@@ -176,6 +176,21 @@ Agent Monitor calls:
 
 `GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, and `childPids`.
 
+Agents may also include a `logs` array for recent provider, process, transcript, or operator events:
+
+```json
+{
+  "logs": [
+    {
+      "at": 1781648578000,
+      "level": "info",
+      "source": "remote-runner",
+      "message": "Fetched branch and started tests."
+    }
+  ]
+}
+```
+
 Action requests receive:
 
 ```json
@@ -239,11 +254,12 @@ The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It map
 ## Current capability
 
 - Track agents from multiple provider namespaces.
-- Show status, provider, parent/child relationships, process lineage, resource usage, spend, and runtime.
+- Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, and recent logs.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
 - Persist local server state and recent action history under `data/`.
+- Persist per-agent logs for state-backed agents.
 - Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.
 - Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.

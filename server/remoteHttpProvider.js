@@ -90,6 +90,21 @@ function normalizeAgent(agent, config) {
     startedAt,
     endedAt: agent.endedAt,
     children: Array.isArray(agent.children) ? agent.children : [],
+    logs: normalizeLogs(agent.logs),
     remoteUrl: config.baseUrl
   };
+}
+
+function normalizeLogs(logs) {
+  if (!Array.isArray(logs)) return [];
+
+  return logs
+    .filter((log) => log && log.message)
+    .map((log) => ({
+      at: Number(log.at || Date.now()),
+      level: log.level || "info",
+      source: log.source || "remote",
+      message: String(log.message)
+    }))
+    .slice(0, 50);
 }

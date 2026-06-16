@@ -84,6 +84,7 @@ function renderWidgetAgent(agent) {
         <span class="${statusTone(agent.status)}">${agent.status}</span>
       </div>
       <p class="metrics">${renderResourceLine(agent)}</p>
+      ${renderLatestLog(agent)}
       <div class="actions">
         ${lifecycleActions.map((action) => renderAction(agent, action)).join("")}
       </div>
@@ -104,6 +105,12 @@ function renderResourceLine(agent) {
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
   if (agent.tokens) parts.push(`${agent.tokens.toLocaleString()} tokens`);
   return parts.join(" · ");
+}
+
+function renderLatestLog(agent) {
+  const log = Array.isArray(agent.logs) ? agent.logs[0] : null;
+  if (!log) return "";
+  return `<p class="log-preview">${log.source || "agent"} · ${log.message}</p>`;
 }
 
 function renderAction(agent, action) {

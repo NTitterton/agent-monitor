@@ -104,6 +104,22 @@ function normalizeBatch(batch, providerConfig, batchConfig) {
     startedAt: Number.isNaN(startedAt) ? Date.now() : startedAt,
     endedAt: status === "ended" ? Date.now() : undefined,
     children: batchConfig.children || [],
+    logs: [
+      {
+        at: Number.isNaN(startedAt) ? Date.now() : startedAt,
+        level: "info",
+        source: "anthropic",
+        message: `Batch ${batch.id} is ${batch.processing_status || "unknown"} with ${total} request${total === 1 ? "" : "s"}.`
+      },
+      ...(errored
+        ? [{
+            at: Date.now(),
+            level: "error",
+            source: "anthropic",
+            message: `${errored} request${errored === 1 ? "" : "s"} errored.`
+          }]
+        : [])
+    ],
     remoteId: batch.id,
     requestCounts: counts,
     capabilities: lifecycleActions.map((action) => action.id)

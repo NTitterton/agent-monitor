@@ -14,7 +14,15 @@ export const initialAgents = [
     tokens: 18420,
     costUsd: 0.42,
     startedAt: now - 1000 * 60 * 42,
-    children: ["openai-research-2"]
+    children: ["openai-research-2"],
+    logs: [
+      {
+        at: now - 1000 * 60 * 41,
+        level: "info",
+        source: "local",
+        message: "Started browser task-manager scaffold."
+      }
+    ]
   },
   {
     id: "openai-research-2",
@@ -29,7 +37,15 @@ export const initialAgents = [
     tokens: 9150,
     costUsd: 0.18,
     startedAt: now - 1000 * 60 * 33,
-    children: []
+    children: [],
+    logs: [
+      {
+        at: now - 1000 * 60 * 31,
+        level: "info",
+        source: "openai",
+        message: "Mapped provider integration options."
+      }
+    ]
   },
   {
     id: "anthropic-review-1",
@@ -44,7 +60,15 @@ export const initialAgents = [
     tokens: 4620,
     costUsd: 0.13,
     startedAt: now - 1000 * 60 * 19,
-    children: []
+    children: [],
+    logs: [
+      {
+        at: now - 1000 * 60 * 18,
+        level: "warn",
+        source: "anthropic",
+        message: "Waiting for lifecycle semantics review."
+      }
+    ]
   },
   {
     id: "remote-build-7",
@@ -60,7 +84,15 @@ export const initialAgents = [
     costUsd: 0.04,
     startedAt: now - 1000 * 60 * 74,
     endedAt: now - 1000 * 60 * 11,
-    children: []
+    children: [],
+    logs: [
+      {
+        at: now - 1000 * 60 * 11,
+        level: "info",
+        source: "remote",
+        message: "Widget bundle validation completed."
+      }
+    ]
   }
 ];
 
@@ -73,17 +105,17 @@ export const lifecycleActions = [
 ];
 
 export function createAgentStore(seedAgents = initialAgents) {
-  let agents = seedAgents.map((agent) => ({ ...agent, children: [...agent.children] }));
+  let agents = seedAgents.map(cloneAgent);
   const subscribers = new Set();
 
   function emit() {
-    const snapshot = agents.map((agent) => ({ ...agent, children: [...agent.children] }));
+    const snapshot = agents.map(cloneAgent);
     subscribers.forEach((subscriber) => subscriber(snapshot));
   }
 
   return {
     list() {
-      return agents.map((agent) => ({ ...agent, children: [...agent.children] }));
+      return agents.map(cloneAgent);
     },
     subscribe(subscriber) {
       subscribers.add(subscriber);
@@ -101,14 +133,32 @@ export function createAgentStore(seedAgents = initialAgents) {
   };
 }
 
+function cloneAgent(agent) {
+  return {
+    ...agent,
+    children: Array.isArray(agent.children) ? [...agent.children] : [],
+    logs: Array.isArray(agent.logs) ? agent.logs.map((log) => ({ ...log })) : []
+  };
+}
+
 export function applyLifecycleAction(agent, actionId, prompt = "", at = Date.now()) {
   const action = lifecycleActions.find((item) => item.id === actionId);
   if (!action) return agent;
+  const record = createActionRecord(agent, actionId, prompt, at);
 
   const changed = {
     ...agent,
     status: action.nextStatus,
-    lastAction: createActionRecord(agent, actionId, prompt, at)
+    lastAction: record,
+    logs: [
+      createLogRecord({
+        at,
+        level: action.destructive ? "error" : "info",
+        source: "operator",
+        message: `${action.label}${prompt.trim() ? `: ${prompt.trim()}` : ""}`
+      }),
+      ...(Array.isArray(agent.logs) ? agent.logs : [])
+    ].slice(0, 50)
   };
 
   if (action.nextStatus === "running" && !changed.startedAt) {
@@ -122,6 +172,15 @@ export function applyLifecycleAction(agent, actionId, prompt = "", at = Date.now
   }
 
   return changed;
+}
+
+export function createLogRecord({ at = Date.now(), level = "info", source = "agent", message = "" }) {
+  return {
+    at,
+    level,
+    source,
+    message: String(message || "").trim()
+  };
 }
 
 export function createActionRecord(agent, actionId, prompt = "", at = Date.now()) {

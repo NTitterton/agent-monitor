@@ -461,6 +461,21 @@ h2 {
   color: #667085;
 }
 
+.log-line {
+  display: grid;
+  gap: 3px;
+  border-top: 1px solid #edf0f5;
+  padding-top: 8px;
+}
+
+.log-line.error strong {
+  color: #a62626;
+}
+
+.log-line.warn strong {
+  color: #805500;
+}
+
 @media (max-width: 920px) {
   .topbar,
   .workspace {

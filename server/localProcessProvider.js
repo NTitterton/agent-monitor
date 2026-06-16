@@ -134,6 +134,7 @@ function toProcessAgent(agent, processes) {
     pid,
     parentPid: processInfo?.ppid || null,
     childPids,
+    logs: buildProcessLogs(agent, processInfo, childPids, isRunning),
     command: agent.command,
     match: agent.match,
     cwd: agent.cwd,
@@ -143,6 +144,49 @@ function toProcessAgent(agent, processes) {
       .filter((action) => !agent.discovered || action.id !== "start")
       .map((action) => action.id)
   };
+}
+
+function buildProcessLogs(agent, processInfo, childPids, isRunning) {
+  const logs = [];
+  const at = processInfo?.startedAt || Date.now();
+
+  if (processInfo) {
+    logs.push({
+      at,
+      level: "info",
+      source: "process",
+      message: `Observed PID ${processInfo.pid} with PPID ${processInfo.ppid}.`
+    });
+  }
+
+  if (childPids.length) {
+    logs.push({
+      at: Date.now(),
+      level: "info",
+      source: "process",
+      message: `Detected child process${childPids.length === 1 ? "" : "es"} ${childPids.join(", ")}.`
+    });
+  }
+
+  if (agent.cwd) {
+    logs.push({
+      at,
+      level: "info",
+      source: "process",
+      message: `Working directory ${agent.cwd}.`
+    });
+  }
+
+  if (!isRunning) {
+    logs.push({
+      at: Date.now(),
+      level: "warn",
+      source: "process",
+      message: "No matching local process is currently running."
+    });
+  }
+
+  return logs;
 }
 
 function discoverAgents(processes, configuredMatches, options) {

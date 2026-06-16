@@ -73,12 +73,17 @@ try {
     "interrupt should move local-codex-1 to waiting"
   );
   assert(action.body.history[0]?.prompt === "smoke test", "action prompt should be recorded");
+  assert(
+    action.body.agents.find((agent) => agent.id === "local-codex-1")?.logs?.[0]?.message.includes("smoke test"),
+    "lifecycle action should append an agent log"
+  );
 
   const detail = await request("/api/agents/local-codex-1");
   assert(detail.status === 200, "agent detail should succeed");
   assert(detail.body.agent.id === "local-codex-1", "agent detail should return requested agent");
   assert(detail.body.children[0]?.id === "openai-research-2", "agent detail should include children");
   assert(detail.body.history[0]?.prompt === "smoke test", "agent detail should include agent history");
+  assert(detail.body.agent.logs[0]?.source === "operator", "agent detail should include logs");
 
   await stopServer(server);
   server = await startServer();
@@ -89,9 +94,14 @@ try {
     "agent status should persist after restart"
   );
   assert(persisted.body.history[0]?.prompt === "smoke test", "history should persist after restart");
+  assert(
+    persisted.body.agents.find((agent) => agent.id === "local-codex-1")?.logs?.[0]?.source === "operator",
+    "agent logs should persist after restart"
+  );
 
   const stateFile = JSON.parse(await readFile(statePath, "utf8"));
   assert(stateFile.history.length > 0, "state file should contain history");
+  assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.logs?.length > 0, "state file should contain logs");
 
   console.log("Smoke test passed");
 } finally {

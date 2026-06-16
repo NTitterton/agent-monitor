@@ -85,7 +85,8 @@ function createDefaultState() {
     agents: initialAgents.map((agent) => ({
       ...agent,
       providerId: agentProviderIds[agent.id] || "local",
-      children: [...agent.children]
+      children: [...agent.children],
+      logs: normalizeLogs(agent.logs)
     })),
     history: []
   };
@@ -95,20 +96,44 @@ function normalizeState(nextState) {
   const fallback = createDefaultState();
   const agents = Array.isArray(nextState.agents) ? nextState.agents : fallback.agents;
   const history = Array.isArray(nextState.history) ? nextState.history : [];
+  const fallbackAgents = new Map(fallback.agents.map((agent) => [agent.id, agent]));
 
   return {
     version: 1,
-    agents: agents.map((agent) => ({
-      ...agent,
-      providerId: agent.providerId || agentProviderIds[agent.id] || "local",
-      children: Array.isArray(agent.children) ? [...agent.children] : []
-    })),
+    agents: agents.map((agent) => {
+      const fallbackAgent = fallbackAgents.get(agent.id);
+      const logs = normalizeLogs(agent.logs);
+      return {
+        ...agent,
+        providerId: agent.providerId || agentProviderIds[agent.id] || "local",
+        children: Array.isArray(agent.children) ? [...agent.children] : [],
+        logs: logs.length ? logs : normalizeLogs(fallbackAgent?.logs)
+      };
+    }),
     history
   };
 }
 
 function cloneAgents(agents) {
-  return agents.map((agent) => ({ ...agent, children: [...agent.children] }));
+  return agents.map((agent) => ({
+    ...agent,
+    children: [...agent.children],
+    logs: normalizeLogs(agent.logs)
+  }));
+}
+
+function normalizeLogs(logs) {
+  if (!Array.isArray(logs)) return [];
+
+  return logs
+    .filter((log) => log && log.message)
+    .map((log) => ({
+      at: Number(log.at || Date.now()),
+      level: log.level || "info",
+      source: log.source || "agent",
+      message: String(log.message)
+    }))
+    .slice(0, 50);
 }
 
 function getStatePath() {

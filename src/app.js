@@ -317,9 +317,30 @@ function renderDetailPanel(detail) {
           <h3>Recent Actions</h3>
           ${history.length ? history.slice(0, 4).map(renderDetailHistory).join("") : "<p>No actions recorded.</p>"}
         </article>
+        <article>
+          <h3>Logs</h3>
+          ${renderAgentLogs(agent)}
+        </article>
       </div>
     </section>
   `;
+}
+
+function renderAgentLogs(agent) {
+  const logs = Array.isArray(agent.logs) ? agent.logs : [];
+  if (!logs.length) return "<p>No logs reported.</p>";
+
+  return logs
+    .slice(0, 5)
+    .map(
+      (log) => `
+        <p class="log-line ${log.level || "info"}">
+          <strong>${log.source || "agent"}</strong>
+          <span>${formatTimestamp(log.at)} · ${log.message}</span>
+        </p>
+      `
+    )
+    .join("");
 }
 
 function renderDetailHistory(record) {

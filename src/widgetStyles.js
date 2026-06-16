@@ -91,6 +91,11 @@ export default `
     margin-top: 10px;
   }
 
+  .log-preview {
+    margin-top: 8px;
+    color: #344054;
+  }
+
   .good,
   .idle,
   .warn,

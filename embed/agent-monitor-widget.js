@@ -9,7 +9,13 @@ const fallbackAgents = [
     memoryMb: 812,
     tokens: 18420,
     startedAt: Date.now() - 1000 * 60 * 42,
-    children: ["openai-research-2"]
+    children: ["openai-research-2"],
+    logs: [{
+      at: Date.now() - 1000 * 60 * 41,
+      level: "info",
+      source: "local",
+      message: "Started browser task-manager scaffold."
+    }]
   },
   {
     id: "openai-research-2",
@@ -21,7 +27,13 @@ const fallbackAgents = [
     memoryMb: 128,
     tokens: 9150,
     startedAt: Date.now() - 1000 * 60 * 33,
-    children: []
+    children: [],
+    logs: [{
+      at: Date.now() - 1000 * 60 * 31,
+      level: "info",
+      source: "openai",
+      message: "Mapped provider integration options."
+    }]
   }
 ];
 
@@ -104,6 +116,11 @@ const styles = `
 
   .metrics {
     margin-top: 10px;
+  }
+
+  .log-preview {
+    margin-top: 8px;
+    color: #344054;
   }
 
   .status {
@@ -246,7 +263,16 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         status: statusForAction(action.id),
         cpu: action.id === "end" || action.id === "force-end" ? 0 : agent.cpu,
         memoryMb: action.id === "end" || action.id === "force-end" ? 0 : agent.memoryMb,
-        lastAction: { action: action.id, label: action.label, prompt, at }
+        lastAction: { action: action.id, label: action.label, prompt, at },
+        logs: [
+          {
+            at,
+            level: action.danger ? "error" : "info",
+            source: "operator",
+            message: `${action.label}${prompt.trim() ? `: ${prompt.trim()}` : ""}`
+          },
+          ...(Array.isArray(agent.logs) ? agent.logs : [])
+        ].slice(0, 50)
       };
     });
     const agent = this.agents.find((item) => item.id === agentId);
@@ -293,6 +319,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           <span class="status ${tone(agent.status)}">${escapeHtml(agent.status)}</span>
         </div>
         <p class="metrics">${formatResourceLine(agent)}</p>
+        ${renderLatestLog(agent)}
         <div class="actions">
           ${actions.map((action) => renderAction(agent, action)).join("")}
         </div>
@@ -382,6 +409,12 @@ function formatResourceLine(agent) {
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
   if (agent.tokens) parts.push(`${Number(agent.tokens).toLocaleString()} tokens`);
   return parts.join(" · ");
+}
+
+function renderLatestLog(agent) {
+  const log = Array.isArray(agent.logs) ? agent.logs[0] : null;
+  if (!log) return "";
+  return `<p class="log-preview">${escapeHtml(log.source || "agent")} · ${escapeHtml(log.message)}</p>`;
 }
 
 function lineageSummary(agent) {

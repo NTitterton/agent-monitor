@@ -102,6 +102,22 @@ function normalizeResponse(response, providerConfig, responseConfig) {
     startedAt,
     endedAt: status === "ended" ? Date.now() : undefined,
     children: responseConfig.children || [],
+    logs: [
+      {
+        at: startedAt,
+        level: status === "ended" ? "info" : "info",
+        source: "openai",
+        message: `Response ${response.id} is ${response.status || "unknown"}${response.model ? ` on ${response.model}` : ""}.`
+      },
+      ...(response.error
+        ? [{
+            at: Date.now(),
+            level: "error",
+            source: "openai",
+            message: response.error.message || "OpenAI response reported an error."
+          }]
+        : [])
+    ],
     remoteId: response.id,
     model: response.model,
     capabilities: lifecycleActions.map((action) => action.id)
