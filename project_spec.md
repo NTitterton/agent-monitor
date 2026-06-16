@@ -103,7 +103,7 @@ Acceptance criteria:
 - Local process Go To is best-effort and platform-specific.
 - If no target is known, the button is hidden or disabled with a clear unavailable state.
 
-Status: partial implementation for macOS local process agents. `Go To` activates likely Terminal/iTerm, browser, or editor surfaces from local process metadata; exact terminal tab selection still needs deeper host integration.
+Status: partial implementation for macOS local process agents and URL-backed remote/account agents. `Go To` activates likely Terminal/iTerm, browser, or editor surfaces from local process metadata, and opens `goToTarget` URLs for remote dashboards/provider pages. Exact terminal tab selection still needs deeper host integration.
 
 Open questions:
 

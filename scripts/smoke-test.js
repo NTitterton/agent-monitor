@@ -40,6 +40,14 @@ try {
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokensPerSecond === "number"), "every agent should include numeric token rate");
   assert(sameOriginAgents.body.agents.every((agent) => agent.tokenCountConfidence), "every agent should include token confidence");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.scannedAt === "number"), "every agent should include scan timestamp");
+  assert(
+    sameOriginAgents.body.agents.find((agent) => agent.id === "remote-build-7")?.capabilities?.includes("go-to"),
+    "remote sample should expose URL go-to"
+  );
+  assert(
+    sameOriginAgents.body.agents.find((agent) => agent.id === "remote-build-7")?.goToKind === "url",
+    "remote sample should identify URL go-to"
+  );
 
   const providers = await request("/api/providers");
   assert(providers.status === 200, "provider status request should succeed");
@@ -107,6 +115,7 @@ try {
           label: "Smoke Remote",
           source: "cloud",
           baseUrl: `${apiBase}/missing`,
+          dashboardUrl: `${apiBase}/dashboard`,
           token: "remote-secret"
         }
       ]
@@ -127,6 +136,7 @@ try {
   assert(configFileAfterUpdate.apiToken === apiToken, "config update should preserve token");
   assert(configFileAfterUpdate.snapshotRefresh.intervalMs === 12000, "config file should include snapshot refresh");
   assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
+  assert(configFileAfterUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "config file should store remote dashboard URL");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.token === "remote-secret", "config file should store remote token");
 
   const remoteTokenPreserved = await request("/api/config", {
@@ -146,6 +156,7 @@ try {
   assert(remoteTokenPreserved.status === 200, "remote provider update should succeed");
   const configFileAfterRemoteUpdate = JSON.parse(await readFile(configPath, "utf8"));
   assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.token === "remote-secret", "remote token should be preserved when omitted");
+  assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "remote dashboard URL should be preserved when omitted");
 
   const updatedOriginRequest = await request("/api/agents", {
     headers: {

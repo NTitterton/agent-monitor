@@ -179,9 +179,11 @@ Agent Monitor calls:
 - `GET {baseUrl}/agents`
 - `POST {baseUrl}/agents/:id/actions`
 
-`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, and `childPids`.
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`.
 
 Use `tokenCountConfidence` to distinguish provider-reported totals from rough or unknown counts. Accepted values are `observed`, `estimated`, `reported`, and `unknown`.
+
+Use `goToTarget` with `goToKind: "url"` to enable browser-side `Go To` for remote dashboards, provider consoles, or hosted agent pages.
 
 Agents may also include a `logs` array for recent provider, process, transcript, or operator events:
 
@@ -234,7 +236,7 @@ Agent Monitor can observe configured OpenAI Responses by ID:
 
 The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response.
 
-OpenAI Responses setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID.
+OpenAI Responses setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked response rows accept `id | name | responseId | task | goToUrl`; the URL is optional.
 
 ## Track Anthropic Message Batches
 
@@ -262,7 +264,7 @@ Agent Monitor can also observe configured Anthropic Message Batch IDs:
 
 The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view.
 
-Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID.
+Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked batch rows accept `id | name | batchId | task | goToUrl`; the URL is optional.
 
 ## Current capability
 

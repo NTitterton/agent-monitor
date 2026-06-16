@@ -78,6 +78,7 @@ function normalizeAgent(agent, config) {
   const tokens = Number(agent.tokens || 0);
   const tokensPerSecond = Number(agent.tokensPerSecond || 0);
   const tokenRateWindowMs = Number(agent.tokenRateWindowMs || 0);
+  const goToTarget = agent.goToTarget || agent.remoteUrl || config.dashboardUrl || config.baseUrl;
   return {
     id: agent.id,
     name: agent.name || agent.id,
@@ -99,8 +100,19 @@ function normalizeAgent(agent, config) {
     endedAt: agent.endedAt,
     children: Array.isArray(agent.children) ? agent.children : [],
     logs: normalizeLogs(agent.logs),
-    remoteUrl: config.baseUrl
+    remoteUrl: agent.remoteUrl || config.baseUrl,
+    goToTarget,
+    goToKind: agent.goToKind || "url",
+    windowTitle: agent.windowTitle || "",
+    capabilities: normalizeCapabilities(agent.capabilities, goToTarget)
   };
+}
+
+function normalizeCapabilities(capabilities, goToTarget) {
+  const values = Array.isArray(capabilities)
+    ? capabilities.map((capability) => String(capability)).filter(Boolean)
+    : lifecycleActions.map((action) => action.id);
+  return goToTarget && !values.includes("go-to") ? [...values, "go-to"] : values;
 }
 
 function normalizeTokenConfidence(value, fallback = "unknown") {

@@ -101,6 +101,11 @@ export const initialAgents = [
     startedAt: now - 1000 * 60 * 74,
     endedAt: now - 1000 * 60 * 11,
     children: [],
+    remoteUrl: "https://agents.example.com",
+    goToTarget: "https://agents.example.com",
+    goToKind: "url",
+    windowTitle: "Remote Runner dashboard",
+    capabilities: ["start", "stop", "interrupt", "end", "force-end", "go-to"],
     logs: [
       {
         at: now - 1000 * 60 * 11,

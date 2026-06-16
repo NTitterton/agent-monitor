@@ -366,6 +366,7 @@ function renderRemoteProviderRow(provider, index, mode) {
       <input data-remote-field="id" value="${escapeAttribute(provider.id || "")}" ${disabled} aria-label="Remote provider ID ${index + 1}" />
       <input data-remote-field="label" value="${escapeAttribute(provider.label || "")}" ${disabled} aria-label="Remote provider label ${index + 1}" />
       <input data-remote-field="baseUrl" value="${escapeAttribute(provider.baseUrl || "")}" ${disabled} aria-label="Remote provider URL ${index + 1}" />
+      <input data-remote-field="dashboardUrl" value="${escapeAttribute(provider.dashboardUrl || "")}" ${disabled} aria-label="Remote provider dashboard URL ${index + 1}" />
       <input data-remote-field="type" value="${escapeAttribute(provider.type || provider.id || "remote")}" ${disabled} aria-label="Remote provider type ${index + 1}" />
       <select data-remote-field="source" ${disabled} aria-label="Remote provider source ${index + 1}">
         ${["cloud", "user-account", "local"].map((source) => renderOption(source, provider.source || "cloud")).join("")}
@@ -395,7 +396,7 @@ function renderOpenAIProviderRow(provider, index, mode) {
       <input data-openai-field="organization" value="${escapeAttribute(provider.organization || "")}" ${disabled} aria-label="OpenAI organization ${index + 1}" />
       <input data-openai-field="project" value="${escapeAttribute(provider.project || "")}" ${disabled} aria-label="OpenAI project ${index + 1}" />
       <textarea data-openai-field="responses" rows="3" ${disabled} aria-label="OpenAI response list ${index + 1}">${escapeText(formatTrackedLines(provider.responses || [], "responseId"))}</textarea>
-      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · responses: id | name | responseId | task</span>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · responses: id | name | responseId | task | goToUrl</span>
     </fieldset>
   `;
 }
@@ -418,7 +419,7 @@ function renderAnthropicProviderRow(provider, index, mode) {
       <input data-anthropic-field="apiKey" type="password" value="" ${disabled} aria-label="Anthropic API key ${index + 1}" />
       <input data-anthropic-field="version" value="${escapeAttribute(provider.version || "")}" ${disabled} aria-label="Anthropic version ${index + 1}" />
       <textarea data-anthropic-field="batches" rows="3" ${disabled} aria-label="Anthropic batch list ${index + 1}">${escapeText(formatTrackedLines(provider.batches || [], "batchId"))}</textarea>
-      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · batches: id | name | batchId | task</span>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · batches: id | name | batchId | task | goToUrl</span>
     </fieldset>
   `;
 }
@@ -684,6 +685,7 @@ function parseRemoteProviders(form) {
         id: fields.id,
         label: fields.label,
         baseUrl: fields.baseUrl,
+        ...(fields.dashboardUrl ? { dashboardUrl: fields.dashboardUrl } : {}),
         type: fields.type || fields.id,
         source: fields.source || "cloud",
         ...(fields.token ? { token: fields.token } : {})
@@ -737,12 +739,13 @@ function rowFields(row, prefix) {
 function parseTrackedLines(value, remoteIdKey) {
   return parseLines(value)
     .map((line) => {
-      const [id, name, remoteId, task] = line.split("|").map((part) => part.trim());
+      const [id, name, remoteId, task, goToTarget] = line.split("|").map((part) => part.trim());
       return {
         id,
         name,
         [remoteIdKey]: remoteId,
-        task
+        task,
+        ...(goToTarget ? { goToTarget, goToKind: "url" } : {})
       };
     })
     .filter((item) => item.id && item[remoteIdKey]);
@@ -754,7 +757,8 @@ function formatTrackedLines(items, remoteIdKey) {
       item.id || "",
       item.name || "",
       item[remoteIdKey] || "",
-      item.task || ""
+      item.task || "",
+      item.goToTarget || ""
     ].join(" | "))
     .join("\n");
 }

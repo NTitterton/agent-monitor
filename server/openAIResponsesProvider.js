@@ -89,6 +89,7 @@ function normalizeResponse(response, providerConfig, responseConfig) {
   const endedAt = status === "ended" ? Date.now() : undefined;
   const totalTokens = inputTokens + outputTokens;
   const tokenRateWindowMs = Math.max(1000, (endedAt || Date.now()) - startedAt);
+  const goToTarget = responseConfig.goToTarget || responseConfig.dashboardUrl || "";
 
   return {
     id: responseConfig.id,
@@ -127,9 +128,17 @@ function normalizeResponse(response, providerConfig, responseConfig) {
         : [])
     ],
     remoteId: response.id,
+    goToTarget,
+    goToKind: goToTarget ? "url" : "unknown",
+    windowTitle: responseConfig.windowTitle || "",
     model: response.model,
-    capabilities: lifecycleActions.map((action) => action.id)
+    capabilities: normalizeCapabilities(goToTarget)
   };
+}
+
+function normalizeCapabilities(goToTarget) {
+  const values = lifecycleActions.map((action) => action.id);
+  return goToTarget ? [...values, "go-to"] : values;
 }
 
 function normalizeStatus(status) {

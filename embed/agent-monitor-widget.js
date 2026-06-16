@@ -239,6 +239,12 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
   async perform(agentId, action) {
     const apiBase = this.apiBase();
     const prompt = action.prompt ? window.prompt(`${action.label} prompt`) || "" : "";
+    const agent = this.agents.find((item) => item.id === agentId);
+
+    if (action.id === "go-to" && isUrlGoTo(agent)) {
+      window.open(agent.goToTarget || agent.remoteUrl, "_blank", "noopener");
+      return;
+    }
 
     if (!apiBase) {
       this.applyLocalAction(agentId, action, prompt);
@@ -408,6 +414,12 @@ function formatRuntime(agent) {
 
 function formatMemory(memoryMb) {
   return memoryMb >= 1024 ? `${(memoryMb / 1024).toFixed(1)} GB` : `${memoryMb} MB`;
+}
+
+function isUrlGoTo(agent) {
+  if (!agent) return false;
+  const target = agent.goToTarget || agent.remoteUrl;
+  return agent.goToKind === "url" && /^https?:\/\//i.test(target || "");
 }
 
 function formatResourceLine(agent) {

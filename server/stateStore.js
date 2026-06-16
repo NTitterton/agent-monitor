@@ -117,6 +117,7 @@ function normalizeState(nextState) {
         providerId: agent.providerId || agentProviderIds[agent.id] || "local",
         type: agent.type || agentTypes[agent.id] || agent.providerId || agentProviderIds[agent.id] || "remote",
         ...normalizeTokenMetrics(agent, fallbackAgent),
+        ...normalizeGoTo(agent, fallbackAgent),
         children: Array.isArray(agent.children) ? [...agent.children] : [],
         logs: logs.length ? logs : normalizeLogs(fallbackAgent?.logs)
       };
@@ -129,6 +130,7 @@ function cloneAgents(agents) {
   return agents.map((agent) => ({
     ...agent,
     ...normalizeTokenMetrics(agent),
+    ...normalizeGoTo(agent),
     children: [...agent.children],
     logs: normalizeLogs(agent.logs)
   }));
@@ -151,6 +153,23 @@ function normalizeTokenMetrics(agent = {}, fallbackAgent = {}) {
 
 function normalizeTokenConfidence(value, fallback = "unknown") {
   return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function normalizeGoTo(agent = {}, fallbackAgent = {}) {
+  const goToTarget = agent.goToTarget ?? fallbackAgent.goToTarget;
+  const remoteUrl = agent.remoteUrl ?? fallbackAgent.remoteUrl;
+  const capabilities = Array.isArray(agent.capabilities)
+    ? agent.capabilities
+    : Array.isArray(fallbackAgent.capabilities)
+      ? fallbackAgent.capabilities
+      : undefined;
+  return {
+    ...(remoteUrl ? { remoteUrl } : {}),
+    ...(goToTarget ? { goToTarget } : {}),
+    ...(agent.goToKind || fallbackAgent.goToKind ? { goToKind: agent.goToKind || fallbackAgent.goToKind } : {}),
+    ...(agent.windowTitle || fallbackAgent.windowTitle ? { windowTitle: agent.windowTitle || fallbackAgent.windowTitle } : {}),
+    ...(capabilities ? { capabilities: [...capabilities] } : {})
+  };
 }
 
 function normalizeLogs(logs) {

@@ -39,6 +39,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Stable per-agent `type` field and type filter.
 - Token throughput and token count confidence in normalized snapshots, main app, widgets, and remote provider docs.
 - `Go To` action for macOS local process agents that activates likely Terminal/iTerm, browser, or editor surfaces.
+- URL-backed `Go To` targets for remote/account agents through `goToTarget` and `goToKind`.
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
 - Provider connection test endpoint and Sources-panel test buttons.
 - GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.

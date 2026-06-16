@@ -88,6 +88,7 @@ function normalizeBatch(batch, providerConfig, batchConfig) {
   const total = processing + succeeded + errored + canceled + expired;
   const status = normalizeStatus(batch.processing_status, processing);
   const startedAt = batch.created_at ? Date.parse(batch.created_at) : Date.now();
+  const goToTarget = batchConfig.goToTarget || batchConfig.dashboardUrl || "";
 
   return {
     id: batchConfig.id,
@@ -126,9 +127,17 @@ function normalizeBatch(batch, providerConfig, batchConfig) {
         : [])
     ],
     remoteId: batch.id,
+    goToTarget,
+    goToKind: goToTarget ? "url" : "unknown",
+    windowTitle: batchConfig.windowTitle || "",
     requestCounts: counts,
-    capabilities: lifecycleActions.map((action) => action.id)
+    capabilities: normalizeCapabilities(goToTarget)
   };
+}
+
+function normalizeCapabilities(goToTarget) {
+  const values = lifecycleActions.map((action) => action.id);
+  return goToTarget ? [...values, "go-to"] : values;
 }
 
 function normalizeStatus(status, processing) {

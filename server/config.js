@@ -133,6 +133,7 @@ function publicRemoteHttpProviders(providers) {
       source: provider.source || "cloud",
       type: provider.type || provider.id,
       baseUrl: provider.baseUrl,
+      dashboardUrl: provider.dashboardUrl || "",
       hasToken: Boolean(provider.token),
       timeoutMs: provider.timeoutMs
     }));
@@ -158,6 +159,9 @@ function normalizeRemoteHttpProviders(value, fallback = []) {
         source: String(provider.source || existing.source || "cloud").trim(),
         type: String(provider.type || existing.type || provider.id).trim(),
         baseUrl: String(provider.baseUrl).trim().replace(/\/+$/, ""),
+        ...(provider.dashboardUrl || existing.dashboardUrl
+          ? { dashboardUrl: String(provider.dashboardUrl || existing.dashboardUrl).trim() }
+          : {}),
         ...(provider.token ? { token: String(provider.token) } : {}),
         ...(provider.timeoutMs ? { timeoutMs: Number(provider.timeoutMs) } : {})
       };
@@ -216,6 +220,11 @@ function normalizeTrackedItems(items, remoteIdKey) {
       [remoteIdKey]: String(item[remoteIdKey]).trim(),
       task: String(item.task || item.name || item.id).trim(),
       ...(item.parentId ? { parentId: String(item.parentId).trim() } : {}),
+      ...(item.goToTarget || item.dashboardUrl
+        ? { goToTarget: String(item.goToTarget || item.dashboardUrl).trim() }
+        : {}),
+      ...(item.goToKind ? { goToKind: String(item.goToKind).trim() } : {}),
+      ...(item.windowTitle ? { windowTitle: String(item.windowTitle).trim() } : {}),
       ...(Array.isArray(item.children) ? { children: normalizeStringList(item.children) } : {})
     }));
 }

@@ -124,6 +124,12 @@ export function createAgentClient() {
     async perform(agentId, actionId, prompt = "") {
       const action = agentActions.find((item) => item.id === actionId);
       if (!action) return;
+      const agent = agents.find((item) => item.id === agentId);
+
+      if (actionId === "go-to" && isUrlGoTo(agent)) {
+        window.open(agent.goToTarget || agent.remoteUrl, "_blank", "noopener");
+        return;
+      }
 
       if (mode === "api") {
         try {
@@ -144,7 +150,6 @@ export function createAgentClient() {
         }
       }
 
-      const agent = agents.find((item) => item.id === agentId);
       localStore.perform(agentId, actionId, prompt);
       if (agent) {
         history = [createActionRecord(agent, actionId, prompt), ...history].filter(Boolean).slice(0, 25);
@@ -152,6 +157,12 @@ export function createAgentClient() {
       }
     }
   };
+}
+
+function isUrlGoTo(agent) {
+  if (!agent) return false;
+  const target = agent.goToTarget || agent.remoteUrl;
+  return agent.goToKind === "url" && /^https?:\/\//i.test(target || "");
 }
 
 function cloneAgent(agent) {
