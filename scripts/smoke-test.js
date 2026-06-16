@@ -58,6 +58,11 @@ try {
     providers.body.providers.find((provider) => provider.id === "local-process")?.capabilities.includes("go-to"),
     "local process provider should expose go-to"
   );
+  assert(
+    providers.body.providers.find((provider) => provider.id === "local")?.scannedAt ===
+      sameOriginAgents.body.agents.find((agent) => agent.providerId === "local")?.scannedAt,
+    "provider status should reuse the fresh agent snapshot"
+  );
 
   const providerTest = await request("/api/providers/local-process/test", { method: "POST" });
   assert(providerTest.status === 200, "provider connection test should succeed");

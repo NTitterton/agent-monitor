@@ -23,6 +23,7 @@ Agent Monitor does not currently run a standalone background scanner.
 - The module widget uses the same client behavior as the browser app.
 - The standalone embeddable widget polls every 15 seconds by default via `refresh-ms`.
 - The local process provider runs `ps` and active local agent discovery whenever `/api/agents` or `/api/providers` asks providers for a fresh snapshot.
+- Provider snapshots are cached for 1000 ms by default, configurable with `AGENT_MONITOR_SCAN_CACHE_MS`, so paired `/api/agents` and `/api/providers` requests reuse the same scan.
 
 ## New Requirements
 
@@ -133,7 +134,7 @@ Initial proposal:
 - Standalone widget default: 15 seconds.
 - Local process scan: on each provider snapshot request, with possible short in-memory cache if polling becomes aggressive.
 
-Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, and source-list scan freshness display.
+Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, source-list scan freshness display, and a short provider snapshot cache to avoid duplicate scans during a single app refresh.
 
 Acceptance criteria:
 

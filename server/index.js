@@ -61,7 +61,9 @@ const server = createServer(async (request, response) => {
 
     if (url.pathname === "/api/config" && request.method === "PUT") {
       const body = await readJson(request);
-      return sendJson(request, response, { config: await updateConfig(body.config || body) });
+      const config = await updateConfig(body.config || body);
+      registry.invalidateSnapshots();
+      return sendJson(request, response, { config });
     }
 
     const detailMatch = url.pathname.match(/^\/api\/agents\/([^/]+)$/);
