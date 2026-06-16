@@ -29,6 +29,10 @@ const server = createServer(async (request, response) => {
       return sendText(request, response, "Not found", 404);
     }
 
+    if (url.pathname.startsWith("/api/") && !(await isAuthorized(request))) {
+      return sendJson(request, response, { error: "Unauthorized" }, 401);
+    }
+
     if (url.pathname === "/api/agents" && request.method === "GET") {
       return sendJson(request, response, {
         agents: await registry.listAgents(),
@@ -141,9 +145,23 @@ async function corsHeaders(request) {
   if (!allowed) return { Vary: "Origin" };
 
   return {
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Agent-Monitor-Token",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Origin": origin,
     Vary: "Origin"
   };
+}
+
+async function isAuthorized(request) {
+  const config = await readConfig();
+  if (!config.apiToken) return true;
+
+  const origin = request.headers.origin;
+  const localOrigin = `http://${request.headers.host}`;
+  if (!origin || origin === localOrigin) return true;
+
+  const authHeader = request.headers.authorization || "";
+  const bearerToken = authHeader.startsWith("Bearer ") ? authHeader.slice("Bearer ".length) : "";
+  const headerToken = request.headers["x-agent-monitor-token"] || "";
+  return bearerToken === config.apiToken || headerToken === config.apiToken;
 }

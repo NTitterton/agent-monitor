@@ -45,6 +45,7 @@ For cross-site embeds, add the site origins that may call the local API:
 
 ```json
 {
+  "apiToken": "replace-with-a-long-random-token",
   "allowedOrigins": [
     "https://zo.computer",
     "https://your-personal-site.example"
@@ -52,7 +53,16 @@ For cross-site embeds, add the site origins that may call the local API:
 }
 ```
 
-`allowedOrigins` is read from `agent-monitor.config.json`. API routes answer CORS preflight requests for trusted origins.
+`allowedOrigins` and `apiToken` are read from `agent-monitor.config.json`. API routes answer CORS preflight requests for trusted origins. When `apiToken` is set, cross-origin widget requests must include the same token:
+
+```html
+<agent-monitor-widget
+  api-base="http://127.0.0.1:5173"
+  api-token="replace-with-a-long-random-token"
+></agent-monitor-widget>
+```
+
+Same-origin local app requests continue to work without putting the token into `index.html`.
 
 Local standalone embed demo:
 

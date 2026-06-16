@@ -201,7 +201,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     if (!apiBase) return;
 
     try {
-      const response = await fetch(`${apiBase}/api/agents`, { headers: { Accept: "application/json" } });
+      const response = await fetch(`${apiBase}/api/agents`, { headers: this.headers() });
       if (!response.ok) throw new Error(`Agent Monitor returned ${response.status}`);
       const payload = await response.json();
       this.agents = payload.agents || [];
@@ -224,10 +224,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     try {
       const response = await fetch(`${apiBase}/api/agents/${encodeURIComponent(agentId)}/actions`, {
         method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
+        headers: this.headers(),
         body: JSON.stringify({ action: action.id, prompt })
       });
       if (!response.ok) throw new Error(`Agent Monitor returned ${response.status}`);
@@ -313,6 +310,18 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
 
   apiBase() {
     return this.getAttribute("api-base")?.replace(/\/+$/, "") || "";
+  }
+
+  apiToken() {
+    return this.getAttribute("api-token") || "";
+  }
+
+  headers() {
+    return {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      ...(this.apiToken() ? { "X-Agent-Monitor-Token": this.apiToken() } : {})
+    };
   }
 }
 

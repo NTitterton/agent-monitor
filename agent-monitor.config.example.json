@@ -1,4 +1,5 @@
 {
+  "apiToken": "replace-with-a-long-random-token",
   "allowedOrigins": [
     "https://example.com",
     "http://localhost:5173"
