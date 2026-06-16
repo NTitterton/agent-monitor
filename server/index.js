@@ -2,6 +2,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
+import { readConfig } from "./config.js";
 import { createProviderRegistry } from "./providerRegistry.js";
 
 const rootDir = resolve(new URL("..", import.meta.url).pathname);
@@ -20,19 +21,27 @@ const server = createServer(async (request, response) => {
   try {
     const url = new URL(request.url, `http://${request.headers.host}`);
 
+    if (request.method === "OPTIONS") {
+      if (url.pathname.startsWith("/api/")) {
+        return sendOptions(request, response);
+      }
+
+      return sendText(request, response, "Not found", 404);
+    }
+
     if (url.pathname === "/api/agents" && request.method === "GET") {
-      return sendJson(response, {
+      return sendJson(request, response, {
         agents: await registry.listAgents(),
         history: await registry.listHistory()
       });
     }
 
     if (url.pathname === "/api/history" && request.method === "GET") {
-      return sendJson(response, { history: await registry.listHistory() });
+      return sendJson(request, response, { history: await registry.listHistory() });
     }
 
     if (url.pathname === "/api/providers" && request.method === "GET") {
-      return sendJson(response, { providers: await registry.providers() });
+      return sendJson(request, response, { providers: await registry.providers() });
     }
 
     const actionMatch = url.pathname.match(/^\/api\/agents\/([^/]+)\/actions$/);
@@ -44,17 +53,17 @@ const server = createServer(async (request, response) => {
         body.prompt || ""
       );
 
-      if (!result) return sendJson(response, { error: "Agent not found" }, 404);
-      return sendJson(response, result);
+      if (!result) return sendJson(request, response, { error: "Agent not found" }, 404);
+      return sendJson(request, response, result);
     }
 
     if (url.pathname.startsWith("/api/")) {
-      return sendJson(response, { error: "Not found" }, 404);
+      return sendJson(request, response, { error: "Not found" }, 404);
     }
 
     return serveStatic(url.pathname, response);
   } catch (error) {
-    return sendJson(response, { error: error.message || "Internal server error" }, 500);
+    return sendJson(request, response, { error: error.message || "Internal server error" }, 500);
   }
 });
 
@@ -67,12 +76,12 @@ async function serveStatic(pathname, response) {
   const filePath = normalize(join(rootDir, relativePath));
 
   if (!filePath.startsWith(rootDir)) {
-    return sendText(response, "Forbidden", 403);
+    return sendText(null, response, "Forbidden", 403);
   }
 
   try {
     const fileStat = await stat(filePath);
-    if (!fileStat.isFile()) return sendText(response, "Not found", 404);
+    if (!fileStat.isFile()) return sendText(null, response, "Not found", 404);
 
     response.writeHead(200, {
       "Content-Length": fileStat.size,
@@ -80,7 +89,7 @@ async function serveStatic(pathname, response) {
     });
     createReadStream(filePath).pipe(response);
   } catch {
-    sendText(response, "Not found", 404);
+    sendText(null, response, "Not found", 404);
   }
 }
 
@@ -91,19 +100,50 @@ async function readJson(request) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-function sendJson(response, payload, status = 200) {
+async function sendOptions(request, response) {
+  response.writeHead(204, await responseHeaders(request, {}));
+  response.end();
+}
+
+async function sendJson(request, response, payload, status = 200) {
   const body = JSON.stringify(payload, null, 2);
-  response.writeHead(status, {
+  response.writeHead(status, await responseHeaders(request, {
     "Content-Length": Buffer.byteLength(body),
     "Content-Type": "application/json; charset=utf-8"
-  });
+  }));
   response.end(body);
 }
 
-function sendText(response, message, status = 200) {
-  response.writeHead(status, {
+async function sendText(request, response, message, status = 200) {
+  response.writeHead(status, await responseHeaders(request, {
     "Content-Length": Buffer.byteLength(message),
     "Content-Type": "text/plain; charset=utf-8"
-  });
+  }));
   response.end(message);
+}
+
+async function responseHeaders(request, headers) {
+  return {
+    ...headers,
+    ...(await corsHeaders(request))
+  };
+}
+
+async function corsHeaders(request) {
+  if (!request) return {};
+
+  const origin = request.headers.origin;
+  if (!origin) return {};
+
+  const config = await readConfig();
+  const allowedOrigins = config.allowedOrigins || [];
+  const allowed = allowedOrigins.includes("*") || allowedOrigins.includes(origin);
+  if (!allowed) return { Vary: "Origin" };
+
+  return {
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Origin": origin,
+    Vary: "Origin"
+  };
 }

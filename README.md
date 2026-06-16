@@ -41,6 +41,19 @@ For personal sites, use the standalone widget script:
 
 Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/agents` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget stays interactive with local fallback data.
 
+For cross-site embeds, add the site origins that may call the local API:
+
+```json
+{
+  "allowedOrigins": [
+    "https://zo.computer",
+    "https://your-personal-site.example"
+  ]
+}
+```
+
+`allowedOrigins` is read from `agent-monitor.config.json`. API routes answer CORS preflight requests for trusted origins.
+
 Local standalone embed demo:
 
 - http://localhost:5173/embed-standalone.html

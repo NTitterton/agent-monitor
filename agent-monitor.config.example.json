@@ -1,4 +1,8 @@
 {
+  "allowedOrigins": [
+    "https://example.com",
+    "http://localhost:5173"
+  ],
   "localAgents": [
     {
       "id": "local-codex",
