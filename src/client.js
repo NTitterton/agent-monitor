@@ -19,6 +19,18 @@ export function createAgentClient() {
 
   async function refresh() {
     try {
+      const response = await fetch("/api/snapshot", { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`API returned ${response.status}`);
+      const payload = await response.json();
+      mode = "api";
+      emit(payload.agents, payload.history || [], payload.providers || [], payload.config || null);
+    } catch {
+      await refreshLegacy();
+    }
+  }
+
+  async function refreshLegacy() {
+    try {
       const response = await fetch("/api/agents", { headers: { Accept: "application/json" } });
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const payload = await response.json();

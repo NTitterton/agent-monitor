@@ -51,6 +51,19 @@ try {
     "remote sample should identify URL go-to"
   );
 
+  const snapshot = await request("/api/snapshot");
+  assert(snapshot.status === 200, "snapshot request should succeed");
+  assert(Array.isArray(snapshot.body.agents), "snapshot should include agents");
+  assert(Array.isArray(snapshot.body.providers), "snapshot should include providers");
+  assert(Array.isArray(snapshot.body.history), "snapshot should include history");
+  assert(snapshot.body.config.hasApiToken === true, "snapshot should include sanitized config");
+  assert(!("apiToken" in snapshot.body.config), "snapshot should not expose token");
+  assert(
+    snapshot.body.providers.find((provider) => provider.id === "local")?.scannedAt ===
+      snapshot.body.agents.find((agent) => agent.providerId === "local")?.scannedAt,
+    "snapshot provider status should reuse the agent scan"
+  );
+
   const providers = await request("/api/providers");
   assert(providers.status === 200, "provider status request should succeed");
   assert(providers.body.providers.every((provider) => typeof provider.scannedAt === "number"), "every provider should include scan timestamp");
@@ -73,6 +86,10 @@ try {
     headers: { Origin: allowedOrigin }
   });
   assert(unauthorized.status === 401, "cross-origin request without token should be unauthorized");
+  const unauthorizedSnapshot = await request("/api/snapshot", {
+    headers: { Origin: allowedOrigin }
+  });
+  assert(unauthorizedSnapshot.status === 401, "cross-origin snapshot without token should be unauthorized");
 
   const preflight = await rawRequest("/api/agents", {
     method: "OPTIONS",
@@ -95,6 +112,13 @@ try {
     }
   });
   assert(authorized.status === 200, "cross-origin request with token should succeed");
+  const authorizedSnapshot = await request("/api/snapshot", {
+    headers: {
+      Origin: allowedOrigin,
+      "X-Agent-Monitor-Token": apiToken
+    }
+  });
+  assert(authorizedSnapshot.status === 200, "cross-origin snapshot with token should succeed");
 
   const config = await request("/api/config");
   assert(config.status === 200, "config request should succeed");

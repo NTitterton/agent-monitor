@@ -33,6 +33,16 @@ const server = createServer(async (request, response) => {
       return sendJson(request, response, { error: "Unauthorized" }, 401);
     }
 
+    if (url.pathname === "/api/snapshot" && request.method === "GET") {
+      const agents = await registry.listAgents();
+      return sendJson(request, response, {
+        agents,
+        history: await registry.listHistory(),
+        providers: await registry.providers(),
+        config: await readPublicConfig()
+      });
+    }
+
     if (url.pathname === "/api/agents" && request.method === "GET") {
       return sendJson(request, response, {
         agents: await registry.listAgents(),

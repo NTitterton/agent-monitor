@@ -109,6 +109,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 
 ## Local API
 
+- `GET /api/snapshot` returns agents, recent history, provider status, and sanitized config in one response. The browser app uses this as its primary refresh path.
 - `GET /api/agents` returns the current agent snapshot. Agents include `scannedAt` when they came from a provider snapshot.
 - `GET /api/providers` returns configured provider adapters, lifecycle capabilities, and `scannedAt` freshness metadata.
 - `POST /api/providers/:id/test` runs one provider snapshot check and returns that provider's health.
@@ -117,7 +118,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
 - `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`.
 
-Provider snapshots are reused for a short window so an app refresh that asks for both `/api/agents` and `/api/providers` does not rescan every adapter twice. The default cache window is 1000 ms and can be changed with `AGENT_MONITOR_SCAN_CACHE_MS`.
+Provider snapshots are reused for a short window so app refreshes and paired legacy calls to `/api/agents` plus `/api/providers` do not rescan every adapter twice. The default cache window is 1000 ms and can be changed with `AGENT_MONITOR_SCAN_CACHE_MS`.
 
 Provider adapters live in `server/providerRegistry.js`. The current adapters are in-memory implementations for local, OpenAI, Anthropic, and remote cloud namespaces. Real integrations should implement the same shape:
 
