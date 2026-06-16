@@ -135,7 +135,7 @@ Copy `agent-monitor.config.example.json` to `agent-monitor.config.json` and add 
 }
 ```
 
-When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, CPU, memory, command, and start time from `ps`. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
+When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, parent PID, child PIDs, CPU, memory, command, and start time from `ps`. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
 
 Agent Monitor also actively discovers known local agent CLI processes even when they are not listed in `localAgents`. Discovery is enabled by default and currently looks for common agent tools such as Codex, Claude, Gemini, Aider, Goose, OpenCode, Cursor Agent, and Amp.
 
@@ -149,7 +149,7 @@ Agent Monitor also actively discovers known local agent CLI processes even when 
 }
 ```
 
-Discovered agents are shown with their PID and resource usage. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`.
+Discovered agents are shown with PID, PPID, child process count, and resource usage. When two monitored local agents are related by OS parent process ID, Agent Monitor links them in the lineage tree. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`.
 
 ## Connect remote HTTP providers
 
@@ -174,7 +174,7 @@ Agent Monitor calls:
 - `GET {baseUrl}/agents`
 - `POST {baseUrl}/agents/:id/actions`
 
-`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `costUsd`, `startedAt`, `endedAt`, `parentId`, and `children`.
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, and `childPids`.
 
 Action requests receive:
 
@@ -239,19 +239,19 @@ The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It map
 ## Current capability
 
 - Track agents from multiple provider namespaces.
-- Show status, provider, parent/child relationships, resource usage, spend, and runtime.
+- Show status, provider, parent/child relationships, process lineage, resource usage, spend, and runtime.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
 - Persist local server state and recent action history under `data/`.
-- Optionally monitor configured local processes with PID, CPU, memory, and process signals.
+- Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.
 - Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.
 - Observe configured Anthropic Message Batches by batch ID.
 
 ## Next backend milestones
 
-1. Replace in-memory adapters with real local process/resource inspection.
-2. Add authenticated OpenAI, Anthropic, and remote cloud provider adapters.
-3. Add richer per-agent logs, process metadata, and provider health checks.
-4. Add GitHub repository remote once `gh auth login -h github.com` has refreshed credentials.
+1. Add richer per-agent logs and transcripts.
+2. Add first-class provider setup flows instead of editing JSON by hand.
+3. Package desktop app builds for easier installation.
+4. Expand provider-specific start/resume semantics where APIs expose them.

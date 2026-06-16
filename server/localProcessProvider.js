@@ -55,7 +55,8 @@ async function readLocalProcessAgents(processes) {
     ? discoverAgents(processes, configuredMatches, config.localDiscovery || {})
     : [];
 
-  return [...configuredAgents.map((agent) => toProcessAgent(agent, processes)), ...discoveredAgents];
+  const agents = [...configuredAgents, ...discoveredAgents].map((agent) => toProcessAgent(agent, processes));
+  return attachProcessLineage(agents);
 }
 
 async function readConfiguredAgents(config = null) {
@@ -104,10 +105,15 @@ async function signalAgent(agent, actionId) {
 }
 
 function toProcessAgent(agent, processes) {
-  const processInfo = findMatchingProcess(agent, processes);
+  const processInfo = agent.pid
+    ? processes.find((item) => item.pid === agent.pid)
+    : findMatchingProcess(agent, processes);
   const child = runningChildren.get(agent.id);
   const isRunning = Boolean(processInfo || child);
   const pid = processInfo?.pid || child?.pid || null;
+  const childPids = pid
+    ? processes.filter((item) => item.ppid === pid).map((item) => item.pid)
+    : [];
 
   return {
     id: agent.id,
@@ -126,6 +132,8 @@ function toProcessAgent(agent, processes) {
     endedAt: isRunning ? undefined : Date.now(),
     children: [],
     pid,
+    parentPid: processInfo?.ppid || null,
+    childPids,
     command: agent.command,
     match: agent.match,
     cwd: agent.cwd,
@@ -153,19 +161,33 @@ function discoverAgents(processes, configuredMatches, options) {
       const matcher = matchers.find((item) => item.pattern.test(processInfo.command));
       if (!matcher) return null;
 
-      return toProcessAgent(
-        {
-          id: `local-discovered-${matcher.id}-${processInfo.pid}`,
-          name: `${matcher.name} (${processInfo.pid})`,
-          command: processInfo.command,
-          match: processInfo.command,
-          discovered: true,
-          pid: processInfo.pid
-        },
-        [processInfo]
-      );
+      return {
+        id: `local-discovered-${matcher.id}-${processInfo.pid}`,
+        name: `${matcher.name} (${processInfo.pid})`,
+        command: processInfo.command,
+        match: processInfo.command,
+        discovered: true,
+        pid: processInfo.pid
+      };
     })
     .filter(Boolean);
+}
+
+function attachProcessLineage(agents) {
+  const agentByPid = new Map(agents.filter((agent) => agent.pid).map((agent) => [agent.pid, agent]));
+
+  return agents.map((agent) => {
+    const parent = agent.parentPid ? agentByPid.get(agent.parentPid) : null;
+    const children = agents
+      .filter((candidate) => candidate.parentPid === agent.pid)
+      .map((candidate) => candidate.id);
+
+    return {
+      ...agent,
+      parentId: agent.parentId || parent?.id || null,
+      children
+    };
+  });
 }
 
 function discoveryEnabled(config) {
@@ -181,7 +203,7 @@ function findMatchingProcess(agent, processes) {
 }
 
 async function listProcesses() {
-  const output = await run("ps", ["-axo", "pid=,pcpu=,rss=,lstart=,command="]);
+  const output = await run("ps", ["-axo", "pid=,ppid=,pcpu=,rss=,lstart=,command="]);
   return output
     .trim()
     .split("\n")
@@ -191,14 +213,15 @@ async function listProcesses() {
 
 function parseProcessLine(line) {
   const match = line.match(
-    /^\s*(\d+)\s+([\d.]+)\s+(\d+)\s+(\w{3})\s+(\w{3})\s+(\d{1,2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{4})\s+(.+)$/
+    /^\s*(\d+)\s+(\d+)\s+([\d.]+)\s+(\d+)\s+(\w{3})\s+(\w{3})\s+(\d{1,2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{4})\s+(.+)$/
   );
   if (!match) return null;
 
-  const [, pid, cpu, rssKb, dayName, month, day, time, year, command] = match;
+  const [, pid, ppid, cpu, rssKb, dayName, month, day, time, year, command] = match;
   const startedAt = Date.parse(`${dayName} ${month} ${day} ${time} ${year}`);
   return {
     pid: Number(pid),
+    ppid: Number(ppid),
     cpu: Number(cpu),
     memoryMb: Math.round(Number(rssKb) / 1024),
     startedAt: Number.isNaN(startedAt) ? Date.now() : startedAt,

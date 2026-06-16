@@ -299,7 +299,7 @@ function renderDetailPanel(detail) {
         <article>
           <span>Resources</span>
           <strong>${formatMemory(agent.memoryMb)}</strong>
-          <p>${agent.cpu}% CPU${agent.pid ? ` · PID ${agent.pid}` : ""}</p>
+          <p>${renderProcessLine(agent)}</p>
         </article>
         <article>
           <span>Usage</span>
@@ -378,7 +378,17 @@ function renderLineageNode(agent, agents, depth) {
 function renderResourceLine(agent) {
   const parts = [`${agent.cpu}% CPU`, formatMemory(agent.memoryMb)];
   if (agent.pid) parts.push(`PID ${agent.pid}`);
+  if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
+  if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
   if (agent.tokens) parts.push(`${agent.tokens.toLocaleString()} tokens`);
+  return parts.join(" · ");
+}
+
+function renderProcessLine(agent) {
+  const parts = [`${agent.cpu}% CPU`];
+  if (agent.pid) parts.push(`PID ${agent.pid}`);
+  if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
+  if (agent.childPids?.length) parts.push(`children ${agent.childPids.join(", ")}`);
   return parts.join(" · ");
 }
 

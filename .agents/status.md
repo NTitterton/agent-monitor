@@ -25,6 +25,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Persistent state and lifecycle history.
 - Local process provider with PID, CPU, memory, start, and signal controls.
 - Active local agent process discovery for known agent CLIs.
+- Local process PPID/child PID metadata and monitored-agent lineage linking.
 - Remote HTTP provider contract and health reporting.
 - OpenAI Responses provider for configured response IDs.
 - Anthropic Message Batches provider for configured batch IDs.

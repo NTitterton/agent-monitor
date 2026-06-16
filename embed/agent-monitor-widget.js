@@ -378,6 +378,8 @@ function formatMemory(memoryMb) {
 function formatResourceLine(agent) {
   const parts = [`${Number(agent.cpu || 0)}% CPU`, formatMemory(Number(agent.memoryMb || 0))];
   if (agent.pid) parts.push(`PID ${agent.pid}`);
+  if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
+  if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
   if (agent.tokens) parts.push(`${Number(agent.tokens).toLocaleString()} tokens`);
   return parts.join(" · ");
 }
