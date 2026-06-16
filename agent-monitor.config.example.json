@@ -36,5 +36,20 @@
         }
       ]
     }
+  ],
+  "anthropicMessageBatchesProviders": [
+    {
+      "id": "anthropic-batches",
+      "label": "Anthropic Message Batches",
+      "apiKeyEnv": "ANTHROPIC_API_KEY",
+      "batches": [
+        {
+          "id": "anthropic-batch-example",
+          "name": "Anthropic Batch",
+          "batchId": "msgbatch_replace_me",
+          "task": "Tracked Anthropic message batch"
+        }
+      ]
+    }
   ]
 }

@@ -196,6 +196,32 @@ Agent Monitor can observe configured OpenAI Responses by ID:
 
 The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response.
 
+## Track Anthropic Message Batches
+
+Agent Monitor can also observe configured Anthropic Message Batch IDs:
+
+```json
+{
+  "anthropicMessageBatchesProviders": [
+    {
+      "id": "anthropic-batches",
+      "label": "Anthropic Message Batches",
+      "apiKeyEnv": "ANTHROPIC_API_KEY",
+      "batches": [
+        {
+          "id": "anthropic-batch-example",
+          "name": "Anthropic Batch",
+          "batchId": "msgbatch_replace_me",
+          "task": "Tracked Anthropic message batch"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view.
+
 ## Current capability
 
 - Track agents from multiple provider namespaces.
@@ -206,6 +232,7 @@ The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps r
 - Persist local server state and recent action history under `data/`.
 - Optionally monitor configured local processes with PID, CPU, memory, and process signals.
 - Observe configured OpenAI Responses by response ID.
+- Observe configured Anthropic Message Batches by batch ID.
 
 ## Next backend milestones
 

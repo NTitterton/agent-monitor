@@ -26,6 +26,7 @@ graph TD
         LocalProcess["Local Process Provider<br/>ps + process signals"]
         RemoteHTTP["Remote HTTP Provider<br/>configured baseUrl"]
         OpenAIResponses["OpenAI Responses Provider<br/>configured response IDs"]
+        AnthropicBatches["Anthropic Message Batches Provider<br/>configured batch IDs"]
     end
 
     subgraph "External Agent Systems"
@@ -47,11 +48,13 @@ graph TD
     Registry --> LocalProcess
     Registry --> RemoteHTTP
     Registry --> OpenAIResponses
+    Registry --> AnthropicBatches
     LocalProcess --> LocalAgents
     SeedProviders -. planned real adapters .-> OpenAI
     SeedProviders -. planned real adapters .-> Anthropic
     RemoteHTTP --> CloudAgents
     OpenAIResponses --> OpenAI
+    AnthropicBatches --> Anthropic
 
     classDef surface fill:#f9f,stroke:#333,stroke-width:2px;
     classDef runtime fill:#DDEBFF,stroke:#2E73B8,stroke-width:2px;
@@ -61,7 +64,7 @@ graph TD
     class Desktop,Browser,ModuleWidget,StandaloneWidget surface;
     class StaticServer,API,Registry runtime;
     class StateStore,Config store;
-    class SeedProviders,LocalProcess,RemoteHTTP,OpenAIResponses provider;
+    class SeedProviders,LocalProcess,RemoteHTTP,OpenAIResponses,AnthropicBatches provider;
     class LocalAgents,OpenAI,Anthropic,CloudAgents external;
 ```
 
@@ -94,7 +97,7 @@ The system has four major layers:
 - **Surfaces:** desktop app, browser app, module widget, and standalone widget.
 - **Local API:** static file server, API router, CORS/auth handling, and JSON response helpers.
 - **Provider registry:** discovers configured providers, normalizes agent snapshots, records lifecycle history, and routes actions.
-- **Provider adapters:** seed adapters, local process adapter, remote HTTP adapter, and configured OpenAI Responses observer.
+- **Provider adapters:** seed adapters, local process adapter, remote HTTP adapter, configured OpenAI Responses observer, and configured Anthropic Message Batches observer.
 
 ## 4. Core Data Flow
 
@@ -201,7 +204,13 @@ The OpenAI Responses provider observes configured response IDs from a user's Ope
 
 This is an observer/control adapter for known response IDs, not a full account crawler. It avoids guessing at private account state that the API does not expose as an agent task list.
 
-## 10. Embed Security
+## 10. Anthropic Message Batches Provider
+
+The Anthropic Message Batches provider observes configured message batch IDs from a user's Anthropic account. It retrieves each batch, maps processing status and request counts into the normalized agent shape, and routes terminating lifecycle actions to Anthropic's cancel batch endpoint.
+
+This is also an observer/control adapter for known batch IDs, not automatic account-wide discovery.
+
+## 11. Embed Security
 
 Cross-site embeds require explicit `allowedOrigins` configuration. If `apiToken` is configured, cross-origin calls must include either:
 
@@ -210,7 +219,7 @@ Cross-site embeds require explicit `allowedOrigins` configuration. If `apiToken`
 
 Same-origin local app requests continue working without embedding secrets in `index.html`.
 
-## 11. Verification
+## 12. Verification
 
 Verification is currently handled by:
 
@@ -218,10 +227,10 @@ Verification is currently handled by:
 - `npm run smoke`: starts an isolated local server with temporary config/state and verifies static routes, API auth, CORS, lifecycle actions, per-agent detail, and persistence.
 - `npm run desktop:build`: compiles the macOS app wrapper.
 
-## 12. Known Gaps
+## 13. Known Gaps
 
 - OpenAI integration currently observes configured Responses API IDs; it does not discover all account activity automatically.
-- Anthropic account integration should use the remote HTTP provider path until a direct, well-scoped API mapping is chosen.
+- Anthropic integration currently observes configured Message Batch IDs; it does not discover all account activity automatically.
 - Desktop packaging is a local macOS app bundle, not a signed installer.
 - GitHub remote creation/push is blocked until `gh auth login -h github.com` refreshes credentials.
 - Local process control is signal-based and should grow process ownership, logs, and safer start/stop policies.

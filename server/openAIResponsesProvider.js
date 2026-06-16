@@ -29,8 +29,7 @@ export function createOpenAIResponsesProvider(config) {
 
       if (["stop", "interrupt", "end", "force-end"].includes(actionId)) {
         await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}/cancel`, {
-          method: "POST",
-          body: JSON.stringify({ metadata: prompt ? { agent_monitor_prompt: prompt } : undefined })
+          method: "POST"
         });
       }
 

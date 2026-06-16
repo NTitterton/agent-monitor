@@ -1,4 +1,5 @@
 import { lifecycleActions } from "../src/core.js";
+import { readAnthropicMessageBatchesProviders } from "./anthropicMessageBatchesProvider.js";
 import { createLocalProcessProvider, hasLocalProcessConfig } from "./localProcessProvider.js";
 import { readOpenAIResponsesProviders } from "./openAIResponsesProvider.js";
 import { readRemoteHttpProviders } from "./remoteHttpProvider.js";
@@ -102,6 +103,7 @@ export function createProviderRegistry() {
   async function listActiveProviders() {
     const configuredProviders = [
       ...(await readOpenAIResponsesProviders()),
+      ...(await readAnthropicMessageBatchesProviders()),
       ...(await readRemoteHttpProviders())
     ];
 
