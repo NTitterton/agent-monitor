@@ -145,8 +145,8 @@ try {
           id: "smoke-local",
           name: "Smoke Local",
           command: "node",
-          args: ["--version"],
-          match: "node --version",
+          args: ["-e", "setTimeout(() => {}, 60000)"],
+          match: "setTimeout(() => {}, 60000)",
           cwd: ".",
           env: ["SMOKE_LOCAL=1"]
         }
@@ -188,6 +188,25 @@ try {
   assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "config file should store remote dashboard URL");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.token === "remote-secret", "config file should store remote token");
+
+  const localStart = await request("/api/agents/smoke-local/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "start" })
+  });
+  assert(localStart.status === 200, "configured local agent start should succeed");
+  const startedLocalAgent = localStart.body.agents.find((agent) => agent.id === "smoke-local");
+  assert(startedLocalAgent?.status === "running", "configured local agent should report running after start");
+  assert(typeof startedLocalAgent?.pid === "number", "configured local agent should report pid after start");
+  assert(localStart.body.history[0]?.agentId === "smoke-local", "local start should be recorded in history");
+
+  const localForceEnd = await request("/api/agents/smoke-local/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "force-end" })
+  });
+  assert(localForceEnd.status === 200, "configured local agent force-end should succeed");
+  assert(localForceEnd.body.history[0]?.action === "force-end", "local force-end should be recorded in history");
 
   const remoteTokenPreserved = await request("/api/config", {
     method: "PUT",

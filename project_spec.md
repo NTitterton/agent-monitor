@@ -204,6 +204,13 @@ Local lifecycle controls should target the process tree that represents the agen
 
 Status: implemented for the local process provider. Smoke tests cover child-before-root PID ordering for nested process trees.
 
+End-to-end coverage:
+
+- Smoke tests configure a long-running local agent command.
+- Smoke tests start that configured local agent through `/api/agents/:id/actions`.
+- Smoke tests verify the started agent reports `running` with a PID and records history.
+- Smoke tests force-end the configured local agent and verify history.
+
 ### Transcripts
 
 Agents should expose recent conversation turns separately from operational logs.
