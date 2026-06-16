@@ -78,17 +78,48 @@ try {
         enabled: false,
         include: ["custom-agent"],
         exclude: ["noisy-agent"]
-      }
+      },
+      remoteHttpProviders: [
+        {
+          id: "smoke-remote",
+          label: "Smoke Remote",
+          source: "cloud",
+          baseUrl: `${apiBase}/missing`,
+          token: "remote-secret"
+        }
+      ]
     })
   });
   assert(updatedConfig.status === 200, "config update should succeed");
   assert(updatedConfig.body.config.allowedOrigins.includes(addedOrigin), "config update should add origin");
   assert(updatedConfig.body.config.localDiscovery.enabled === false, "config update should change discovery");
   assert(updatedConfig.body.config.localDiscovery.include[0] === "custom-agent", "config update should persist include list");
+  assert(updatedConfig.body.config.remoteHttpProviders[0]?.id === "smoke-remote", "config update should add remote provider");
+  assert(updatedConfig.body.config.remoteHttpProviders[0]?.hasToken === true, "public remote provider should report token presence");
+  assert(!("token" in updatedConfig.body.config.remoteHttpProviders[0]), "public remote provider should not expose token");
 
   const configFileAfterUpdate = JSON.parse(await readFile(configPath, "utf8"));
   assert(configFileAfterUpdate.apiToken === apiToken, "config update should preserve token");
   assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
+  assert(configFileAfterUpdate.remoteHttpProviders[0]?.token === "remote-secret", "config file should store remote token");
+
+  const remoteTokenPreserved = await request("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      remoteHttpProviders: [
+        {
+          id: "smoke-remote",
+          label: "Smoke Remote Updated",
+          source: "cloud",
+          baseUrl: `${apiBase}/missing`
+        }
+      ]
+    })
+  });
+  assert(remoteTokenPreserved.status === 200, "remote provider update should succeed");
+  const configFileAfterRemoteUpdate = JSON.parse(await readFile(configPath, "utf8"));
+  assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.token === "remote-secret", "remote token should be preserved when omitted");
 
   const updatedOriginRequest = await request("/api/agents", {
     headers: {

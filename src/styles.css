@@ -326,6 +326,19 @@ h2 {
   padding: 7px 9px;
 }
 
+.settings-form input,
+.settings-form select {
+  min-width: 0;
+  min-height: 32px;
+  border: 1px solid #cbd2dd;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 6px 8px;
+}
+
 .settings-form textarea:disabled {
   color: #9aa3af;
 }
@@ -347,6 +360,34 @@ h2 {
   flex-wrap: wrap;
   gap: 6px 10px;
   text-transform: none;
+}
+
+.remote-provider-list {
+  display: grid;
+  gap: 8px;
+}
+
+.remote-provider-list > span {
+  color: #667085;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.remote-provider-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin: 0;
+  padding: 8px;
+  border: 1px solid #e6e9ef;
+  border-radius: 6px;
+  background: #fbfcfe;
+}
+
+.remote-provider-row span {
+  color: #667085;
+  font-size: 0.76rem;
 }
 
 .source-error {

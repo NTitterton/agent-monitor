@@ -32,7 +32,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Anthropic Message Batches provider for configured batch IDs.
 - Standalone embeddable widget.
 - Trusted-origin CORS and optional API token.
-- Local settings API and app panel for trusted origins and local discovery.
+- Local settings API and app panel for trusted origins, local discovery, and remote HTTP providers.
 - Smoke test harness.
 - Lineage view and selected-agent detail panel.
 - Search/status/source filters for the agent table.

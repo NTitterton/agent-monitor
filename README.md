@@ -82,7 +82,7 @@ For cross-site embeds, add the site origins that may call the local API:
 
 Same-origin local app requests continue to work without putting the token into `index.html`.
 
-The app sidebar includes a Settings panel for trusted origins and local discovery include/exclude patterns. It writes through the local API and does not expose configured API tokens or provider credentials.
+The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, and remote HTTP providers. It writes through the local API and does not expose configured API tokens or provider credentials.
 
 Local standalone embed demo:
 
@@ -105,7 +105,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 - `GET /api/providers` returns configured provider adapters and lifecycle capabilities.
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
-- `PUT /api/config` updates trusted origins and local discovery settings while preserving existing provider credentials.
+- `PUT /api/config` updates trusted origins, local discovery settings, and remote HTTP providers while preserving existing provider credentials.
 - `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end", "prompt": "optional text" }`.
 
 Provider adapters live in `server/providerRegistry.js`. The current adapters are in-memory implementations for local, OpenAI, Anthropic, and remote cloud namespaces. Real integrations should implement the same shape:
@@ -201,6 +201,8 @@ Action requests receive:
 { "action": "interrupt", "prompt": "optional operator prompt" }
 ```
 
+Remote provider setup can be edited from the app Settings panel. Saved provider tokens are not returned by `GET /api/config`; leaving the token field blank preserves an existing token for that provider ID.
+
 The response may return `{ "agent": {...} }` or `{ "agents": [...] }`. Provider health is surfaced through `GET /api/providers`; a failing remote provider is shown in the Sources panel without breaking other providers.
 
 ## Track OpenAI Responses
@@ -262,7 +264,7 @@ The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It map
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
-- Configure trusted embed origins and local discovery from the app.
+- Configure trusted embed origins, local discovery, and remote HTTP providers from the app.
 - Persist local server state and recent action history under `data/`.
 - Persist per-agent logs for state-backed agents.
 - Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.
@@ -273,6 +275,6 @@ The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It map
 ## Next backend milestones
 
 1. Add richer per-agent transcripts.
-2. Expand first-class provider setup flows beyond trusted origins and discovery.
+2. Expand first-class provider setup flows for OpenAI and Anthropic account adapters.
 3. Package desktop app builds for easier installation.
 4. Expand provider-specific start/resume semantics where APIs expose them.

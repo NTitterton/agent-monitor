@@ -13,7 +13,7 @@ export function createAgentClient() {
     agents = nextAgents.map((agent) => ({ ...agent, children: [...agent.children] }));
     history = nextHistory.map((record) => ({ ...record }));
     providers = nextProviders.map((provider) => ({ ...provider }));
-    config = nextConfig ? { ...nextConfig, localDiscovery: { ...(nextConfig.localDiscovery || {}) } } : null;
+    config = cloneConfig(nextConfig);
     subscribers.forEach((subscriber) => subscriber(snapshot()));
   }
 
@@ -51,7 +51,7 @@ export function createAgentClient() {
       agents: list(),
       history: historyList(),
       providers: providers.map((provider) => ({ ...provider })),
-      config: config ? { ...config, localDiscovery: { ...(config.localDiscovery || {}) } } : null,
+      config: cloneConfig(config),
       mode
     };
   }
@@ -139,5 +139,17 @@ export function createAgentClient() {
         emit(localStore.list(), history);
       }
     }
+  };
+}
+
+function cloneConfig(config) {
+  if (!config) return null;
+
+  return {
+    ...config,
+    localDiscovery: { ...(config.localDiscovery || {}) },
+    remoteHttpProviders: Array.isArray(config.remoteHttpProviders)
+      ? config.remoteHttpProviders.map((provider) => ({ ...provider }))
+      : []
   };
 }

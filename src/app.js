@@ -96,7 +96,8 @@ class AgentMonitorApp extends HTMLElement {
           enabled: form.querySelector('[data-setting="localDiscoveryEnabled"]').checked,
           include: parseLines(form.querySelector('[data-setting="localDiscoveryInclude"]').value),
           exclude: parseLines(form.querySelector('[data-setting="localDiscoveryExclude"]').value)
-        }
+        },
+        remoteHttpProviders: parseRemoteProviders(form)
       };
 
       try {
@@ -241,6 +242,7 @@ function renderSourceList(agents, providers) {
 function renderSettings(config, mode = "local", message = "") {
   const discovery = config?.localDiscovery || { enabled: true, include: [], exclude: [] };
   const providerCounts = config?.providerCounts || {};
+  const remoteProviders = config?.remoteHttpProviders || [];
   return `
     <section class="settings-block">
       <div class="settings-heading">
@@ -264,6 +266,10 @@ function renderSettings(config, mode = "local", message = "") {
           <span>Discovery Exclude</span>
           <textarea data-setting="localDiscoveryExclude" rows="2" ${mode === "api" ? "" : "disabled"}>${escapeText((discovery.exclude || []).join("\n"))}</textarea>
         </label>
+        <div class="remote-provider-list">
+          <span>Remote Providers</span>
+          ${renderRemoteProviderRows(remoteProviders, mode)}
+        </div>
         <div class="settings-meta">
           <span>${providerCounts.localAgents || 0} local</span>
           <span>${providerCounts.remoteHttpProviders || 0} remote</span>
@@ -273,6 +279,27 @@ function renderSettings(config, mode = "local", message = "") {
         <button type="submit" ${mode === "api" ? "" : "disabled"}>Save Settings</button>
       </form>
     </section>
+  `;
+}
+
+function renderRemoteProviderRows(providers, mode) {
+  const rows = [...providers, { id: "", label: "", baseUrl: "", source: "cloud", hasToken: false }];
+  return rows.map((provider, index) => renderRemoteProviderRow(provider, index, mode)).join("");
+}
+
+function renderRemoteProviderRow(provider, index, mode) {
+  const disabled = mode === "api" ? "" : "disabled";
+  return `
+    <fieldset class="remote-provider-row" data-remote-row>
+      <input data-remote-field="id" value="${escapeAttribute(provider.id || "")}" ${disabled} aria-label="Remote provider ID ${index + 1}" />
+      <input data-remote-field="label" value="${escapeAttribute(provider.label || "")}" ${disabled} aria-label="Remote provider label ${index + 1}" />
+      <input data-remote-field="baseUrl" value="${escapeAttribute(provider.baseUrl || "")}" ${disabled} aria-label="Remote provider URL ${index + 1}" />
+      <select data-remote-field="source" ${disabled} aria-label="Remote provider source ${index + 1}">
+        ${["cloud", "user-account", "local"].map((source) => renderOption(source, provider.source || "cloud")).join("")}
+      </select>
+      <input data-remote-field="token" type="password" value="" ${disabled} aria-label="Remote provider token ${index + 1}" />
+      <span>${provider.hasToken ? "Token saved" : "No token"}</span>
+    </fieldset>
   `;
 }
 
@@ -506,6 +533,27 @@ function parseLines(value) {
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+function parseRemoteProviders(form) {
+  return [...form.querySelectorAll("[data-remote-row]")]
+    .map((row) => {
+      const fields = Object.fromEntries(
+        [...row.querySelectorAll("[data-remote-field]")].map((input) => [
+          input.getAttribute("data-remote-field"),
+          input.value.trim()
+        ])
+      );
+
+      return {
+        id: fields.id,
+        label: fields.label,
+        baseUrl: fields.baseUrl,
+        source: fields.source || "cloud",
+        ...(fields.token ? { token: fields.token } : {})
+      };
+    })
+    .filter((provider) => provider.id && provider.baseUrl);
 }
 
 function renderAction(agent, action) {
