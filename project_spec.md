@@ -127,6 +127,8 @@ Initial proposal:
 - Standalone widget default: 15 seconds.
 - Local process scan: on each provider snapshot request, with possible short in-memory cache if polling becomes aggressive.
 
+Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, and source-list scan freshness display.
+
 Acceptance criteria:
 
 - Settings expose snapshot refresh cadence.

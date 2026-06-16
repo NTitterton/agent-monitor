@@ -18,12 +18,36 @@ class AgentMonitorApp extends HTMLElement {
       this.config = snapshot.config;
       this.mode = snapshot.mode;
       this.selectedAgentId = this.selectedAgentId || snapshot.agents[0]?.id || null;
+      this.configurePolling(snapshot.config, snapshot.mode);
       this.render();
     });
   }
 
   disconnectedCallback() {
     this.unsubscribe?.();
+    this.clearPolling();
+  }
+
+  configurePolling(config, mode) {
+    const refresh = config?.snapshotRefresh || {};
+    const enabled = mode === "api" && refresh.enabled === true;
+    const intervalMs = Number(refresh.intervalMs || 15000);
+    const nextKey = enabled ? `${intervalMs}` : "";
+    if (this.pollingKey === nextKey) return;
+
+    this.clearPolling();
+    this.pollingKey = nextKey;
+    if (enabled) {
+      this.refreshTimer = window.setInterval(() => client.refresh(), intervalMs);
+    }
+  }
+
+  clearPolling() {
+    if (this.refreshTimer) {
+      window.clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
+    this.pollingKey = "";
   }
 
   render() {
@@ -98,6 +122,10 @@ class AgentMonitorApp extends HTMLElement {
           enabled: form.querySelector('[data-setting="localDiscoveryEnabled"]').checked,
           include: parseLines(form.querySelector('[data-setting="localDiscoveryInclude"]').value),
           exclude: parseLines(form.querySelector('[data-setting="localDiscoveryExclude"]').value)
+        },
+        snapshotRefresh: {
+          enabled: form.querySelector('[data-setting="snapshotRefreshEnabled"]').checked,
+          intervalMs: Number(form.querySelector('[data-setting="snapshotRefreshIntervalMs"]').value || 15000)
         },
         remoteHttpProviders: parseRemoteProviders(form),
         openAIResponsesProviders: parseOpenAIProviders(form),
@@ -226,7 +254,7 @@ function renderSourceList(agents, providers) {
             <strong>${labelize(source)}</strong>
             <p>${sourceAgents.length} agents, ${running} running</p>
           </div>
-          <span>${sourceAgents.map((agent) => agent.provider).filter(unique).join(", ")}</span>
+          <span>${sourceAgents.map((agent) => agent.provider).filter(unique).join(", ")} · ${formatScanFreshness(sourceAgents)}</span>
         </article>
       `;
     })
@@ -241,7 +269,7 @@ function renderSourceList(agents, providers) {
             <strong>${provider.label}</strong>
             <p>${provider.error}</p>
           </div>
-          <span>Provider error</span>
+          <span>Provider error · ${formatScanFreshness([provider])}</span>
         </article>
       `
     )
@@ -252,6 +280,7 @@ function renderSourceList(agents, providers) {
 
 function renderSettings(config, mode = "local", message = "") {
   const discovery = config?.localDiscovery || { enabled: true, include: [], exclude: [] };
+  const snapshotRefresh = config?.snapshotRefresh || { enabled: false, intervalMs: 15000 };
   const providerCounts = config?.providerCounts || {};
   const remoteProviders = config?.remoteHttpProviders || [];
   const openAIProviders = config?.openAIResponsesProviders || [];
@@ -270,6 +299,14 @@ function renderSettings(config, mode = "local", message = "") {
         <label class="toggle-row">
           <input data-setting="localDiscoveryEnabled" type="checkbox" ${discovery.enabled ? "checked" : ""} ${mode === "api" ? "" : "disabled"} />
           <span>Local Discovery</span>
+        </label>
+        <label class="toggle-row">
+          <input data-setting="snapshotRefreshEnabled" type="checkbox" ${snapshotRefresh.enabled ? "checked" : ""} ${mode === "api" ? "" : "disabled"} />
+          <span>Auto Refresh</span>
+        </label>
+        <label>
+          <span>Refresh Interval (ms)</span>
+          <input data-setting="snapshotRefreshIntervalMs" type="number" min="5000" max="300000" step="1000" value="${Number(snapshotRefresh.intervalMs || 15000)}" ${mode === "api" ? "" : "disabled"} />
         </label>
         <label>
           <span>Discovery Include</span>
@@ -740,6 +777,20 @@ function unique(value, index, values) {
 
 function formatTimestamp(value) {
   return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatScanFreshness(items) {
+  const scannedAt = Math.max(
+    0,
+    ...items
+      .map((item) => Number(item.scannedAt || 0))
+      .filter(Boolean)
+  );
+  if (!scannedAt) return "not scanned";
+  const seconds = Math.max(0, Math.round((Date.now() - scannedAt) / 1000));
+  if (seconds < 5) return "scanned now";
+  if (seconds < 60) return `scanned ${seconds}s ago`;
+  return `scanned ${Math.round(seconds / 60)}m ago`;
 }
 
 customElements.define("agent-monitor-app", AgentMonitorApp);

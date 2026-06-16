@@ -22,10 +22,15 @@ class AgentMonitorWidget extends HTMLElement {
       this.history = snapshot.history;
       this.render();
     });
+    const refreshMs = Number(this.getAttribute("refresh-ms") || 0);
+    if (refreshMs > 0) {
+      this.refreshTimer = window.setInterval(() => client.refresh(), Math.max(refreshMs, 5000));
+    }
   }
 
   disconnectedCallback() {
     this.unsubscribe?.();
+    if (this.refreshTimer) window.clearInterval(this.refreshTimer);
   }
 
   render() {

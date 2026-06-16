@@ -39,9 +39,11 @@ try {
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokens === "number"), "every agent should include numeric tokens");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokensPerSecond === "number"), "every agent should include numeric token rate");
   assert(sameOriginAgents.body.agents.every((agent) => agent.tokenCountConfidence), "every agent should include token confidence");
+  assert(sameOriginAgents.body.agents.every((agent) => typeof agent.scannedAt === "number"), "every agent should include scan timestamp");
 
   const providers = await request("/api/providers");
   assert(providers.status === 200, "provider status request should succeed");
+  assert(providers.body.providers.every((provider) => typeof provider.scannedAt === "number"), "every provider should include scan timestamp");
   assert(
     providers.body.providers.find((provider) => provider.id === "local-process")?.capabilities.includes("go-to"),
     "local process provider should expose go-to"
@@ -90,6 +92,10 @@ try {
         include: ["custom-agent"],
         exclude: ["noisy-agent"]
       },
+      snapshotRefresh: {
+        enabled: true,
+        intervalMs: 12000
+      },
       remoteHttpProviders: [
         {
           id: "smoke-remote",
@@ -104,6 +110,8 @@ try {
   assert(updatedConfig.status === 200, "config update should succeed");
   assert(updatedConfig.body.config.allowedOrigins.includes(addedOrigin), "config update should add origin");
   assert(updatedConfig.body.config.localDiscovery.enabled === false, "config update should change discovery");
+  assert(updatedConfig.body.config.snapshotRefresh.enabled === true, "config update should enable snapshot refresh");
+  assert(updatedConfig.body.config.snapshotRefresh.intervalMs === 12000, "config update should persist snapshot interval");
   assert(updatedConfig.body.config.localDiscovery.include[0] === "custom-agent", "config update should persist include list");
   assert(updatedConfig.body.config.remoteHttpProviders[0]?.id === "smoke-remote", "config update should add remote provider");
   assert(updatedConfig.body.config.remoteHttpProviders[0]?.type === "smoke-remote", "remote provider should expose type");
@@ -112,6 +120,7 @@ try {
 
   const configFileAfterUpdate = JSON.parse(await readFile(configPath, "utf8"));
   assert(configFileAfterUpdate.apiToken === apiToken, "config update should preserve token");
+  assert(configFileAfterUpdate.snapshotRefresh.intervalMs === 12000, "config file should include snapshot refresh");
   assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.token === "remote-secret", "config file should store remote token");
 

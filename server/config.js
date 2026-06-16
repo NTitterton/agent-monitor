@@ -27,6 +27,9 @@ export async function updateConfig(patch) {
     ...(Object.hasOwn(patch, "localDiscovery")
       ? { localDiscovery: normalizeLocalDiscovery(patch.localDiscovery, current.localDiscovery) }
       : {}),
+    ...(Object.hasOwn(patch, "snapshotRefresh")
+      ? { snapshotRefresh: normalizeSnapshotRefresh(patch.snapshotRefresh, current.snapshotRefresh) }
+      : {}),
     ...(Object.hasOwn(patch, "remoteHttpProviders")
       ? { remoteHttpProviders: normalizeRemoteHttpProviders(patch.remoteHttpProviders, current.remoteHttpProviders) }
       : {}),
@@ -68,6 +71,7 @@ function publicConfig(config) {
   return {
     allowedOrigins: normalizeStringList(config.allowedOrigins),
     localDiscovery: normalizeLocalDiscovery(config.localDiscovery),
+    snapshotRefresh: normalizeSnapshotRefresh(config.snapshotRefresh),
     remoteHttpProviders: publicRemoteHttpProviders(config.remoteHttpProviders),
     openAIResponsesProviders: publicOpenAIResponsesProviders(config.openAIResponsesProviders),
     anthropicMessageBatchesProviders: publicAnthropicMessageBatchesProviders(
@@ -233,6 +237,18 @@ function normalizeLocalDiscovery(value = {}, fallback = {}) {
       : fallbackSource.enabled !== false,
     include: normalizeStringList(source.include ?? fallbackSource.include),
     exclude: normalizeStringList(source.exclude ?? fallbackSource.exclude)
+  };
+}
+
+function normalizeSnapshotRefresh(value = {}, fallback = {}) {
+  const source = value && typeof value === "object" ? value : {};
+  const fallbackSource = fallback && typeof fallback === "object" ? fallback : {};
+  const intervalMs = Number(source.intervalMs ?? fallbackSource.intervalMs ?? 15000);
+  return {
+    enabled: Object.hasOwn(source, "enabled")
+      ? source.enabled === true
+      : fallbackSource.enabled === true,
+    intervalMs: Number.isFinite(intervalMs) ? Math.min(Math.max(Math.round(intervalMs), 5000), 300000) : 15000
   };
 }
 

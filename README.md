@@ -82,7 +82,7 @@ For cross-site embeds, add the site origins that may call the local API:
 
 Same-origin local app requests continue to work without putting the token into `index.html`.
 
-The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API and does not expose configured API tokens or provider credentials.
+The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API and does not expose configured API tokens or provider credentials.
 
 Local standalone embed demo:
 
@@ -101,8 +101,8 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 
 ## Local API
 
-- `GET /api/agents` returns the current agent snapshot.
-- `GET /api/providers` returns configured provider adapters and lifecycle capabilities.
+- `GET /api/agents` returns the current agent snapshot. Agents include `scannedAt` when they came from a provider snapshot.
+- `GET /api/providers` returns configured provider adapters, lifecycle capabilities, and `scannedAt` freshness metadata.
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
@@ -153,7 +153,7 @@ Agent Monitor also actively discovers known local agent CLI processes even when 
 }
 ```
 
-Discovered agents are shown with PID, PPID, child process count, and resource usage. When two monitored local agents are related by OS parent process ID, Agent Monitor links them in the lineage tree. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`. On macOS, the `Go To` action activates the likely local surface for discovered terminal, browser, or editor-backed processes.
+Discovered agents are shown with PID, PPID, child process count, scan freshness, and resource usage. When two monitored local agents are related by OS parent process ID, Agent Monitor links them in the lineage tree. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`. On macOS, the `Go To` action activates the likely local surface for discovered terminal, browser, or editor-backed processes.
 
 ## Connect remote HTTP providers
 
@@ -272,6 +272,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
 - Configure trusted embed origins, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
+- Configure optional browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.
 - Persist local server state and recent action history under `data/`.
 - Persist per-agent logs for state-backed agents.
 - Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.

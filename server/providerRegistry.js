@@ -120,7 +120,7 @@ export function createProviderRegistry() {
   async function listProviderStatus() {
     const activeProviders = await listActiveProviders();
     const results = await Promise.all(activeProviders.map((provider) => safeListAgents(provider)));
-    return results.map(({ provider, agents, error }) => ({
+    return results.map(({ provider, agents, scannedAt, error }) => ({
       id: provider.id,
       label: provider.label,
       source: provider.source,
@@ -128,15 +128,23 @@ export function createProviderRegistry() {
       capabilities: provider.capabilities,
       status: error ? "error" : "ok",
       agentCount: agents.length,
+      scannedAt,
       error: error?.message || null
     }));
   }
 
   async function safeListAgents(provider) {
+    const scannedAt = Date.now();
     try {
-      return { provider, agents: await provider.listAgents(), error: null };
+      const agents = await provider.listAgents();
+      return {
+        provider,
+        agents: agents.map((agent) => ({ scannedAt, ...agent, scannedAt: agent.scannedAt || scannedAt })),
+        scannedAt,
+        error: null
+      };
     } catch (error) {
-      return { provider, agents: [], error };
+      return { provider, agents: [], scannedAt, error };
     }
   }
 
