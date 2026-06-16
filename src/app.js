@@ -10,8 +10,10 @@ const client = createAgentClient();
 
 class AgentMonitorApp extends HTMLElement {
   connectedCallback() {
-    this.unsubscribe = client.subscribe((agents) => {
-      this.agents = agents;
+    this.unsubscribe = client.subscribe((snapshot) => {
+      this.agents = snapshot.agents;
+      this.history = snapshot.history;
+      this.mode = snapshot.mode;
       this.render();
     });
   }
@@ -25,6 +27,7 @@ class AgentMonitorApp extends HTMLElement {
     const running = agents.filter((agent) => agent.status === "running").length;
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
     const spend = agents.reduce((total, agent) => total + agent.costUsd, 0);
+    const history = this.history || [];
 
     this.innerHTML = `
       <main class="app-shell">
@@ -57,6 +60,7 @@ class AgentMonitorApp extends HTMLElement {
           <aside class="panel sources-panel">
             <h2>Sources</h2>
             ${renderSourceList(agents)}
+            ${renderHistory(history, this.mode)}
           </aside>
           <section class="panel agent-panel">
             <div class="panel-heading">
@@ -87,6 +91,35 @@ class AgentMonitorApp extends HTMLElement {
       });
     });
   }
+}
+
+function renderHistory(history, mode = "local") {
+  if (!history.length) {
+    return `
+      <section class="history-block">
+        <h2>Action History</h2>
+        <p class="empty-history">${mode === "api" ? "No actions recorded yet." : "History is stored when the local API is running."}</p>
+      </section>
+    `;
+  }
+
+  return `
+    <section class="history-block">
+      <h2>Action History</h2>
+      ${history
+        .slice(0, 8)
+        .map(
+          (record) => `
+            <article class="history-row">
+              <strong>${record.label}</strong>
+              <p>${record.agentName} · ${formatTimestamp(record.at)}</p>
+              ${record.prompt ? `<p class="prompt-text">${record.prompt}</p>` : ""}
+            </article>
+          `
+        )
+        .join("")}
+    </section>
+  `;
 }
 
 function renderSourceList(agents) {
@@ -180,6 +213,10 @@ function labelize(value) {
 
 function unique(value, index, values) {
   return values.indexOf(value) === index;
+}
+
+function formatTimestamp(value) {
+  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 customElements.define("agent-monitor-app", AgentMonitorApp);

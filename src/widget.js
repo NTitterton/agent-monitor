@@ -16,8 +16,9 @@ class AgentMonitorWidget extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribe = client.subscribe((agents) => {
-      this.agents = agents;
+    this.unsubscribe = client.subscribe((snapshot) => {
+      this.agents = snapshot.agents;
+      this.history = snapshot.history;
       this.render();
     });
   }
@@ -43,6 +44,7 @@ class AgentMonitorWidget extends HTMLElement {
         <div class="list">
           ${agents.map(renderWidgetAgent).join("")}
         </div>
+        ${renderWidgetHistory(this.history || [])}
       </section>
     `;
 
@@ -56,6 +58,18 @@ class AgentMonitorWidget extends HTMLElement {
       });
     });
   }
+}
+
+function renderWidgetHistory(history) {
+  if (!history.length) return "";
+
+  const latest = history[0];
+  return `
+    <footer>
+      <strong>${latest.label}</strong>
+      <span>${latest.agentName}</span>
+    </footer>
+  `;
 }
 
 function renderWidgetAgent(agent) {

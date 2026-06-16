@@ -1,14 +1,16 @@
-import { createAgentStore, lifecycleActions } from "./core.js";
+import { createActionRecord, createAgentStore, lifecycleActions } from "./core.js";
 
 export function createAgentClient() {
   const localStore = createAgentStore();
   const subscribers = new Set();
   let agents = localStore.list();
+  let history = [];
   let mode = "local";
 
-  function emit(nextAgents) {
+  function emit(nextAgents, nextHistory = history) {
     agents = nextAgents.map((agent) => ({ ...agent, children: [...agent.children] }));
-    subscribers.forEach((subscriber) => subscriber(list()));
+    history = nextHistory.map((record) => ({ ...record }));
+    subscribers.forEach((subscriber) => subscriber(snapshot()));
   }
 
   async function refresh() {
@@ -17,7 +19,7 @@ export function createAgentClient() {
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const payload = await response.json();
       mode = "api";
-      emit(payload.agents);
+      emit(payload.agents, payload.history || []);
     } catch {
       mode = "local";
       emit(localStore.list());
@@ -32,14 +34,27 @@ export function createAgentClient() {
     return agents.map((agent) => ({ ...agent, children: [...agent.children] }));
   }
 
+  function historyList() {
+    return history.map((record) => ({ ...record }));
+  }
+
+  function snapshot() {
+    return {
+      agents: list(),
+      history: historyList(),
+      mode
+    };
+  }
+
   return {
     list,
+    history: historyList,
     mode() {
       return mode;
     },
     subscribe(subscriber) {
       subscribers.add(subscriber);
-      subscriber(list());
+      subscriber(snapshot());
       void refresh();
       return () => subscribers.delete(subscriber);
     },
@@ -62,14 +77,19 @@ export function createAgentClient() {
           });
           if (!response.ok) throw new Error(`API returned ${response.status}`);
           const payload = await response.json();
-          emit(payload.agents);
+          emit(payload.agents, payload.history || history);
           return;
         } catch {
           mode = "local";
         }
       }
 
+      const agent = agents.find((item) => item.id === agentId);
       localStore.perform(agentId, actionId, prompt);
+      if (agent) {
+        history = [createActionRecord(agent, actionId, prompt), ...history].filter(Boolean).slice(0, 25);
+        emit(localStore.list(), history);
+      }
     }
   };
 }

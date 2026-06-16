@@ -45,6 +45,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 
 - `GET /api/agents` returns the current agent snapshot.
 - `GET /api/providers` returns configured provider adapters and lifecycle capabilities.
+- `GET /api/history` returns recent lifecycle actions.
 - `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end", "prompt": "optional text" }`.
 
 Provider adapters live in `server/providerRegistry.js`. The current adapters are in-memory implementations for local, OpenAI, Anthropic, and remote cloud namespaces. Real integrations should implement the same shape:
@@ -67,10 +68,11 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
+- Persist local server state and recent action history under `data/`.
 
 ## Next backend milestones
 
 1. Replace in-memory adapters with real local process/resource inspection.
 2. Add authenticated OpenAI, Anthropic, and remote cloud provider adapters.
-3. Persist action history and agent snapshots.
+3. Add richer per-agent logs, process metadata, and provider health checks.
 4. Add GitHub repository remote once `gh auth login -h github.com` has refreshed credentials.

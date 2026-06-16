@@ -91,38 +91,51 @@ export function createAgentStore(seedAgents = initialAgents) {
       return () => subscribers.delete(subscriber);
     },
     perform(agentId, actionId, prompt = "") {
-      const action = lifecycleActions.find((item) => item.id === actionId);
-      if (!action) return;
-
       agents = agents.map((agent) => {
         if (agent.id !== agentId) return agent;
-
-        const changed = {
-          ...agent,
-          status: action.nextStatus,
-          lastAction: {
-            id: action.id,
-            label: action.label,
-            prompt: prompt.trim(),
-            at: Date.now()
-          }
-        };
-
-        if (action.nextStatus === "running" && !changed.startedAt) {
-          changed.startedAt = Date.now();
-        }
-
-        if (action.nextStatus === "ended") {
-          changed.cpu = 0;
-          changed.memoryMb = 0;
-          changed.endedAt = Date.now();
-        }
-
-        return changed;
+        return applyLifecycleAction(agent, actionId, prompt);
       });
 
       emit();
     }
+  };
+}
+
+export function applyLifecycleAction(agent, actionId, prompt = "", at = Date.now()) {
+  const action = lifecycleActions.find((item) => item.id === actionId);
+  if (!action) return agent;
+
+  const changed = {
+    ...agent,
+    status: action.nextStatus,
+    lastAction: createActionRecord(agent, actionId, prompt, at)
+  };
+
+  if (action.nextStatus === "running" && !changed.startedAt) {
+    changed.startedAt = at;
+  }
+
+  if (action.nextStatus === "ended") {
+    changed.cpu = 0;
+    changed.memoryMb = 0;
+    changed.endedAt = at;
+  }
+
+  return changed;
+}
+
+export function createActionRecord(agent, actionId, prompt = "", at = Date.now()) {
+  const action = lifecycleActions.find((item) => item.id === actionId);
+  if (!action) return null;
+
+  return {
+    id: `${agent.id}-${action.id}-${at}`,
+    agentId: agent.id,
+    agentName: agent.name,
+    action: action.id,
+    label: action.label,
+    prompt: prompt.trim(),
+    at
   };
 }
 

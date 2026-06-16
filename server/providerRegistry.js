@@ -1,49 +1,48 @@
-import { createAgentStore, initialAgents, lifecycleActions } from "../src/core.js";
+import { lifecycleActions } from "../src/core.js";
+import { createStateStore } from "./stateStore.js";
 
-function createMemoryProvider({ id, label, source, agentIds }) {
-  const seedAgents = initialAgents.filter((agent) => agentIds.includes(agent.id));
-  const store = createAgentStore(seedAgents);
-
+function createStateProvider({ id, label, source, stateStore }) {
   return {
     id,
     label,
     source,
     capabilities: ["list", ...lifecycleActions.map((action) => action.id)],
     async listAgents() {
-      return store.list();
+      return stateStore.listAgents(id);
     },
     async performAction(agentId, actionId, prompt = "") {
-      store.perform(agentId, actionId, prompt);
-      return store.list().find((agent) => agent.id === agentId) || null;
+      const agents = await stateStore.performAction(agentId, actionId, prompt);
+      return agents?.find((agent) => agent.id === agentId) || null;
     }
   };
 }
 
 export function createProviderRegistry() {
+  const stateStore = createStateStore();
   const providers = [
-    createMemoryProvider({
+    createStateProvider({
       id: "local",
       label: "Local agents",
       source: "local",
-      agentIds: ["local-codex-1"]
+      stateStore
     }),
-    createMemoryProvider({
+    createStateProvider({
       id: "openai",
       label: "OpenAI account",
       source: "user-account",
-      agentIds: ["openai-research-2"]
+      stateStore
     }),
-    createMemoryProvider({
+    createStateProvider({
       id: "anthropic",
       label: "Anthropic account",
       source: "user-account",
-      agentIds: ["anthropic-review-1"]
+      stateStore
     }),
-    createMemoryProvider({
+    createStateProvider({
       id: "remote",
       label: "Remote cloud agents",
       source: "cloud",
-      agentIds: ["remote-build-7"]
+      stateStore
     })
   ];
 
@@ -57,7 +56,10 @@ export function createProviderRegistry() {
       const agents = await provider.listAgents();
       if (agents.some((agent) => agent.id === agentId)) {
         await provider.performAction(agentId, actionId, prompt);
-        return listAgents();
+        return {
+          agents: await listAgents(),
+          history: await stateStore.listHistory()
+        };
       }
     }
 
@@ -72,6 +74,7 @@ export function createProviderRegistry() {
       capabilities
     })),
     listAgents,
+    listHistory: stateStore.listHistory,
     performAction
   };
 }

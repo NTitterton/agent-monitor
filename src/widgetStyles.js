@@ -55,6 +55,22 @@ export default `
     border-top: 1px solid #e6e9ef;
   }
 
+  footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid #e6e9ef;
+    background: #f7f9fc;
+    color: #5d687a;
+    font-size: 0.8rem;
+  }
+
+  footer strong {
+    color: #172033;
+  }
+
   .agent-line {
     display: flex;
     align-items: flex-start;

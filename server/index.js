@@ -21,7 +21,14 @@ const server = createServer(async (request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
 
     if (url.pathname === "/api/agents" && request.method === "GET") {
-      return sendJson(response, { agents: await registry.listAgents() });
+      return sendJson(response, {
+        agents: await registry.listAgents(),
+        history: await registry.listHistory()
+      });
+    }
+
+    if (url.pathname === "/api/history" && request.method === "GET") {
+      return sendJson(response, { history: await registry.listHistory() });
     }
 
     if (url.pathname === "/api/providers" && request.method === "GET") {
@@ -31,14 +38,14 @@ const server = createServer(async (request, response) => {
     const actionMatch = url.pathname.match(/^\/api\/agents\/([^/]+)\/actions$/);
     if (actionMatch && request.method === "POST") {
       const body = await readJson(request);
-      const agents = await registry.performAction(
+      const result = await registry.performAction(
         decodeURIComponent(actionMatch[1]),
         body.action,
         body.prompt || ""
       );
 
-      if (!agents) return sendJson(response, { error: "Agent not found" }, 404);
-      return sendJson(response, { agents });
+      if (!result) return sendJson(response, { error: "Agent not found" }, 404);
+      return sendJson(response, result);
     }
 
     if (url.pathname.startsWith("/api/")) {
