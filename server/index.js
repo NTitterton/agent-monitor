@@ -48,6 +48,13 @@ const server = createServer(async (request, response) => {
       return sendJson(request, response, { providers: await registry.providers() });
     }
 
+    const providerTestMatch = url.pathname.match(/^\/api\/providers\/([^/]+)\/test$/);
+    if (providerTestMatch && request.method === "POST") {
+      const result = await registry.testProvider(decodeURIComponent(providerTestMatch[1]));
+      if (!result) return sendJson(request, response, { error: "Provider not found" }, 404);
+      return sendJson(request, response, { provider: result });
+    }
+
     if (url.pathname === "/api/config" && request.method === "GET") {
       return sendJson(request, response, { config: await readPublicConfig() });
     }

@@ -103,6 +103,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 
 - `GET /api/agents` returns the current agent snapshot. Agents include `scannedAt` when they came from a provider snapshot.
 - `GET /api/providers` returns configured provider adapters, lifecycle capabilities, and `scannedAt` freshness metadata.
+- `POST /api/providers/:id/test` runs one provider snapshot check and returns that provider's health.
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
@@ -273,6 +274,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Use a local API when available, with static fallback for hosted embeds.
 - Configure trusted embed origins, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
 - Configure optional browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.
+- Test configured provider connections from the Sources panel.
 - Persist local server state and recent action history under `data/`.
 - Persist per-agent logs for state-backed agents.
 - Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.

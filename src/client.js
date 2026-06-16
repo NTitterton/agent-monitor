@@ -88,6 +88,18 @@ export function createAgentClient() {
       await refresh();
       return payload.config;
     },
+    async testProvider(providerId) {
+      if (mode !== "api") return null;
+
+      const response = await fetch(`/api/providers/${encodeURIComponent(providerId)}/test`, {
+        method: "POST",
+        headers: { Accept: "application/json" }
+      });
+      if (!response.ok) throw new Error(`API returned ${response.status}`);
+      const payload = await response.json();
+      await refresh();
+      return payload.provider;
+    },
     async detail(agentId) {
       if (mode === "api") {
         const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}`, {

@@ -159,6 +159,8 @@ Acceptance criteria:
 - `PUT /api/config` can update provider setup while preserving omitted secrets.
 - Smoke tests prove token/API-key hiding and preservation for remote HTTP, OpenAI, and Anthropic setup.
 
+Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons.
+
 ## Data Model Draft
 
 ```json

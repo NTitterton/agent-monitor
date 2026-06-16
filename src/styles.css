@@ -275,6 +275,12 @@ h2 {
   font-size: 0.82rem;
 }
 
+.source-message {
+  color: #344054;
+  font-size: 0.82rem;
+  padding: 0 20px 12px;
+}
+
 .settings-block {
   border-top: 1px solid #e6e9ef;
   padding: 18px 20px;

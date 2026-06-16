@@ -49,6 +49,11 @@ try {
     "local process provider should expose go-to"
   );
 
+  const providerTest = await request("/api/providers/local-process/test", { method: "POST" });
+  assert(providerTest.status === 200, "provider connection test should succeed");
+  assert(providerTest.body.provider.id === "local-process", "provider connection test should return provider status");
+  assert(providerTest.body.provider.status === "ok", "local process provider test should be ok");
+
   const unauthorized = await request("/api/agents", {
     headers: { Origin: allowedOrigin }
   });

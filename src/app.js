@@ -92,7 +92,7 @@ class AgentMonitorApp extends HTMLElement {
         <section class="workspace">
           <aside class="panel sources-panel">
             <h2>Sources</h2>
-            ${renderSourceList(agents, this.providers || [])}
+            ${renderSourceList(agents, this.providers || [], this.providerTestMessage)}
             ${renderSettings(this.config, this.mode, this.settingsMessage)}
             ${renderLineageTree(agents)}
             ${renderHistory(history, this.mode)}
@@ -113,6 +113,20 @@ class AgentMonitorApp extends HTMLElement {
     `;
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
+    this.querySelectorAll("[data-test-provider]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const providerId = button.getAttribute("data-test-provider");
+        try {
+          const provider = await client.testProvider(providerId);
+          this.providerTestMessage = provider
+            ? `${provider.label}: ${provider.status}${provider.error ? ` (${provider.error})` : ""}`
+            : "Provider unavailable";
+        } catch {
+          this.providerTestMessage = "Provider test failed";
+        }
+        this.render();
+      });
+    });
     this.querySelector(".settings-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -237,7 +251,7 @@ function renderHistory(history, mode = "local") {
   `;
 }
 
-function renderSourceList(agents, providers) {
+function renderSourceList(agents, providers, message = "") {
   const bySource = agents.reduce((groups, agent) => {
     const sourceAgents = groups.get(agent.source) || [];
     sourceAgents.push(agent);
@@ -261,21 +275,21 @@ function renderSourceList(agents, providers) {
     .join("");
 
   const providerRows = providers
-    .filter((provider) => provider.status === "error")
     .map(
       (provider) => `
-        <article class="source-row source-error">
+        <article class="source-row ${provider.status === "error" ? "source-error" : ""}">
           <div>
             <strong>${provider.label}</strong>
-            <p>${provider.error}</p>
+            <p>${provider.status === "error" ? provider.error : `${provider.agentCount} agents`}</p>
           </div>
-          <span>Provider error · ${formatScanFreshness([provider])}</span>
+          <span>${labelize(provider.status)} · ${formatScanFreshness([provider])}</span>
+          <button class="icon-button" type="button" title="Test provider connection" data-test-provider="${escapeAttribute(provider.id)}">✓</button>
         </article>
       `
     )
     .join("");
 
-  return `${sourceRows}${providerRows}`;
+  return `${message ? `<p class="source-message">${escapeText(message)}</p>` : ""}${sourceRows}${providerRows}`;
 }
 
 function renderSettings(config, mode = "local", message = "") {
