@@ -46,6 +46,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - URL-backed `Go To` targets for remote/account agents through `goToTarget` and `goToKind`.
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
 - Provider connection test endpoint and Sources-panel test buttons.
+- Provider-specific action capabilities so OpenAI/Anthropic tracked objects do not expose unsupported `start` actions.
 - Non-blocking setup validation warnings from `/api/config` and Settings panel display.
 - GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.
 

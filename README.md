@@ -130,6 +130,8 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 }
 ```
 
+Agent-level `capabilities` should only include actions the provider can actually perform. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
+
 ## Monitor local processes
 
 Copy `agent-monitor.config.example.json` to `agent-monitor.config.json` and add local commands to monitor:
@@ -259,7 +261,7 @@ Agent Monitor can observe configured OpenAI Responses by ID:
 }
 ```
 
-The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response.
+The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response. Already-created Responses do not expose a provider-backed `start` action.
 
 OpenAI Responses setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked response rows accept `id | name | responseId | task | goToUrl`; the URL is optional.
 
@@ -287,7 +289,7 @@ Agent Monitor can also observe configured Anthropic Message Batch IDs:
 }
 ```
 
-The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view.
+The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view. Already-created Message Batches do not expose a provider-backed `start` action.
 
 Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked batch rows accept `id | name | batchId | task | goToUrl`; the URL is optional.
 
@@ -312,4 +314,4 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 
 ## Next backend milestones
 
-1. Expand provider-specific start/resume semantics where APIs expose them.
+1. Add real provider-specific start/resume creation flows where APIs expose them.

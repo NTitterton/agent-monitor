@@ -171,6 +171,16 @@ Acceptance criteria:
 
 Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons. Config saves also return validation warnings for malformed provider/local-agent setup, and the Settings panel displays them.
 
+### Provider Action Semantics
+
+Agent-level capabilities should describe actions the active provider can truly perform.
+
+- Configured local agents can expose `start` because Agent Monitor can spawn their configured command.
+- Remote HTTP agents can expose `start` or future resume-like controls when the remote API advertises those capabilities.
+- OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions for tracked objects, plus optional `go-to` links, but do not expose `start` for already-created work.
+
+Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions.
+
 ### Transcripts
 
 Agents should expose recent conversation turns separately from operational logs.

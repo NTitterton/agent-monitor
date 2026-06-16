@@ -1,7 +1,7 @@
-import { lifecycleActions } from "../src/core.js";
 import { readConfig } from "./config.js";
 
 const baseUrl = "https://api.openai.com/v1";
+const cancelActions = ["stop", "interrupt", "end", "force-end"];
 
 export function createOpenAIResponsesProvider(config) {
   return {
@@ -10,7 +10,7 @@ export function createOpenAIResponsesProvider(config) {
     source: "user-account",
     type: "openai",
     recordsHistory: false,
-    capabilities: ["list", "stop", "interrupt", "end", "force-end"],
+    capabilities: ["list", ...cancelActions],
     async listAgents() {
       const responseConfigs = config.responses || [];
       const responses = await Promise.all(
@@ -28,11 +28,11 @@ export function createOpenAIResponsesProvider(config) {
       const responseConfig = (config.responses || []).find((item) => item.id === agentId);
       if (!responseConfig) return null;
 
-      if (["stop", "interrupt", "end", "force-end"].includes(actionId)) {
-        await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}/cancel`, {
-          method: "POST"
-        });
-      }
+      if (!cancelActions.includes(actionId)) return null;
+
+      await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}/cancel`, {
+        method: "POST"
+      });
 
       const response = await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}`, {
         method: "GET"
@@ -159,7 +159,7 @@ function extractTextParts(item) {
 }
 
 function normalizeCapabilities(goToTarget) {
-  const values = lifecycleActions.map((action) => action.id);
+  const values = [...cancelActions];
   return goToTarget ? [...values, "go-to"] : values;
 }
 

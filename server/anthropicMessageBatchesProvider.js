@@ -1,8 +1,8 @@
-import { lifecycleActions } from "../src/core.js";
 import { readConfig } from "./config.js";
 
 const baseUrl = "https://api.anthropic.com/v1";
 const anthropicVersion = "2023-06-01";
+const cancelActions = ["stop", "interrupt", "end", "force-end"];
 
 export function createAnthropicMessageBatchesProvider(config) {
   return {
@@ -11,7 +11,7 @@ export function createAnthropicMessageBatchesProvider(config) {
     source: "user-account",
     type: "anthropic",
     recordsHistory: false,
-    capabilities: ["list", "stop", "interrupt", "end", "force-end"],
+    capabilities: ["list", ...cancelActions],
     async listAgents() {
       const batchConfigs = config.batches || [];
       return Promise.all(
@@ -27,11 +27,11 @@ export function createAnthropicMessageBatchesProvider(config) {
       const batchConfig = (config.batches || []).find((item) => item.id === agentId);
       if (!batchConfig) return null;
 
-      if (["stop", "interrupt", "end", "force-end"].includes(actionId)) {
-        await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}/cancel`, {
-          method: "POST"
-        });
-      }
+      if (!cancelActions.includes(actionId)) return null;
+
+      await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}/cancel`, {
+        method: "POST"
+      });
 
       const batch = await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}`, {
         method: "GET"
@@ -136,7 +136,7 @@ function normalizeBatch(batch, providerConfig, batchConfig) {
 }
 
 function normalizeCapabilities(goToTarget) {
-  const values = lifecycleActions.map((action) => action.id);
+  const values = [...cancelActions];
   return goToTarget ? [...values, "go-to"] : values;
 }
 

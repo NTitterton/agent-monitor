@@ -2,6 +2,8 @@ import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
+import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider.js";
+import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
 
 const port = 5199;
 const apiBase = `http://127.0.0.1:${port}`;
@@ -367,9 +369,81 @@ try {
   assert(preservedAccountConfigFile.openAIResponsesProviders[0]?.apiKey === "openai-secret", "OpenAI API key should be preserved when omitted");
   assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be preserved when omitted");
 
+  await assertAccountProviderCapabilities();
+
   console.log("Smoke test passed");
 } finally {
   await stopServer(server);
+}
+
+async function assertAccountProviderCapabilities() {
+  const originalFetch = globalThis.fetch;
+  const fetchCalls = [];
+
+  globalThis.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url: String(url), method: options.method || "GET" });
+
+    if (String(url).includes("/responses/resp_smoke")) {
+      return jsonResponse({
+        id: "resp_smoke",
+        status: "in_progress",
+        model: "gpt-smoke",
+        created_at: Math.floor(Date.now() / 1000),
+        usage: { input_tokens: 10, output_tokens: 5 },
+        output: []
+      });
+    }
+
+    if (String(url).includes("/messages/batches/msgbatch_smoke")) {
+      return jsonResponse({
+        id: "msgbatch_smoke",
+        processing_status: "in_progress",
+        created_at: new Date().toISOString(),
+        request_counts: { processing: 1, succeeded: 0, errored: 0, canceled: 0, expired: 0 }
+      });
+    }
+
+    return jsonResponse({ error: "unexpected smoke URL" }, 404);
+  };
+
+  try {
+    const openAIProvider = createOpenAIResponsesProvider({
+      id: "mock-openai",
+      apiKey: "test",
+      responses: [{ id: "mock-response", responseId: "resp_smoke", goToTarget: "https://platform.openai.com/responses/resp_smoke" }]
+    });
+    const [openAIAgent] = await openAIProvider.listAgents();
+    assert(openAIAgent.capabilities.includes("stop"), "OpenAI response should expose cancel-style actions");
+    assert(openAIAgent.capabilities.includes("go-to"), "OpenAI response should expose configured go-to URL");
+    assert(!openAIAgent.capabilities.includes("start"), "OpenAI response should not expose unsupported start action");
+    const unsupportedOpenAIStart = await openAIProvider.performAction("mock-response", "start");
+    assert(unsupportedOpenAIStart === null, "OpenAI response start should be unsupported");
+
+    const anthropicProvider = createAnthropicMessageBatchesProvider({
+      id: "mock-anthropic",
+      apiKey: "test",
+      batches: [{ id: "mock-batch", batchId: "msgbatch_smoke", goToTarget: "https://console.anthropic.com/batches/msgbatch_smoke" }]
+    });
+    const [anthropicAgent] = await anthropicProvider.listAgents();
+    assert(anthropicAgent.capabilities.includes("stop"), "Anthropic batch should expose cancel-style actions");
+    assert(anthropicAgent.capabilities.includes("go-to"), "Anthropic batch should expose configured go-to URL");
+    assert(!anthropicAgent.capabilities.includes("start"), "Anthropic batch should not expose unsupported start action");
+    const unsupportedAnthropicStart = await anthropicProvider.performAction("mock-batch", "start");
+    assert(unsupportedAnthropicStart === null, "Anthropic batch start should be unsupported");
+    assert(
+      fetchCalls.every((call) => !call.url.includes("/cancel") || call.method === "POST"),
+      "cancel endpoints should only be called through explicit cancel-style actions"
+    );
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" }
+  });
 }
 
 async function startServer() {
