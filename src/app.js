@@ -668,6 +668,9 @@ function renderLineageNode(agent, agents, depth) {
 
 function renderResourceLine(agent) {
   const parts = [`${agent.cpu}% CPU`, formatMemory(agent.memoryMb)];
+  if (agent.childCpu || agent.childMemoryMb) {
+    parts.push(`children ${Number(agent.childCpu || 0)}% / ${formatMemory(Number(agent.childMemoryMb || 0))}`);
+  }
   if (agent.pid) parts.push(`PID ${agent.pid}`);
   if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
@@ -691,6 +694,12 @@ function renderTokenUsageLine(agent) {
 
 function renderProcessLine(agent) {
   const parts = [`${agent.cpu}% CPU`];
+  if (agent.processCpu || agent.processMemoryMb) {
+    parts.push(`own ${Number(agent.processCpu || 0)}% / ${formatMemory(Number(agent.processMemoryMb || 0))}`);
+  }
+  if (agent.childCpu || agent.childMemoryMb) {
+    parts.push(`children ${Number(agent.childCpu || 0)}% / ${formatMemory(Number(agent.childMemoryMb || 0))}`);
+  }
   if (agent.pid) parts.push(`PID ${agent.pid}`);
   if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
   if (agent.childPids?.length) parts.push(`children ${agent.childPids.join(", ")}`);

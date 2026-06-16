@@ -153,7 +153,7 @@ Copy `agent-monitor.config.example.json` to `agent-monitor.config.json` and add 
 }
 ```
 
-When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, parent PID, child PIDs, CPU, memory, command, and start time from `ps`. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
+When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, parent PID, descendant child PIDs, CPU, memory, command, and start time from `ps`. `cpu` and `memoryMb` include the matched process plus descendant child processes; `processCpu`/`processMemoryMb` and `childCpu`/`childMemoryMb` expose the breakdown. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
 
 Agent Monitor also actively discovers known local agent CLI processes even when they are not listed in `localAgents`. Discovery is enabled by default and currently looks for common agent tools such as Codex, Claude, Gemini, Aider, Goose, OpenCode, Cursor Agent, and Amp.
 
@@ -194,7 +194,7 @@ Agent Monitor calls:
 - `GET {baseUrl}/agents`
 - `POST {baseUrl}/agents/:id/actions`
 
-`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`.
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `cpu`, `memoryMb`, `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`.
 
 Use `tokenCountConfidence` to distinguish provider-reported totals from rough or unknown counts. Accepted values are `observed`, `estimated`, `reported`, and `unknown`.
 
@@ -310,7 +310,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Test configured provider connections from the Sources panel.
 - Persist local server state and recent action history under `data/`.
 - Persist per-agent logs and transcripts for state-backed agents.
-- Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.
+- Optionally monitor configured local processes with PID, PPID, descendant child PIDs, aggregate/own/child CPU and memory, and process signals.
 - Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.
 - Observe configured Anthropic Message Batches by batch ID.

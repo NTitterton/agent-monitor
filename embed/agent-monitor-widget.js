@@ -434,6 +434,9 @@ function isUrlGoTo(agent) {
 
 function formatResourceLine(agent) {
   const parts = [`${Number(agent.cpu || 0)}% CPU`, formatMemory(Number(agent.memoryMb || 0))];
+  if (agent.childCpu || agent.childMemoryMb) {
+    parts.push(`children ${Number(agent.childCpu || 0)}% / ${formatMemory(Number(agent.childMemoryMb || 0))}`);
+  }
   if (agent.pid) parts.push(`PID ${agent.pid}`);
   if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);

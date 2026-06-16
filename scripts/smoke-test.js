@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider.js";
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
+import { summarizeProcessResources } from "../server/localProcessProvider.js";
 
 const port = 5199;
 const apiBase = `http://127.0.0.1:${port}`;
@@ -402,10 +403,27 @@ try {
   assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be preserved when omitted");
 
   await assertAccountProviderCapabilities();
+  assertProcessResourceAggregation();
 
   console.log("Smoke test passed");
 } finally {
   await stopServer(server);
+}
+
+function assertProcessResourceAggregation() {
+  const resources = summarizeProcessResources(
+    { cpu: 2.25, memoryMb: 100 },
+    [
+      { cpu: 3.15, memoryMb: 25 },
+      { cpu: 0.44, memoryMb: 10 }
+    ]
+  );
+  assert(resources.cpu === 5.9, "aggregate local CPU should include child processes");
+  assert(resources.memoryMb === 135, "aggregate local memory should include child processes");
+  assert(resources.processCpu === 2.3, "local process own CPU should be rounded");
+  assert(resources.childCpu === 3.6, "local child CPU should be rounded");
+  assert(resources.processMemoryMb === 100, "local process memory should be preserved");
+  assert(resources.childMemoryMb === 35, "local child memory should be summed");
 }
 
 async function assertAccountProviderCapabilities() {

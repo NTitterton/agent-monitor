@@ -183,6 +183,17 @@ Agent-level capabilities should describe actions the active provider can truly p
 
 Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions.
 
+### Local Process Resource Accounting
+
+Local process resources should represent the work owned by the agent, not only the wrapper process.
+
+- `cpu` and `memoryMb` are aggregate values for the matched process plus descendants.
+- `processCpu` and `processMemoryMb` represent the matched process only.
+- `childCpu` and `childMemoryMb` represent descendant child processes.
+- `childPids` includes descendant process IDs, not only direct children.
+
+Status: implemented for the local process provider and rendered in the app, module widget, and standalone widget. Smoke tests cover aggregate own/child resource accounting.
+
 ### Transcripts
 
 Agents should expose recent conversation turns separately from operational logs.
@@ -204,6 +215,10 @@ Status: implemented for state-backed agents, remote HTTP provider payloads, and 
   "tokensPerSecond": 12.4,
   "tokenRateWindowMs": 15000,
   "tokenCountConfidence": "observed",
+  "processCpu": 4.2,
+  "processMemoryMb": 188,
+  "childCpu": 8.2,
+  "childMemoryMb": 624,
   "goToKind": "terminal",
   "goToTarget": "pid:12345",
   "pid": 12345,

@@ -106,6 +106,9 @@ function lineageSummary(agent) {
 
 function renderResourceLine(agent) {
   const parts = [`${agent.cpu}% CPU`, formatMemory(agent.memoryMb)];
+  if (agent.childCpu || agent.childMemoryMb) {
+    parts.push(`children ${Number(agent.childCpu || 0)}% / ${formatMemory(Number(agent.childMemoryMb || 0))}`);
+  }
   if (agent.pid) parts.push(`PID ${agent.pid}`);
   if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);

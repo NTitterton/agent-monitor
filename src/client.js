@@ -186,6 +186,7 @@ function cloneAgent(agent) {
     tokenRateWindowMs: Number(agent.tokenRateWindowMs || 0),
     tokenCountConfidence: agent.tokenCountConfidence || (agent.tokens ? "estimated" : "unknown"),
     children: Array.isArray(agent.children) ? [...agent.children] : [],
+    childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
     transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
 }

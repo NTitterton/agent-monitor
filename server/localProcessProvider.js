@@ -118,9 +118,9 @@ function toProcessAgent(agent, processes) {
   const child = runningChildren.get(agent.id);
   const isRunning = Boolean(processInfo || child);
   const pid = processInfo?.pid || child?.pid || null;
-  const childPids = pid
-    ? processes.filter((item) => item.ppid === pid).map((item) => item.pid)
-    : [];
+  const childProcesses = pid ? descendantProcesses(processes, pid) : [];
+  const childPids = childProcesses.map((item) => item.pid);
+  const resources = summarizeProcessResources(processInfo, childProcesses);
 
   return {
     id: agent.id,
@@ -132,8 +132,12 @@ function toProcessAgent(agent, processes) {
     status: isRunning ? "running" : "ended",
     parentId: agent.parentId || null,
     task: agent.command,
-    cpu: processInfo?.cpu || 0,
-    memoryMb: processInfo?.memoryMb || 0,
+    cpu: resources.cpu,
+    memoryMb: resources.memoryMb,
+    processCpu: resources.processCpu,
+    processMemoryMb: resources.processMemoryMb,
+    childCpu: resources.childCpu,
+    childMemoryMb: resources.childMemoryMb,
     tokens: 0,
     tokensPerSecond: 0,
     tokenRateWindowMs: 0,
@@ -155,6 +159,45 @@ function toProcessAgent(agent, processes) {
       .filter((action) => !agent.discovered || action.id !== "start")
       .map((action) => action.id)
   };
+}
+
+export function summarizeProcessResources(processInfo, childProcesses = []) {
+  const processCpu = roundCpu(processInfo?.cpu || 0);
+  const childCpu = roundCpu(childProcesses.reduce((total, item) => total + Number(item.cpu || 0), 0));
+  const processMemoryMb = Number(processInfo?.memoryMb || 0);
+  const childMemoryMb = childProcesses.reduce((total, item) => total + Number(item.memoryMb || 0), 0);
+
+  return {
+    cpu: roundCpu(processCpu + childCpu),
+    memoryMb: processMemoryMb + childMemoryMb,
+    processCpu,
+    processMemoryMb,
+    childCpu,
+    childMemoryMb
+  };
+}
+
+function descendantProcesses(processes, rootPid) {
+  const childrenByParent = new Map();
+  for (const processInfo of processes) {
+    const children = childrenByParent.get(processInfo.ppid) || [];
+    children.push(processInfo);
+    childrenByParent.set(processInfo.ppid, children);
+  }
+
+  const descendants = [];
+  const pending = [...(childrenByParent.get(rootPid) || [])];
+  while (pending.length) {
+    const processInfo = pending.shift();
+    descendants.push(processInfo);
+    pending.push(...(childrenByParent.get(processInfo.pid) || []));
+  }
+
+  return descendants;
+}
+
+function roundCpu(value) {
+  return Number(Number(value || 0).toFixed(1));
 }
 
 async function goToAgent(agent, processes) {

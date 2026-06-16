@@ -202,6 +202,7 @@ function cloneAgent(agent) {
   return {
     ...agent,
     children: Array.isArray(agent.children) ? [...agent.children] : [],
+    childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
     logs: Array.isArray(agent.logs) ? agent.logs.map((log) => ({ ...log })) : [],
     transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
