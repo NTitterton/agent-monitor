@@ -170,6 +170,32 @@ Action requests receive:
 
 The response may return `{ "agent": {...} }` or `{ "agents": [...] }`. Provider health is surfaced through `GET /api/providers`; a failing remote provider is shown in the Sources panel without breaking other providers.
 
+## Track OpenAI Responses
+
+Agent Monitor can observe configured OpenAI Responses by ID:
+
+```json
+{
+  "openAIResponsesProviders": [
+    {
+      "id": "openai-responses",
+      "label": "OpenAI Responses",
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "responses": [
+        {
+          "id": "openai-response-example",
+          "name": "OpenAI Background Response",
+          "responseId": "resp_replace_me",
+          "task": "Tracked OpenAI response"
+        }
+      ]
+    }
+  ]
+}
+```
+
+The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response.
+
 ## Current capability
 
 - Track agents from multiple provider namespaces.
@@ -179,6 +205,7 @@ The response may return `{ "agent": {...} }` or `{ "agents": [...] }`. Provider 
 - Use a local API when available, with static fallback for hosted embeds.
 - Persist local server state and recent action history under `data/`.
 - Optionally monitor configured local processes with PID, CPU, memory, and process signals.
+- Observe configured OpenAI Responses by response ID.
 
 ## Next backend milestones
 

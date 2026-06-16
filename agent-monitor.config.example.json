@@ -21,5 +21,20 @@
       "baseUrl": "https://agents.example.com/api",
       "token": "replace-me"
     }
+  ],
+  "openAIResponsesProviders": [
+    {
+      "id": "openai-responses",
+      "label": "OpenAI Responses",
+      "apiKeyEnv": "OPENAI_API_KEY",
+      "responses": [
+        {
+          "id": "openai-response-example",
+          "name": "OpenAI Background Response",
+          "responseId": "resp_replace_me",
+          "task": "Tracked OpenAI response"
+        }
+      ]
+    }
   ]
 }

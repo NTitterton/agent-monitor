@@ -25,6 +25,7 @@ graph TD
         SeedProviders["Seed Providers<br/>local/openai/anthropic/remote"]
         LocalProcess["Local Process Provider<br/>ps + process signals"]
         RemoteHTTP["Remote HTTP Provider<br/>configured baseUrl"]
+        OpenAIResponses["OpenAI Responses Provider<br/>configured response IDs"]
     end
 
     subgraph "External Agent Systems"
@@ -45,10 +46,12 @@ graph TD
     Registry --> SeedProviders
     Registry --> LocalProcess
     Registry --> RemoteHTTP
+    Registry --> OpenAIResponses
     LocalProcess --> LocalAgents
     SeedProviders -. planned real adapters .-> OpenAI
     SeedProviders -. planned real adapters .-> Anthropic
     RemoteHTTP --> CloudAgents
+    OpenAIResponses --> OpenAI
 
     classDef surface fill:#f9f,stroke:#333,stroke-width:2px;
     classDef runtime fill:#DDEBFF,stroke:#2E73B8,stroke-width:2px;
@@ -58,7 +61,7 @@ graph TD
     class Desktop,Browser,ModuleWidget,StandaloneWidget surface;
     class StaticServer,API,Registry runtime;
     class StateStore,Config store;
-    class SeedProviders,LocalProcess,RemoteHTTP provider;
+    class SeedProviders,LocalProcess,RemoteHTTP,OpenAIResponses provider;
     class LocalAgents,OpenAI,Anthropic,CloudAgents external;
 ```
 
@@ -91,7 +94,7 @@ The system has four major layers:
 - **Surfaces:** desktop app, browser app, module widget, and standalone widget.
 - **Local API:** static file server, API router, CORS/auth handling, and JSON response helpers.
 - **Provider registry:** discovers configured providers, normalizes agent snapshots, records lifecycle history, and routes actions.
-- **Provider adapters:** seed adapters, local process adapter, and remote HTTP adapter.
+- **Provider adapters:** seed adapters, local process adapter, remote HTTP adapter, and configured OpenAI Responses observer.
 
 ## 4. Core Data Flow
 
@@ -192,7 +195,13 @@ Remote HTTP providers are configured by `baseUrl`. Agent Monitor calls:
 
 Provider failures are isolated: `/api/providers` reports health and errors, while healthy providers continue returning agents.
 
-## 9. Embed Security
+## 9. OpenAI Responses Provider
+
+The OpenAI Responses provider observes configured response IDs from a user's OpenAI account. It retrieves each response, maps status/model/token usage into the normalized agent shape, and routes terminating lifecycle actions to OpenAI's cancel response endpoint.
+
+This is an observer/control adapter for known response IDs, not a full account crawler. It avoids guessing at private account state that the API does not expose as an agent task list.
+
+## 10. Embed Security
 
 Cross-site embeds require explicit `allowedOrigins` configuration. If `apiToken` is configured, cross-origin calls must include either:
 
@@ -201,7 +210,7 @@ Cross-site embeds require explicit `allowedOrigins` configuration. If `apiToken`
 
 Same-origin local app requests continue working without embedding secrets in `index.html`.
 
-## 10. Verification
+## 11. Verification
 
 Verification is currently handled by:
 
@@ -209,9 +218,10 @@ Verification is currently handled by:
 - `npm run smoke`: starts an isolated local server with temporary config/state and verifies static routes, API auth, CORS, lifecycle actions, per-agent detail, and persistence.
 - `npm run desktop:build`: compiles the macOS app wrapper.
 
-## 11. Known Gaps
+## 12. Known Gaps
 
-- OpenAI and Anthropic adapters are currently seed/provider namespaces, not authenticated live integrations.
+- OpenAI integration currently observes configured Responses API IDs; it does not discover all account activity automatically.
+- Anthropic account integration should use the remote HTTP provider path until a direct, well-scoped API mapping is chosen.
 - Desktop packaging is a local macOS app bundle, not a signed installer.
 - GitHub remote creation/push is blocked until `gh auth login -h github.com` refreshes credentials.
 - Local process control is signal-based and should grow process ownership, logs, and safer start/stop policies.

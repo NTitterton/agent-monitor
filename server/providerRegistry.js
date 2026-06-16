@@ -1,5 +1,6 @@
 import { lifecycleActions } from "../src/core.js";
 import { createLocalProcessProvider, hasLocalProcessConfig } from "./localProcessProvider.js";
+import { readOpenAIResponsesProviders } from "./openAIResponsesProvider.js";
 import { readRemoteHttpProviders } from "./remoteHttpProvider.js";
 import { createStateStore } from "./stateStore.js";
 
@@ -99,7 +100,10 @@ export function createProviderRegistry() {
   }
 
   async function listActiveProviders() {
-    const configuredProviders = await readRemoteHttpProviders();
+    const configuredProviders = [
+      ...(await readOpenAIResponsesProviders()),
+      ...(await readRemoteHttpProviders())
+    ];
 
     if (await hasLocalProcessConfig()) configuredProviders.unshift(createLocalProcessProvider());
 
