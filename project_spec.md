@@ -194,6 +194,16 @@ Local process resources should represent the work owned by the agent, not only t
 
 Status: implemented for the local process provider and rendered in the app, module widget, and standalone widget. Smoke tests cover aggregate own/child resource accounting.
 
+### Local Process Tree Controls
+
+Local lifecycle controls should target the process tree that represents the agent.
+
+- `stop`, `interrupt`, and `end` send `SIGTERM` to descendant processes before the root process.
+- `force-end` sends `SIGKILL` to descendant processes before the root process.
+- Signaling descendants first gives child workers a chance to exit before their parent is terminated.
+
+Status: implemented for the local process provider. Smoke tests cover child-before-root PID ordering for nested process trees.
+
 ### Transcripts
 
 Agents should expose recent conversation turns separately from operational logs.

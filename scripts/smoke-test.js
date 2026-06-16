@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider.js";
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
-import { summarizeProcessResources } from "../server/localProcessProvider.js";
+import { signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
 
 const port = 5199;
 const apiBase = `http://127.0.0.1:${port}`;
@@ -404,10 +404,22 @@ try {
 
   await assertAccountProviderCapabilities();
   assertProcessResourceAggregation();
+  assertProcessTreeSignalOrder();
 
   console.log("Smoke test passed");
 } finally {
   await stopServer(server);
+}
+
+function assertProcessTreeSignalOrder() {
+  const pids = signalPidsForProcessTree(10, [
+    { pid: 10, ppid: 1 },
+    { pid: 11, ppid: 10 },
+    { pid: 12, ppid: 11 },
+    { pid: 13, ppid: 10 },
+    { pid: 14, ppid: 99 }
+  ]);
+  assert(pids.join(",") === "12,13,11,10", "local lifecycle signals should target descendants before root");
 }
 
 function assertProcessResourceAggregation() {

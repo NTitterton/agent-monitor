@@ -104,10 +104,12 @@ async function signalAgent(agent, actionId) {
   if (!pid) return;
 
   const signal = actionId === "force-end" ? "SIGKILL" : "SIGTERM";
-  try {
-    process.kill(pid, signal);
-  } catch {
-    // The target may have exited between snapshot and signal.
+  for (const targetPid of signalPidsForProcessTree(pid, processes)) {
+    try {
+      process.kill(targetPid, signal);
+    } catch {
+      // The target may have exited between snapshot and signal.
+    }
   }
 }
 
@@ -175,6 +177,10 @@ export function summarizeProcessResources(processInfo, childProcesses = []) {
     childCpu,
     childMemoryMb
   };
+}
+
+export function signalPidsForProcessTree(rootPid, processes) {
+  return [...descendantProcesses(processes, rootPid).map((item) => item.pid).reverse(), rootPid];
 }
 
 function descendantProcesses(processes, rootPid) {

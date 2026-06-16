@@ -153,7 +153,7 @@ Copy `agent-monitor.config.example.json` to `agent-monitor.config.json` and add 
 }
 ```
 
-When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, parent PID, descendant child PIDs, CPU, memory, command, and start time from `ps`. `cpu` and `memoryMb` include the matched process plus descendant child processes; `processCpu`/`processMemoryMb` and `childCpu`/`childMemoryMb` expose the breakdown. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
+When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, parent PID, descendant child PIDs, CPU, memory, command, and start time from `ps`. `cpu` and `memoryMb` include the matched process plus descendant child processes; `processCpu`/`processMemoryMb` and `childCpu`/`childMemoryMb` expose the breakdown. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM` to the process tree; `force-end` sends `SIGKILL` to the process tree.
 
 Agent Monitor also actively discovers known local agent CLI processes even when they are not listed in `localAgents`. Discovery is enabled by default and currently looks for common agent tools such as Codex, Claude, Gemini, Aider, Goose, OpenCode, Cursor Agent, and Amp.
 
@@ -310,7 +310,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Test configured provider connections from the Sources panel.
 - Persist local server state and recent action history under `data/`.
 - Persist per-agent logs and transcripts for state-backed agents.
-- Optionally monitor configured local processes with PID, PPID, descendant child PIDs, aggregate/own/child CPU and memory, and process signals.
+- Optionally monitor configured local processes with PID, PPID, descendant child PIDs, aggregate/own/child CPU and memory, and process-tree signals.
 - Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.
 - Observe configured Anthropic Message Batches by batch ID.
