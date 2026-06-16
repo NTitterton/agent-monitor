@@ -126,6 +126,31 @@ Acceptance criteria:
 - Settings expose snapshot refresh cadence.
 - API responses include enough timestamp metadata to show scan freshness.
 
+### Provider Setup
+
+Provider setup should be possible from the app for the adapters Agent Monitor already supports.
+
+Current supported setup surfaces:
+
+- Trusted embed origins.
+- Local process discovery include/exclude patterns.
+- Remote HTTP providers.
+- OpenAI Responses provider instances and tracked response IDs.
+- Anthropic Message Batches provider instances and tracked batch IDs.
+
+Credential handling requirements:
+
+- Public config responses must never include API tokens or provider API keys.
+- Public config may expose boolean `hasToken` or `hasApiKey` flags.
+- If a settings update omits an existing secret for a provider ID, the existing secret should be preserved.
+- If a settings update includes a new secret, it should replace the previous one for that provider ID.
+
+Acceptance criteria:
+
+- `/api/config` returns sanitized setup data for all supported provider setup surfaces.
+- `PUT /api/config` can update provider setup while preserving omitted secrets.
+- Smoke tests prove token/API-key hiding and preservation for remote HTTP, OpenAI, and Anthropic setup.
+
 ## Data Model Draft
 
 ```json
@@ -155,4 +180,5 @@ Acceptance criteria:
 2. Add token confidence fields and compute `tokensPerSecond` where successive snapshots make that possible.
 3. Add `goTo` metadata and a disabled/available UI state.
 4. Add configurable polling cadence to app settings.
-5. Document platform-specific Go To behavior before implementing OS automation.
+5. Add provider setup validation and connection-test actions.
+6. Document platform-specific Go To behavior before implementing OS automation.

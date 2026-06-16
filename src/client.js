@@ -150,6 +150,22 @@ function cloneConfig(config) {
     localDiscovery: { ...(config.localDiscovery || {}) },
     remoteHttpProviders: Array.isArray(config.remoteHttpProviders)
       ? config.remoteHttpProviders.map((provider) => ({ ...provider }))
+      : [],
+    openAIResponsesProviders: Array.isArray(config.openAIResponsesProviders)
+      ? config.openAIResponsesProviders.map((provider) => ({
+          ...provider,
+          responses: Array.isArray(provider.responses)
+            ? provider.responses.map((response) => ({ ...response }))
+            : []
+        }))
+      : [],
+    anthropicMessageBatchesProviders: Array.isArray(config.anthropicMessageBatchesProviders)
+      ? config.anthropicMessageBatchesProviders.map((provider) => ({
+          ...provider,
+          batches: Array.isArray(provider.batches)
+            ? provider.batches.map((batch) => ({ ...batch }))
+            : []
+        }))
       : []
   };
 }

@@ -29,6 +29,22 @@ export async function updateConfig(patch) {
       : {}),
     ...(Object.hasOwn(patch, "remoteHttpProviders")
       ? { remoteHttpProviders: normalizeRemoteHttpProviders(patch.remoteHttpProviders, current.remoteHttpProviders) }
+      : {}),
+    ...(Object.hasOwn(patch, "openAIResponsesProviders")
+      ? {
+          openAIResponsesProviders: normalizeOpenAIResponsesProviders(
+            patch.openAIResponsesProviders,
+            current.openAIResponsesProviders
+          )
+        }
+      : {}),
+    ...(Object.hasOwn(patch, "anthropicMessageBatchesProviders")
+      ? {
+          anthropicMessageBatchesProviders: normalizeAnthropicMessageBatchesProviders(
+            patch.anthropicMessageBatchesProviders,
+            current.anthropicMessageBatchesProviders
+          )
+        }
       : {})
   };
 
@@ -53,6 +69,10 @@ function publicConfig(config) {
     allowedOrigins: normalizeStringList(config.allowedOrigins),
     localDiscovery: normalizeLocalDiscovery(config.localDiscovery),
     remoteHttpProviders: publicRemoteHttpProviders(config.remoteHttpProviders),
+    openAIResponsesProviders: publicOpenAIResponsesProviders(config.openAIResponsesProviders),
+    anthropicMessageBatchesProviders: publicAnthropicMessageBatchesProviders(
+      config.anthropicMessageBatchesProviders
+    ),
     hasApiToken: Boolean(config.apiToken),
     providerCounts: {
       localAgents: Array.isArray(config.localAgents) ? config.localAgents.length : 0,
@@ -65,6 +85,37 @@ function publicConfig(config) {
         : 0
     }
   };
+}
+
+function publicOpenAIResponsesProviders(providers) {
+  if (!Array.isArray(providers)) return [];
+
+  return providers
+    .filter((provider) => provider && provider.id)
+    .map((provider) => ({
+      id: String(provider.id),
+      label: provider.label || "OpenAI Responses",
+      apiKeyEnv: provider.apiKeyEnv || "OPENAI_API_KEY",
+      hasApiKey: Boolean(provider.apiKey),
+      organization: provider.organization || "",
+      project: provider.project || "",
+      responses: normalizeTrackedItems(provider.responses, "responseId")
+    }));
+}
+
+function publicAnthropicMessageBatchesProviders(providers) {
+  if (!Array.isArray(providers)) return [];
+
+  return providers
+    .filter((provider) => provider && provider.id)
+    .map((provider) => ({
+      id: String(provider.id),
+      label: provider.label || "Anthropic Message Batches",
+      apiKeyEnv: provider.apiKeyEnv || "ANTHROPIC_API_KEY",
+      hasApiKey: Boolean(provider.apiKey),
+      version: provider.version || "",
+      batches: normalizeTrackedItems(provider.batches, "batchId")
+    }));
 }
 
 function publicRemoteHttpProviders(providers) {
@@ -105,6 +156,70 @@ function normalizeRemoteHttpProviders(value, fallback = []) {
         ...(provider.timeoutMs ? { timeoutMs: Number(provider.timeoutMs) } : {})
       };
     });
+}
+
+function normalizeOpenAIResponsesProviders(value, fallback = []) {
+  if (!Array.isArray(value)) return [];
+
+  const existingById = providerMap(fallback);
+  return value
+    .filter((provider) => provider && provider.id)
+    .map((provider) => {
+      const existing = existingById.get(provider.id) || {};
+      return {
+        ...existing,
+        id: String(provider.id).trim(),
+        label: String(provider.label || existing.label || "OpenAI Responses").trim(),
+        apiKeyEnv: String(provider.apiKeyEnv || existing.apiKeyEnv || "OPENAI_API_KEY").trim(),
+        ...(provider.apiKey ? { apiKey: String(provider.apiKey) } : {}),
+        ...(provider.organization ? { organization: String(provider.organization).trim() } : {}),
+        ...(provider.project ? { project: String(provider.project).trim() } : {}),
+        responses: normalizeTrackedItems(provider.responses, "responseId")
+      };
+    });
+}
+
+function normalizeAnthropicMessageBatchesProviders(value, fallback = []) {
+  if (!Array.isArray(value)) return [];
+
+  const existingById = providerMap(fallback);
+  return value
+    .filter((provider) => provider && provider.id)
+    .map((provider) => {
+      const existing = existingById.get(provider.id) || {};
+      return {
+        ...existing,
+        id: String(provider.id).trim(),
+        label: String(provider.label || existing.label || "Anthropic Message Batches").trim(),
+        apiKeyEnv: String(provider.apiKeyEnv || existing.apiKeyEnv || "ANTHROPIC_API_KEY").trim(),
+        ...(provider.apiKey ? { apiKey: String(provider.apiKey) } : {}),
+        ...(provider.version ? { version: String(provider.version).trim() } : {}),
+        batches: normalizeTrackedItems(provider.batches, "batchId")
+      };
+    });
+}
+
+function normalizeTrackedItems(items, remoteIdKey) {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .filter((item) => item && item.id && item[remoteIdKey])
+    .map((item) => ({
+      id: String(item.id).trim(),
+      name: String(item.name || item.id).trim(),
+      [remoteIdKey]: String(item[remoteIdKey]).trim(),
+      task: String(item.task || item.name || item.id).trim(),
+      ...(item.parentId ? { parentId: String(item.parentId).trim() } : {}),
+      ...(Array.isArray(item.children) ? { children: normalizeStringList(item.children) } : {})
+    }));
+}
+
+function providerMap(providers) {
+  return new Map(
+    (Array.isArray(providers) ? providers : [])
+      .filter((provider) => provider && provider.id)
+      .map((provider) => [provider.id, provider])
+  );
 }
 
 function normalizeLocalDiscovery(value = {}, fallback = {}) {

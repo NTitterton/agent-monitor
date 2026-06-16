@@ -170,6 +170,94 @@ try {
   assert(stateFile.history.length > 0, "state file should contain history");
   assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.logs?.length > 0, "state file should contain logs");
 
+  const accountProviderConfig = await request("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      openAIResponsesProviders: [
+        {
+          id: "smoke-openai",
+          label: "Smoke OpenAI",
+          apiKeyEnv: "SMOKE_OPENAI_KEY",
+          apiKey: "openai-secret",
+          responses: [
+            {
+              id: "smoke-response",
+              name: "Smoke Response",
+              responseId: "resp_smoke",
+              task: "Smoke response tracking"
+            }
+          ]
+        }
+      ],
+      anthropicMessageBatchesProviders: [
+        {
+          id: "smoke-anthropic",
+          label: "Smoke Anthropic",
+          apiKeyEnv: "SMOKE_ANTHROPIC_KEY",
+          apiKey: "anthropic-secret",
+          batches: [
+            {
+              id: "smoke-batch",
+              name: "Smoke Batch",
+              batchId: "msgbatch_smoke",
+              task: "Smoke batch tracking"
+            }
+          ]
+        }
+      ]
+    })
+  });
+  assert(accountProviderConfig.status === 200, "account provider config update should succeed");
+  assert(accountProviderConfig.body.config.openAIResponsesProviders[0]?.hasApiKey === true, "OpenAI public config should report API key presence");
+  assert(accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]?.hasApiKey === true, "Anthropic public config should report API key presence");
+  assert(!("apiKey" in accountProviderConfig.body.config.openAIResponsesProviders[0]), "OpenAI public config should not expose API key");
+  assert(!("apiKey" in accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]), "Anthropic public config should not expose API key");
+
+  const accountConfigFile = JSON.parse(await readFile(configPath, "utf8"));
+  assert(accountConfigFile.openAIResponsesProviders[0]?.apiKey === "openai-secret", "OpenAI API key should be stored");
+  assert(accountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be stored");
+
+  await request("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      openAIResponsesProviders: [
+        {
+          id: "smoke-openai",
+          label: "Smoke OpenAI Updated",
+          apiKeyEnv: "SMOKE_OPENAI_KEY",
+          responses: [
+            {
+              id: "smoke-response",
+              name: "Smoke Response",
+              responseId: "resp_smoke",
+              task: "Smoke response tracking"
+            }
+          ]
+        }
+      ],
+      anthropicMessageBatchesProviders: [
+        {
+          id: "smoke-anthropic",
+          label: "Smoke Anthropic Updated",
+          apiKeyEnv: "SMOKE_ANTHROPIC_KEY",
+          batches: [
+            {
+              id: "smoke-batch",
+              name: "Smoke Batch",
+              batchId: "msgbatch_smoke",
+              task: "Smoke batch tracking"
+            }
+          ]
+        }
+      ]
+    })
+  });
+  const preservedAccountConfigFile = JSON.parse(await readFile(configPath, "utf8"));
+  assert(preservedAccountConfigFile.openAIResponsesProviders[0]?.apiKey === "openai-secret", "OpenAI API key should be preserved when omitted");
+  assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be preserved when omitted");
+
   console.log("Smoke test passed");
 } finally {
   await stopServer(server);

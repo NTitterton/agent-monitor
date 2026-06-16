@@ -97,7 +97,9 @@ class AgentMonitorApp extends HTMLElement {
           include: parseLines(form.querySelector('[data-setting="localDiscoveryInclude"]').value),
           exclude: parseLines(form.querySelector('[data-setting="localDiscoveryExclude"]').value)
         },
-        remoteHttpProviders: parseRemoteProviders(form)
+        remoteHttpProviders: parseRemoteProviders(form),
+        openAIResponsesProviders: parseOpenAIProviders(form),
+        anthropicMessageBatchesProviders: parseAnthropicProviders(form)
       };
 
       try {
@@ -243,6 +245,8 @@ function renderSettings(config, mode = "local", message = "") {
   const discovery = config?.localDiscovery || { enabled: true, include: [], exclude: [] };
   const providerCounts = config?.providerCounts || {};
   const remoteProviders = config?.remoteHttpProviders || [];
+  const openAIProviders = config?.openAIResponsesProviders || [];
+  const anthropicProviders = config?.anthropicMessageBatchesProviders || [];
   return `
     <section class="settings-block">
       <div class="settings-heading">
@@ -269,6 +273,14 @@ function renderSettings(config, mode = "local", message = "") {
         <div class="remote-provider-list">
           <span>Remote Providers</span>
           ${renderRemoteProviderRows(remoteProviders, mode)}
+        </div>
+        <div class="remote-provider-list">
+          <span>OpenAI Responses</span>
+          ${renderOpenAIProviderRows(openAIProviders, mode)}
+        </div>
+        <div class="remote-provider-list">
+          <span>Anthropic Batches</span>
+          ${renderAnthropicProviderRows(anthropicProviders, mode)}
         </div>
         <div class="settings-meta">
           <span>${providerCounts.localAgents || 0} local</span>
@@ -299,6 +311,53 @@ function renderRemoteProviderRow(provider, index, mode) {
       </select>
       <input data-remote-field="token" type="password" value="" ${disabled} aria-label="Remote provider token ${index + 1}" />
       <span>${provider.hasToken ? "Token saved" : "No token"}</span>
+    </fieldset>
+  `;
+}
+
+function renderOpenAIProviderRows(providers, mode) {
+  const rows = [
+    ...providers,
+    { id: "", label: "", apiKeyEnv: "OPENAI_API_KEY", hasApiKey: false, responses: [] }
+  ];
+  return rows.map((provider, index) => renderOpenAIProviderRow(provider, index, mode)).join("");
+}
+
+function renderOpenAIProviderRow(provider, index, mode) {
+  const disabled = mode === "api" ? "" : "disabled";
+  return `
+    <fieldset class="remote-provider-row" data-openai-row>
+      <input data-openai-field="id" value="${escapeAttribute(provider.id || "")}" ${disabled} aria-label="OpenAI provider ID ${index + 1}" />
+      <input data-openai-field="label" value="${escapeAttribute(provider.label || "")}" ${disabled} aria-label="OpenAI provider label ${index + 1}" />
+      <input data-openai-field="apiKeyEnv" value="${escapeAttribute(provider.apiKeyEnv || "OPENAI_API_KEY")}" ${disabled} aria-label="OpenAI API key env ${index + 1}" />
+      <input data-openai-field="apiKey" type="password" value="" ${disabled} aria-label="OpenAI API key ${index + 1}" />
+      <input data-openai-field="organization" value="${escapeAttribute(provider.organization || "")}" ${disabled} aria-label="OpenAI organization ${index + 1}" />
+      <input data-openai-field="project" value="${escapeAttribute(provider.project || "")}" ${disabled} aria-label="OpenAI project ${index + 1}" />
+      <textarea data-openai-field="responses" rows="3" ${disabled} aria-label="OpenAI response list ${index + 1}">${escapeText(formatTrackedLines(provider.responses || [], "responseId"))}</textarea>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · responses: id | name | responseId | task</span>
+    </fieldset>
+  `;
+}
+
+function renderAnthropicProviderRows(providers, mode) {
+  const rows = [
+    ...providers,
+    { id: "", label: "", apiKeyEnv: "ANTHROPIC_API_KEY", hasApiKey: false, batches: [] }
+  ];
+  return rows.map((provider, index) => renderAnthropicProviderRow(provider, index, mode)).join("");
+}
+
+function renderAnthropicProviderRow(provider, index, mode) {
+  const disabled = mode === "api" ? "" : "disabled";
+  return `
+    <fieldset class="remote-provider-row" data-anthropic-row>
+      <input data-anthropic-field="id" value="${escapeAttribute(provider.id || "")}" ${disabled} aria-label="Anthropic provider ID ${index + 1}" />
+      <input data-anthropic-field="label" value="${escapeAttribute(provider.label || "")}" ${disabled} aria-label="Anthropic provider label ${index + 1}" />
+      <input data-anthropic-field="apiKeyEnv" value="${escapeAttribute(provider.apiKeyEnv || "ANTHROPIC_API_KEY")}" ${disabled} aria-label="Anthropic API key env ${index + 1}" />
+      <input data-anthropic-field="apiKey" type="password" value="" ${disabled} aria-label="Anthropic API key ${index + 1}" />
+      <input data-anthropic-field="version" value="${escapeAttribute(provider.version || "")}" ${disabled} aria-label="Anthropic version ${index + 1}" />
+      <textarea data-anthropic-field="batches" rows="3" ${disabled} aria-label="Anthropic batch list ${index + 1}">${escapeText(formatTrackedLines(provider.batches || [], "batchId"))}</textarea>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · batches: id | name | batchId | task</span>
     </fieldset>
   `;
 }
@@ -554,6 +613,73 @@ function parseRemoteProviders(form) {
       };
     })
     .filter((provider) => provider.id && provider.baseUrl);
+}
+
+function parseOpenAIProviders(form) {
+  return [...form.querySelectorAll("[data-openai-row]")]
+    .map((row) => {
+      const fields = rowFields(row, "openai");
+      return {
+        id: fields.id,
+        label: fields.label,
+        apiKeyEnv: fields.apiKeyEnv || "OPENAI_API_KEY",
+        ...(fields.apiKey ? { apiKey: fields.apiKey } : {}),
+        ...(fields.organization ? { organization: fields.organization } : {}),
+        ...(fields.project ? { project: fields.project } : {}),
+        responses: parseTrackedLines(fields.responses, "responseId")
+      };
+    })
+    .filter((provider) => provider.id && provider.responses.length);
+}
+
+function parseAnthropicProviders(form) {
+  return [...form.querySelectorAll("[data-anthropic-row]")]
+    .map((row) => {
+      const fields = rowFields(row, "anthropic");
+      return {
+        id: fields.id,
+        label: fields.label,
+        apiKeyEnv: fields.apiKeyEnv || "ANTHROPIC_API_KEY",
+        ...(fields.apiKey ? { apiKey: fields.apiKey } : {}),
+        ...(fields.version ? { version: fields.version } : {}),
+        batches: parseTrackedLines(fields.batches, "batchId")
+      };
+    })
+    .filter((provider) => provider.id && provider.batches.length);
+}
+
+function rowFields(row, prefix) {
+  return Object.fromEntries(
+    [...row.querySelectorAll(`[data-${prefix}-field]`)].map((input) => [
+      input.getAttribute(`data-${prefix}-field`),
+      input.value.trim()
+    ])
+  );
+}
+
+function parseTrackedLines(value, remoteIdKey) {
+  return parseLines(value)
+    .map((line) => {
+      const [id, name, remoteId, task] = line.split("|").map((part) => part.trim());
+      return {
+        id,
+        name,
+        [remoteIdKey]: remoteId,
+        task
+      };
+    })
+    .filter((item) => item.id && item[remoteIdKey]);
+}
+
+function formatTrackedLines(items, remoteIdKey) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => [
+      item.id || "",
+      item.name || "",
+      item[remoteIdKey] || "",
+      item.task || ""
+    ].join(" | "))
+    .join("\n");
 }
 
 function renderAction(agent, action) {

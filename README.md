@@ -82,7 +82,7 @@ For cross-site embeds, add the site origins that may call the local API:
 
 Same-origin local app requests continue to work without putting the token into `index.html`.
 
-The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, and remote HTTP providers. It writes through the local API and does not expose configured API tokens or provider credentials.
+The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API and does not expose configured API tokens or provider credentials.
 
 Local standalone embed demo:
 
@@ -105,7 +105,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 - `GET /api/providers` returns configured provider adapters and lifecycle capabilities.
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
-- `PUT /api/config` updates trusted origins, local discovery settings, and remote HTTP providers while preserving existing provider credentials.
+- `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
 - `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end", "prompt": "optional text" }`.
 
 Provider adapters live in `server/providerRegistry.js`. The current adapters are in-memory implementations for local, OpenAI, Anthropic, and remote cloud namespaces. Real integrations should implement the same shape:
@@ -231,6 +231,8 @@ Agent Monitor can observe configured OpenAI Responses by ID:
 
 The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response.
 
+OpenAI Responses setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID.
+
 ## Track Anthropic Message Batches
 
 Agent Monitor can also observe configured Anthropic Message Batch IDs:
@@ -257,6 +259,8 @@ Agent Monitor can also observe configured Anthropic Message Batch IDs:
 
 The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view.
 
+Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID.
+
 ## Current capability
 
 - Track agents from multiple provider namespaces.
@@ -264,7 +268,7 @@ The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It map
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
-- Configure trusted embed origins, local discovery, and remote HTTP providers from the app.
+- Configure trusted embed origins, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
 - Persist local server state and recent action history under `data/`.
 - Persist per-agent logs for state-backed agents.
 - Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.
@@ -275,6 +279,6 @@ The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It map
 ## Next backend milestones
 
 1. Add richer per-agent transcripts.
-2. Expand first-class provider setup flows for OpenAI and Anthropic account adapters.
+2. Add richer provider setup validation and connection tests.
 3. Package desktop app builds for easier installation.
 4. Expand provider-specific start/resume semantics where APIs expose them.
