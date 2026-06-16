@@ -2,7 +2,7 @@ import {
   formatTokenRate,
   formatMemory,
   formatRuntime,
-  lifecycleActions,
+  agentActions,
   statusTone
 } from "./core.js";
 import { createAgentClient } from "./client.js";
@@ -53,7 +53,7 @@ class AgentMonitorWidget extends HTMLElement {
       button.addEventListener("click", () => {
         const agentId = button.getAttribute("data-agent-id");
         const actionId = button.getAttribute("data-action");
-        const action = lifecycleActions.find((item) => item.id === actionId);
+        const action = agentActions.find((item) => item.id === actionId);
         const prompt = action?.requiresPrompt ? window.prompt(`${action.label} prompt`) || "" : "";
         void client.perform(agentId, actionId, prompt);
       });
@@ -87,7 +87,7 @@ function renderWidgetAgent(agent) {
       <p class="metrics">${renderResourceLine(agent)}</p>
       ${renderLatestLog(agent)}
       <div class="actions">
-        ${lifecycleActions.map((action) => renderAction(agent, action)).join("")}
+        ${agentActions.map((action) => renderAction(agent, action)).join("")}
       </div>
     </article>
   `;
@@ -121,6 +121,7 @@ function renderLatestLog(agent) {
 
 function renderAction(agent, action) {
   const disabled =
+    (action.surface && !agent.capabilities?.includes(action.id)) ||
     (agent.capabilities && !agent.capabilities.includes(action.id)) ||
     (agent.status === "ended" && action.id !== "start") ||
     (agent.status === "running" && action.id === "start");

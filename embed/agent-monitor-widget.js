@@ -48,7 +48,8 @@ const actions = [
   { id: "stop", label: "Stop", prompt: false },
   { id: "interrupt", label: "Interrupt", prompt: true },
   { id: "end", label: "End", prompt: true },
-  { id: "force-end", label: "Force End", prompt: false, danger: true }
+  { id: "force-end", label: "Force End", prompt: false, danger: true },
+  { id: "go-to", label: "Go To", prompt: false, surface: true }
 ];
 
 const styles = `
@@ -361,6 +362,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
 
 function renderAction(agent, action) {
   const disabled =
+    (action.surface && !agent.capabilities?.includes(action.id)) ||
     (agent.capabilities && !agent.capabilities.includes(action.id)) ||
     (agent.status === "ended" && action.id !== "start") ||
     (agent.status === "running" && action.id === "start");

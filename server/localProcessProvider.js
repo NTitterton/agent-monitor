@@ -1,6 +1,6 @@
 import { spawn } from "node:child_process";
 import { resolve } from "node:path";
-import { lifecycleActions } from "../src/core.js";
+import { agentActions } from "../src/core.js";
 import { readConfig } from "./config.js";
 
 const runningChildren = new Map();
@@ -22,7 +22,7 @@ export function createLocalProcessProvider() {
     source: "local",
     type: "local",
     recordsHistory: false,
-    capabilities: ["list", "start", "stop", "interrupt", "end", "force-end"],
+    capabilities: ["list", "start", "stop", "interrupt", "end", "force-end", "go-to"],
     async listAgents() {
       const processes = await listProcesses();
       return readLocalProcessAgents(processes);
@@ -32,7 +32,13 @@ export function createLocalProcessProvider() {
       const agent = (await readLocalProcessAgents(processes)).find((item) => item.id === agentId);
       if (!agent) return null;
 
-      if (actionId === "start" && !agent.discovered) {
+      if (actionId === "go-to") {
+        try {
+          await goToAgent(agent, processes);
+        } catch {
+          // Window activation is best-effort and may be blocked by OS permissions.
+        }
+      } else if (actionId === "start" && !agent.discovered) {
         startAgent(agent);
       } else if (actionId !== "start") {
         await signalAgent(agent, actionId, prompt);
@@ -145,10 +151,45 @@ function toProcessAgent(agent, processes) {
     cwd: agent.cwd,
     args: agent.args,
     discovered: Boolean(agent.discovered),
-    capabilities: lifecycleActions
+    capabilities: agentActions
       .filter((action) => !agent.discovered || action.id !== "start")
       .map((action) => action.id)
   };
+}
+
+async function goToAgent(agent, processes) {
+  if (process.platform !== "darwin") return;
+
+  const processInfo = agent.pid
+    ? processes.find((item) => item.pid === agent.pid)
+    : findMatchingProcess(agent, processes);
+  const command = processInfo?.command || agent.command || "";
+  const applicationName = inferApplicationName(command);
+
+  if (applicationName) {
+    await run("osascript", ["-e", `tell application "${applicationName}" to activate`]);
+    return;
+  }
+
+  await run("osascript", [
+    "-e",
+    `tell application "System Events"
+      if exists process "iTerm2" then
+        tell application "iTerm2" to activate
+      else
+        tell application "Terminal" to activate
+      end if
+    end tell`
+  ]);
+}
+
+function inferApplicationName(command) {
+  if (/Google Chrome/i.test(command)) return "Google Chrome";
+  if (/Chromium/i.test(command)) return "Chromium";
+  if (/Safari/i.test(command)) return "Safari";
+  if (/Cursor/i.test(command)) return "Cursor";
+  if (/Visual Studio Code|\/Code\.app/i.test(command)) return "Visual Studio Code";
+  return "";
 }
 
 function buildProcessLogs(agent, processInfo, childPids, isRunning) {

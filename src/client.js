@@ -1,4 +1,4 @@
-import { createActionRecord, createAgentStore, lifecycleActions } from "./core.js";
+import { agentActions, createActionRecord, createAgentStore } from "./core.js";
 
 export function createAgentClient() {
   const localStore = createAgentStore();
@@ -110,7 +110,7 @@ export function createAgentClient() {
       };
     },
     async perform(agentId, actionId, prompt = "") {
-      const action = lifecycleActions.find((item) => item.id === actionId);
+      const action = agentActions.find((item) => item.id === actionId);
       if (!action) return;
 
       if (mode === "api") {

@@ -40,6 +40,13 @@ try {
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokensPerSecond === "number"), "every agent should include numeric token rate");
   assert(sameOriginAgents.body.agents.every((agent) => agent.tokenCountConfidence), "every agent should include token confidence");
 
+  const providers = await request("/api/providers");
+  assert(providers.status === 200, "provider status request should succeed");
+  assert(
+    providers.body.providers.find((provider) => provider.id === "local-process")?.capabilities.includes("go-to"),
+    "local process provider should expose go-to"
+  );
+
   const unauthorized = await request("/api/agents", {
     headers: { Origin: allowedOrigin }
   });

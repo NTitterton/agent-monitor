@@ -106,7 +106,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
-- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end", "prompt": "optional text" }`.
+- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`.
 
 Provider adapters live in `server/providerRegistry.js`. The current adapters are in-memory implementations for local, OpenAI, Anthropic, and remote cloud namespaces. Real integrations should implement the same shape:
 
@@ -153,7 +153,7 @@ Agent Monitor also actively discovers known local agent CLI processes even when 
 }
 ```
 
-Discovered agents are shown with PID, PPID, child process count, and resource usage. When two monitored local agents are related by OS parent process ID, Agent Monitor links them in the lineage tree. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`.
+Discovered agents are shown with PID, PPID, child process count, and resource usage. When two monitored local agents are related by OS parent process ID, Agent Monitor links them in the lineage tree. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`. On macOS, the `Go To` action activates the likely local surface for discovered terminal, browser, or editor-backed processes.
 
 ## Connect remote HTTP providers
 

@@ -2,7 +2,7 @@ import {
   formatTokenRate,
   formatMemory,
   formatRuntime,
-  lifecycleActions,
+  agentActions,
   statusTone
 } from "./core.js";
 import { createAgentClient } from "./client.js";
@@ -138,7 +138,7 @@ class AgentMonitorApp extends HTMLElement {
       button.addEventListener("click", () => {
         const agentId = button.getAttribute("data-agent-id");
         const actionId = button.getAttribute("data-action");
-        const action = lifecycleActions.find((item) => item.id === actionId);
+        const action = agentActions.find((item) => item.id === actionId);
         let prompt = "";
 
         if (action?.requiresPrompt) {
@@ -423,7 +423,7 @@ function renderAgentRow(agent, agents, selectedAgentId) {
         <p class="muted">${childCount ? childNames : "No children"}</p>
       </div>
       <div class="action-row">
-        ${lifecycleActions.map((action) => renderAction(agent, action)).join("")}
+        ${agentActions.map((action) => renderAction(agent, action)).join("")}
       </div>
     </article>
   `;
@@ -710,6 +710,7 @@ function formatTrackedLines(items, remoteIdKey) {
 
 function renderAction(agent, action) {
   const disabled =
+    (action.surface && !agent.capabilities?.includes(action.id)) ||
     (agent.capabilities && !agent.capabilities.includes(action.id)) ||
     (agent.status === "ended" && action.id !== "start") ||
     (agent.status === "running" && action.id === "start");

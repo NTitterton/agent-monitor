@@ -120,6 +120,12 @@ export const lifecycleActions = [
   { id: "force-end", label: "Force End", nextStatus: "ended", requiresPrompt: false, destructive: true }
 ];
 
+export const surfaceActions = [
+  { id: "go-to", label: "Go To", requiresPrompt: false, surface: true }
+];
+
+export const agentActions = [...lifecycleActions, ...surfaceActions];
+
 export function createAgentStore(seedAgents = initialAgents) {
   let agents = seedAgents.map(cloneAgent);
   const subscribers = new Set();
@@ -201,7 +207,7 @@ export function createLogRecord({ at = Date.now(), level = "info", source = "age
 }
 
 export function createActionRecord(agent, actionId, prompt = "", at = Date.now()) {
-  const action = lifecycleActions.find((item) => item.id === actionId);
+  const action = agentActions.find((item) => item.id === actionId);
   if (!action) return null;
 
   return {
