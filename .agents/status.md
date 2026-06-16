@@ -14,6 +14,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Standalone widget demo: `http://127.0.0.1:5173/embed-standalone.html`
 - Desktop build: `npm run desktop:build`
 - Smoke test: `npm run smoke`
+- GitHub push helper: `npm run github:push`
 
 ## Completed
 
@@ -28,11 +29,12 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Smoke test harness.
 - Lineage view and selected-agent detail panel.
 - Search/status/source filters for the agent table.
+- GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.
 
 ## Blockers
 
 - GitHub push is blocked because `gh auth status` reports the saved `NTitterton` token is invalid.
-- Required action: run `gh auth login -h github.com`, then create/push the GitHub repo.
+- Required action: run `gh auth login -h github.com`, then `npm run github:push`.
 
 ## Push Policy
 

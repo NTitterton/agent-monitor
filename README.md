@@ -30,6 +30,15 @@ npm run smoke
 
 `npm run smoke` starts Agent Monitor on a temporary port with isolated config and state files. It verifies static routes, API auth, CORS preflight, lifecycle actions, and state persistence across a server restart.
 
+## Push to GitHub
+
+```sh
+gh auth login -h github.com
+npm run github:push
+```
+
+`npm run github:push` expects a clean tracked worktree, creates or attaches `origin`, and pushes `main`. Defaults are `GITHUB_REPO=agent-monitor` and `GITHUB_VISIBILITY=private`.
+
 ## Run as a standalone macOS app
 
 ```sh
