@@ -15,6 +15,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Desktop build: `npm run desktop:build`
 - Smoke test: `npm run smoke`
 - GitHub push helper: `npm run github:push`
+- GitHub repo: `https://github.com/NTitterton/agent-monitor` (public)
 
 ## Completed
 
@@ -23,6 +24,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - macOS WebKit desktop wrapper.
 - Persistent state and lifecycle history.
 - Local process provider with PID, CPU, memory, start, and signal controls.
+- Active local agent process discovery for known agent CLIs.
 - Remote HTTP provider contract and health reporting.
 - OpenAI Responses provider for configured response IDs.
 - Anthropic Message Batches provider for configured batch IDs.
@@ -35,9 +37,8 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 
 ## Blockers
 
-- GitHub push is blocked because `gh auth status` reports the saved `NTitterton` token is invalid.
-- Required action: run `gh auth login -h github.com`, then `npm run github:push`.
+- None currently.
 
 ## Push Policy
 
-Push after meaningful commits and at the end of a work session when GitHub auth is valid. Until then, keep committing locally and re-check `gh auth status` each session.
+Push after meaningful commits and at the end of a work session.

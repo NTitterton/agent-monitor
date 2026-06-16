@@ -106,6 +106,7 @@ function renderResourceLine(agent) {
 
 function renderAction(agent, action) {
   const disabled =
+    (agent.capabilities && !agent.capabilities.includes(action.id)) ||
     (agent.status === "ended" && action.id !== "start") ||
     (agent.status === "running" && action.id === "start");
   return `

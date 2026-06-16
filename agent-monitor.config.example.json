@@ -13,6 +13,11 @@
       "cwd": "."
     }
   ],
+  "localDiscovery": {
+    "enabled": true,
+    "include": [],
+    "exclude": []
+  },
   "remoteHttpProviders": [
     {
       "id": "remote-runner",

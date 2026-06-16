@@ -137,6 +137,20 @@ Copy `agent-monitor.config.example.json` to `agent-monitor.config.json` and add 
 
 When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, CPU, memory, command, and start time from `ps`. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
 
+Agent Monitor also actively discovers known local agent CLI processes even when they are not listed in `localAgents`. Discovery is enabled by default and currently looks for common agent tools such as Codex, Claude, Gemini, Aider, Goose, OpenCode, Cursor Agent, and Amp.
+
+```json
+{
+  "localDiscovery": {
+    "enabled": true,
+    "include": ["my-custom-agent"],
+    "exclude": ["experimental-agent"]
+  }
+}
+```
+
+Discovered agents are shown with their PID and resource usage. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`.
+
 ## Connect remote HTTP providers
 
 Add remote providers to `agent-monitor.config.json`:
@@ -231,6 +245,7 @@ The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It map
 - Use a local API when available, with static fallback for hosted embeds.
 - Persist local server state and recent action history under `data/`.
 - Optionally monitor configured local processes with PID, CPU, memory, and process signals.
+- Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.
 - Observe configured Anthropic Message Batches by batch ID.
 
