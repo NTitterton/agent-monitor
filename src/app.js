@@ -174,7 +174,7 @@ function renderAgentRow(agent) {
       </div>
       <div class="resource-stack">
         <meter min="0" max="100" value="${agent.cpu}"></meter>
-        <p>${agent.cpu}% CPU · ${formatMemory(agent.memoryMb)} · ${agent.tokens.toLocaleString()} tokens</p>
+        <p>${renderResourceLine(agent)}</p>
       </div>
       <div>
         <p>${parent}</p>
@@ -185,6 +185,13 @@ function renderAgentRow(agent) {
       </div>
     </article>
   `;
+}
+
+function renderResourceLine(agent) {
+  const parts = [`${agent.cpu}% CPU`, formatMemory(agent.memoryMb)];
+  if (agent.pid) parts.push(`PID ${agent.pid}`);
+  if (agent.tokens) parts.push(`${agent.tokens.toLocaleString()} tokens`);
+  return parts.join(" · ");
 }
 
 function renderAction(agent, action) {

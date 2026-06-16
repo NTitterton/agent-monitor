@@ -61,6 +61,26 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 }
 ```
 
+## Monitor local processes
+
+Copy `agent-monitor.config.example.json` to `agent-monitor.config.json` and add local commands to monitor:
+
+```json
+{
+  "localAgents": [
+    {
+      "id": "local-codex",
+      "name": "Local Codex",
+      "command": "codex",
+      "match": "codex",
+      "cwd": "."
+    }
+  ]
+}
+```
+
+When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, CPU, memory, command, and start time from `ps`. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
+
 ## Current capability
 
 - Track agents from multiple provider namespaces.
@@ -69,6 +89,7 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
 - Persist local server state and recent action history under `data/`.
+- Optionally monitor configured local processes with PID, CPU, memory, and process signals.
 
 ## Next backend milestones
 

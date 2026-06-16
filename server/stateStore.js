@@ -64,6 +64,15 @@ export function createStateStore() {
       state.history = [record, ...state.history].slice(0, 200);
       await persist();
       return cloneAgents(state.agents);
+    },
+    async recordAction(agent, actionId, prompt = "") {
+      await load();
+      const record = createActionRecord(agent, actionId, prompt);
+      if (!record) return null;
+
+      state.history = [record, ...state.history].slice(0, 200);
+      await persist();
+      return { ...record };
     }
   };
 }

@@ -32,7 +32,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (url.pathname === "/api/providers" && request.method === "GET") {
-      return sendJson(response, { providers: registry.providers });
+      return sendJson(response, { providers: await registry.providers() });
     }
 
     const actionMatch = url.pathname.match(/^\/api\/agents\/([^/]+)\/actions$/);

@@ -1,0 +1,11 @@
+{
+  "localAgents": [
+    {
+      "id": "local-codex",
+      "name": "Local Codex",
+      "command": "codex",
+      "match": "codex",
+      "cwd": "."
+    }
+  ]
+}

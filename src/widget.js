@@ -82,12 +82,19 @@ function renderWidgetAgent(agent) {
         </div>
         <span class="${statusTone(agent.status)}">${agent.status}</span>
       </div>
-      <p class="metrics">${agent.cpu}% CPU · ${formatMemory(agent.memoryMb)} · ${agent.tokens.toLocaleString()} tokens</p>
+      <p class="metrics">${renderResourceLine(agent)}</p>
       <div class="actions">
         ${lifecycleActions.map((action) => renderAction(agent, action)).join("")}
       </div>
     </article>
   `;
+}
+
+function renderResourceLine(agent) {
+  const parts = [`${agent.cpu}% CPU`, formatMemory(agent.memoryMb)];
+  if (agent.pid) parts.push(`PID ${agent.pid}`);
+  if (agent.tokens) parts.push(`${agent.tokens.toLocaleString()} tokens`);
+  return parts.join(" · ");
 }
 
 function renderAction(agent, action) {
