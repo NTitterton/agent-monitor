@@ -173,7 +173,8 @@ function cloneAgent(agent) {
     tokensPerSecond: Number(agent.tokensPerSecond || 0),
     tokenRateWindowMs: Number(agent.tokenRateWindowMs || 0),
     tokenCountConfidence: agent.tokenCountConfidence || (agent.tokens ? "estimated" : "unknown"),
-    children: Array.isArray(agent.children) ? [...agent.children] : []
+    children: Array.isArray(agent.children) ? [...agent.children] : [],
+    transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
 }
 

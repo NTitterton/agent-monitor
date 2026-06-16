@@ -202,6 +202,21 @@ Agents may also include a `logs` array for recent provider, process, transcript,
 }
 ```
 
+Agents may also include a `transcript` array for recent conversation turns:
+
+```json
+{
+  "transcript": [
+    {
+      "at": 1781648578000,
+      "role": "assistant",
+      "source": "remote",
+      "content": "Validated the hosted widget."
+    }
+  ]
+}
+```
+
 Action requests receive:
 
 ```json
@@ -272,7 +287,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 
 - Track agents from multiple provider namespaces.
 - Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
-- Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, and recent logs.
+- Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
@@ -280,7 +295,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Configure optional browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.
 - Test configured provider connections from the Sources panel.
 - Persist local server state and recent action history under `data/`.
-- Persist per-agent logs for state-backed agents.
+- Persist per-agent logs and transcripts for state-backed agents.
 - Optionally monitor configured local processes with PID, PPID, child PIDs, CPU, memory, and process signals.
 - Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.
@@ -288,7 +303,6 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 
 ## Next backend milestones
 
-1. Add richer per-agent transcripts.
-2. Add richer provider setup validation and connection tests.
-3. Package desktop app builds for easier installation.
-4. Expand provider-specific start/resume semantics where APIs expose them.
+1. Add richer provider setup validation and connection tests.
+2. Package desktop app builds for easier installation.
+3. Expand provider-specific start/resume semantics where APIs expose them.

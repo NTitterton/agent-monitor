@@ -223,6 +223,7 @@ try {
   assert(detail.body.children[0]?.id === "openai-research-2", "agent detail should include children");
   assert(detail.body.history[0]?.prompt === "smoke test", "agent detail should include agent history");
   assert(detail.body.agent.logs[0]?.source === "operator", "agent detail should include logs");
+  assert(detail.body.agent.transcript?.length > 0, "agent detail should include transcript");
 
   await stopServer(server);
   server = await startServer();
@@ -237,10 +238,15 @@ try {
     persisted.body.agents.find((agent) => agent.id === "local-codex-1")?.logs?.[0]?.source === "operator",
     "agent logs should persist after restart"
   );
+  assert(
+    persisted.body.agents.find((agent) => agent.id === "local-codex-1")?.transcript?.length > 0,
+    "agent transcript should persist after restart"
+  );
 
   const stateFile = JSON.parse(await readFile(statePath, "utf8"));
   assert(stateFile.history.length > 0, "state file should contain history");
   assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.logs?.length > 0, "state file should contain logs");
+  assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.transcript?.length > 0, "state file should contain transcript");
 
   const accountProviderConfig = await request("/api/config", {
     method: "PUT",

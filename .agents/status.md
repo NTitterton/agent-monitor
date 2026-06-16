@@ -24,6 +24,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - macOS WebKit desktop wrapper.
 - Persistent state and lifecycle history.
 - Per-agent logs from state, local process, remote HTTP, OpenAI, and Anthropic providers.
+- Per-agent transcripts in normalized state, remote provider payloads, OpenAI response output, and selected-agent details.
 - Local process provider with PID, CPU, memory, start, and signal controls.
 - Settings UI for configured local agents and launch commands.
 - Active local agent process discovery for known agent CLIs.

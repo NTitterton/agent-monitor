@@ -95,6 +95,7 @@ function createDefaultState() {
       type: agent.type || agentTypes[agent.id] || agent.providerId || "local",
       ...normalizeTokenMetrics(agent),
       children: [...agent.children],
+      transcript: normalizeTranscript(agent.transcript),
       logs: normalizeLogs(agent.logs)
     })),
     history: []
@@ -112,6 +113,7 @@ function normalizeState(nextState) {
     agents: agents.map((agent) => {
       const fallbackAgent = fallbackAgents.get(agent.id);
       const logs = normalizeLogs(agent.logs);
+      const transcript = normalizeTranscript(agent.transcript);
       return {
         ...agent,
         providerId: agent.providerId || agentProviderIds[agent.id] || "local",
@@ -119,6 +121,7 @@ function normalizeState(nextState) {
         ...normalizeTokenMetrics(agent, fallbackAgent),
         ...normalizeGoTo(agent, fallbackAgent),
         children: Array.isArray(agent.children) ? [...agent.children] : [],
+        transcript: transcript.length ? transcript : normalizeTranscript(fallbackAgent?.transcript),
         logs: logs.length ? logs : normalizeLogs(fallbackAgent?.logs)
       };
     }),
@@ -132,6 +135,7 @@ function cloneAgents(agents) {
     ...normalizeTokenMetrics(agent),
     ...normalizeGoTo(agent),
     children: [...agent.children],
+    transcript: normalizeTranscript(agent.transcript),
     logs: normalizeLogs(agent.logs)
   }));
 }
@@ -184,6 +188,24 @@ function normalizeLogs(logs) {
       message: String(log.message)
     }))
     .slice(0, 50);
+}
+
+function normalizeTranscript(transcript) {
+  if (!Array.isArray(transcript)) return [];
+
+  return transcript
+    .filter((entry) => entry && (entry.content || entry.message || entry.text))
+    .map((entry) => ({
+      at: Number(entry.at || Date.now()),
+      role: normalizeRole(entry.role),
+      source: entry.source || "agent",
+      content: String(entry.content || entry.message || entry.text).trim()
+    }))
+    .slice(0, 100);
+}
+
+function normalizeRole(role) {
+  return ["system", "user", "assistant", "tool"].includes(role) ? role : "assistant";
 }
 
 function getStatePath() {

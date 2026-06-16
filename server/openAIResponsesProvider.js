@@ -90,6 +90,7 @@ function normalizeResponse(response, providerConfig, responseConfig) {
   const totalTokens = inputTokens + outputTokens;
   const tokenRateWindowMs = Math.max(1000, (endedAt || Date.now()) - startedAt);
   const goToTarget = responseConfig.goToTarget || responseConfig.dashboardUrl || "";
+  const transcript = normalizeResponseTranscript(response, startedAt);
 
   return {
     id: responseConfig.id,
@@ -111,6 +112,7 @@ function normalizeResponse(response, providerConfig, responseConfig) {
     startedAt,
     endedAt,
     children: responseConfig.children || [],
+    transcript,
     logs: [
       {
         at: startedAt,
@@ -134,6 +136,26 @@ function normalizeResponse(response, providerConfig, responseConfig) {
     model: response.model,
     capabilities: normalizeCapabilities(goToTarget)
   };
+}
+
+function normalizeResponseTranscript(response, fallbackAt) {
+  const output = Array.isArray(response.output) ? response.output : [];
+  return output
+    .flatMap((item) => extractTextParts(item).map((content) => ({
+      at: fallbackAt,
+      role: item.role || "assistant",
+      source: "openai",
+      content
+    })))
+    .slice(0, 100);
+}
+
+function extractTextParts(item) {
+  const content = Array.isArray(item.content) ? item.content : [];
+  return content
+    .map((part) => part.text || part.content || part.output_text || "")
+    .map((text) => String(text).trim())
+    .filter(Boolean);
 }
 
 function normalizeCapabilities(goToTarget) {

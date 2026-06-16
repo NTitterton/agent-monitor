@@ -170,6 +170,12 @@ Acceptance criteria:
 
 Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons.
 
+### Transcripts
+
+Agents should expose recent conversation turns separately from operational logs.
+
+Status: implemented for state-backed agents, remote HTTP provider payloads, and best-effort OpenAI Responses output text. The selected-agent detail panel shows recent transcript turns, and smoke tests verify transcript persistence.
+
 ## Data Model Draft
 
 ```json

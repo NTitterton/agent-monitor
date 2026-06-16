@@ -99,6 +99,7 @@ function normalizeAgent(agent, config) {
     startedAt,
     endedAt: agent.endedAt,
     children: Array.isArray(agent.children) ? agent.children : [],
+    transcript: normalizeTranscript(agent.transcript),
     logs: normalizeLogs(agent.logs),
     remoteUrl: agent.remoteUrl || config.baseUrl,
     goToTarget,
@@ -131,4 +132,18 @@ function normalizeLogs(logs) {
       message: String(log.message)
     }))
     .slice(0, 50);
+}
+
+function normalizeTranscript(transcript) {
+  if (!Array.isArray(transcript)) return [];
+
+  return transcript
+    .filter((entry) => entry && (entry.content || entry.message || entry.text))
+    .map((entry) => ({
+      at: Number(entry.at || Date.now()),
+      role: ["system", "user", "assistant", "tool"].includes(entry.role) ? entry.role : "assistant",
+      source: entry.source || "remote",
+      content: String(entry.content || entry.message || entry.text).trim()
+    }))
+    .slice(0, 100);
 }

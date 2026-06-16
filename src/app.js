@@ -557,6 +557,10 @@ function renderDetailPanel(detail) {
           <h3>Logs</h3>
           ${renderAgentLogs(agent)}
         </article>
+        <article>
+          <h3>Transcript</h3>
+          ${renderAgentTranscript(agent)}
+        </article>
       </div>
     </section>
   `;
@@ -571,8 +575,25 @@ function renderAgentLogs(agent) {
     .map(
       (log) => `
         <p class="log-line ${log.level || "info"}">
-          <strong>${log.source || "agent"}</strong>
-          <span>${formatTimestamp(log.at)} · ${log.message}</span>
+          <strong>${escapeText(log.source || "agent")}</strong>
+          <span>${formatTimestamp(log.at)} · ${escapeText(log.message)}</span>
+        </p>
+      `
+    )
+    .join("");
+}
+
+function renderAgentTranscript(agent) {
+  const transcript = Array.isArray(agent.transcript) ? agent.transcript : [];
+  if (!transcript.length) return "<p>No transcript reported.</p>";
+
+  return transcript
+    .slice(-6)
+    .map(
+      (entry) => `
+        <p class="log-line ${entry.role || "assistant"}">
+          <strong>${labelize(entry.role || "assistant")}</strong>
+          <span>${formatTimestamp(entry.at)} · ${escapeText(entry.content)}</span>
         </p>
       `
     )

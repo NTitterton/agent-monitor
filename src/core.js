@@ -19,6 +19,20 @@ export const initialAgents = [
     costUsd: 0.42,
     startedAt: now - 1000 * 60 * 42,
     children: ["openai-research-2"],
+    transcript: [
+      {
+        at: now - 1000 * 60 * 40,
+        role: "user",
+        source: "operator",
+        content: "Build the initial browser task manager shell."
+      },
+      {
+        at: now - 1000 * 60 * 39,
+        role: "assistant",
+        source: "local",
+        content: "Scaffolded the app shell, provider list, and lifecycle controls."
+      }
+    ],
     logs: [
       {
         at: now - 1000 * 60 * 41,
@@ -46,6 +60,14 @@ export const initialAgents = [
     costUsd: 0.18,
     startedAt: now - 1000 * 60 * 33,
     children: [],
+    transcript: [
+      {
+        at: now - 1000 * 60 * 30,
+        role: "assistant",
+        source: "openai",
+        content: "Responses API retrieve and cancel endpoints can back account-level tracking."
+      }
+    ],
     logs: [
       {
         at: now - 1000 * 60 * 31,
@@ -73,6 +95,14 @@ export const initialAgents = [
     costUsd: 0.13,
     startedAt: now - 1000 * 60 * 19,
     children: [],
+    transcript: [
+      {
+        at: now - 1000 * 60 * 17,
+        role: "assistant",
+        source: "anthropic",
+        content: "Batch status can be represented as request-count progress until per-message output is available."
+      }
+    ],
     logs: [
       {
         at: now - 1000 * 60 * 18,
@@ -106,6 +136,14 @@ export const initialAgents = [
     goToKind: "url",
     windowTitle: "Remote Runner dashboard",
     capabilities: ["start", "stop", "interrupt", "end", "force-end", "go-to"],
+    transcript: [
+      {
+        at: now - 1000 * 60 * 12,
+        role: "assistant",
+        source: "remote",
+        content: "Validated that the standalone widget can load against the local API."
+      }
+    ],
     logs: [
       {
         at: now - 1000 * 60 * 11,
@@ -164,7 +202,8 @@ function cloneAgent(agent) {
   return {
     ...agent,
     children: Array.isArray(agent.children) ? [...agent.children] : [],
-    logs: Array.isArray(agent.logs) ? agent.logs.map((log) => ({ ...log })) : []
+    logs: Array.isArray(agent.logs) ? agent.logs.map((log) => ({ ...log })) : [],
+    transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
 }
 
