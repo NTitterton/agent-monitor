@@ -137,6 +137,7 @@ class AgentMonitorApp extends HTMLElement {
           include: parseLines(form.querySelector('[data-setting="localDiscoveryInclude"]').value),
           exclude: parseLines(form.querySelector('[data-setting="localDiscoveryExclude"]').value)
         },
+        localAgents: parseLocalAgents(form),
         snapshotRefresh: {
           enabled: form.querySelector('[data-setting="snapshotRefreshEnabled"]').checked,
           intervalMs: Number(form.querySelector('[data-setting="snapshotRefreshIntervalMs"]').value || 15000)
@@ -296,6 +297,7 @@ function renderSettings(config, mode = "local", message = "") {
   const discovery = config?.localDiscovery || { enabled: true, include: [], exclude: [] };
   const snapshotRefresh = config?.snapshotRefresh || { enabled: false, intervalMs: 15000 };
   const providerCounts = config?.providerCounts || {};
+  const localAgents = config?.localAgents || [];
   const remoteProviders = config?.remoteHttpProviders || [];
   const openAIProviders = config?.openAIResponsesProviders || [];
   const anthropicProviders = config?.anthropicMessageBatchesProviders || [];
@@ -331,6 +333,10 @@ function renderSettings(config, mode = "local", message = "") {
           <textarea data-setting="localDiscoveryExclude" rows="2" ${mode === "api" ? "" : "disabled"}>${escapeText((discovery.exclude || []).join("\n"))}</textarea>
         </label>
         <div class="remote-provider-list">
+          <span>Local Agents</span>
+          ${renderLocalAgentRows(localAgents, mode)}
+        </div>
+        <div class="remote-provider-list">
           <span>Remote Providers</span>
           ${renderRemoteProviderRows(remoteProviders, mode)}
         </div>
@@ -351,6 +357,27 @@ function renderSettings(config, mode = "local", message = "") {
         <button type="submit" ${mode === "api" ? "" : "disabled"}>Save Settings</button>
       </form>
     </section>
+  `;
+}
+
+function renderLocalAgentRows(agents, mode) {
+  const rows = [...agents, { id: "", name: "", command: "", args: [], match: "", cwd: "." }];
+  return rows.map((agent, index) => renderLocalAgentRow(agent, index, mode)).join("");
+}
+
+function renderLocalAgentRow(agent, index, mode) {
+  const disabled = mode === "api" ? "" : "disabled";
+  return `
+    <fieldset class="remote-provider-row" data-local-agent-row>
+      <input data-local-agent-field="id" value="${escapeAttribute(agent.id || "")}" ${disabled} aria-label="Local agent ID ${index + 1}" />
+      <input data-local-agent-field="name" value="${escapeAttribute(agent.name || "")}" ${disabled} aria-label="Local agent name ${index + 1}" />
+      <input data-local-agent-field="command" value="${escapeAttribute(agent.command || "")}" ${disabled} aria-label="Local agent command ${index + 1}" />
+      <input data-local-agent-field="args" value="${escapeAttribute((agent.args || []).join(" "))}" ${disabled} aria-label="Local agent args ${index + 1}" />
+      <input data-local-agent-field="match" value="${escapeAttribute(agent.match || agent.command || "")}" ${disabled} aria-label="Local agent match ${index + 1}" />
+      <input data-local-agent-field="cwd" value="${escapeAttribute(agent.cwd || ".")}" ${disabled} aria-label="Local agent working directory ${index + 1}" />
+      <input data-local-agent-field="env" type="password" value="" ${disabled} aria-label="Local agent env ${index + 1}" />
+      <span>${agent.hasEnv ? "Env saved" : "No env"} · id | name | command | args | match | cwd</span>
+    </fieldset>
   `;
 }
 
@@ -671,6 +698,11 @@ function parseLines(value) {
     .filter(Boolean);
 }
 
+function splitShellWords(value) {
+  const matches = String(value || "").match(/"([^"]*)"|'([^']*)'|\S+/g) || [];
+  return matches.map((item) => item.replace(/^["']|["']$/g, ""));
+}
+
 function parseRemoteProviders(form) {
   return [...form.querySelectorAll("[data-remote-row]")]
     .map((row) => {
@@ -692,6 +724,23 @@ function parseRemoteProviders(form) {
       };
     })
     .filter((provider) => provider.id && provider.baseUrl);
+}
+
+function parseLocalAgents(form) {
+  return [...form.querySelectorAll("[data-local-agent-row]")]
+    .map((row) => {
+      const fields = rowFields(row, "local-agent");
+      return {
+        id: fields.id,
+        name: fields.name,
+        command: fields.command,
+        args: splitShellWords(fields.args),
+        match: fields.match || fields.command,
+        cwd: fields.cwd || ".",
+        ...(fields.env ? { env: fields.env.split("\n") } : {})
+      };
+    })
+    .filter((agent) => agent.id && agent.name && agent.command);
 }
 
 function parseOpenAIProviders(form) {

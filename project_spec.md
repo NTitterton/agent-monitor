@@ -147,6 +147,7 @@ Provider setup should be possible from the app for the adapters Agent Monitor al
 Current supported setup surfaces:
 
 - Trusted embed origins.
+- Configured local agents and their launch commands.
 - Local process discovery include/exclude patterns.
 - Remote HTTP providers.
 - OpenAI Responses provider instances and tracked response IDs.
@@ -155,6 +156,7 @@ Current supported setup surfaces:
 Credential handling requirements:
 
 - Public config responses must never include API tokens or provider API keys.
+- Public config responses must never include local agent environment variables.
 - Public config may expose boolean `hasToken` or `hasApiKey` flags.
 - If a settings update omits an existing secret for a provider ID, the existing secret should be preserved.
 - If a settings update includes a new secret, it should replace the previous one for that provider ID.
@@ -164,6 +166,7 @@ Acceptance criteria:
 - `/api/config` returns sanitized setup data for all supported provider setup surfaces.
 - `PUT /api/config` can update provider setup while preserving omitted secrets.
 - Smoke tests prove token/API-key hiding and preservation for remote HTTP, OpenAI, and Anthropic setup.
+- Smoke tests prove local agent env hiding and preservation.
 
 Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons.
 

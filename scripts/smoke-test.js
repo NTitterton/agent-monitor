@@ -105,6 +105,17 @@ try {
         include: ["custom-agent"],
         exclude: ["noisy-agent"]
       },
+      localAgents: [
+        {
+          id: "smoke-local",
+          name: "Smoke Local",
+          command: "node",
+          args: ["--version"],
+          match: "node --version",
+          cwd: ".",
+          env: ["SMOKE_LOCAL=1"]
+        }
+      ],
       snapshotRefresh: {
         enabled: true,
         intervalMs: 12000
@@ -124,6 +135,9 @@ try {
   assert(updatedConfig.status === 200, "config update should succeed");
   assert(updatedConfig.body.config.allowedOrigins.includes(addedOrigin), "config update should add origin");
   assert(updatedConfig.body.config.localDiscovery.enabled === false, "config update should change discovery");
+  assert(updatedConfig.body.config.localAgents[0]?.id === "smoke-local", "config update should expose local agent");
+  assert(updatedConfig.body.config.localAgents[0]?.hasEnv === true, "public local agent should report env presence");
+  assert(!("env" in updatedConfig.body.config.localAgents[0]), "public local agent should not expose env");
   assert(updatedConfig.body.config.snapshotRefresh.enabled === true, "config update should enable snapshot refresh");
   assert(updatedConfig.body.config.snapshotRefresh.intervalMs === 12000, "config update should persist snapshot interval");
   assert(updatedConfig.body.config.localDiscovery.include[0] === "custom-agent", "config update should persist include list");
@@ -134,6 +148,7 @@ try {
 
   const configFileAfterUpdate = JSON.parse(await readFile(configPath, "utf8"));
   assert(configFileAfterUpdate.apiToken === apiToken, "config update should preserve token");
+  assert(configFileAfterUpdate.localAgents[0]?.env?.SMOKE_LOCAL === "1", "config file should store local agent env");
   assert(configFileAfterUpdate.snapshotRefresh.intervalMs === 12000, "config file should include snapshot refresh");
   assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "config file should store remote dashboard URL");
@@ -157,6 +172,26 @@ try {
   const configFileAfterRemoteUpdate = JSON.parse(await readFile(configPath, "utf8"));
   assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.token === "remote-secret", "remote token should be preserved when omitted");
   assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "remote dashboard URL should be preserved when omitted");
+
+  const localEnvPreserved = await request("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      localAgents: [
+        {
+          id: "smoke-local",
+          name: "Smoke Local Updated",
+          command: "node",
+          args: ["--version"],
+          match: "node --version",
+          cwd: "."
+        }
+      ]
+    })
+  });
+  assert(localEnvPreserved.status === 200, "local agent update should succeed");
+  const configFileAfterLocalUpdate = JSON.parse(await readFile(configPath, "utf8"));
+  assert(configFileAfterLocalUpdate.localAgents[0]?.env?.SMOKE_LOCAL === "1", "local agent env should be preserved when omitted");
 
   const updatedOriginRequest = await request("/api/agents", {
     headers: {

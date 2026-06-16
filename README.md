@@ -144,6 +144,8 @@ When this file exists, Agent Monitor adds a `local-process` provider. It reads P
 
 Agent Monitor also actively discovers known local agent CLI processes even when they are not listed in `localAgents`. Discovery is enabled by default and currently looks for common agent tools such as Codex, Claude, Gemini, Aider, Goose, OpenCode, Cursor Agent, and Amp.
 
+Configured local agents can be edited from the app Settings panel. Saved local agent environment variables are not returned by `GET /api/config`; leaving the env field blank preserves an existing env map for that local agent ID.
+
 ```json
 {
   "localDiscovery": {
@@ -274,7 +276,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
-- Configure trusted embed origins, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
+- Configure trusted embed origins, configured local agents, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
 - Configure optional browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.
 - Test configured provider connections from the Sources panel.
 - Persist local server state and recent action history under `data/`.

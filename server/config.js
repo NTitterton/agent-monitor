@@ -27,6 +27,9 @@ export async function updateConfig(patch) {
     ...(Object.hasOwn(patch, "localDiscovery")
       ? { localDiscovery: normalizeLocalDiscovery(patch.localDiscovery, current.localDiscovery) }
       : {}),
+    ...(Object.hasOwn(patch, "localAgents")
+      ? { localAgents: normalizeLocalAgents(patch.localAgents, current.localAgents) }
+      : {}),
     ...(Object.hasOwn(patch, "snapshotRefresh")
       ? { snapshotRefresh: normalizeSnapshotRefresh(patch.snapshotRefresh, current.snapshotRefresh) }
       : {}),
@@ -70,6 +73,7 @@ function configPath() {
 function publicConfig(config) {
   return {
     allowedOrigins: normalizeStringList(config.allowedOrigins),
+    localAgents: publicLocalAgents(config.localAgents),
     localDiscovery: normalizeLocalDiscovery(config.localDiscovery),
     snapshotRefresh: normalizeSnapshotRefresh(config.snapshotRefresh),
     remoteHttpProviders: publicRemoteHttpProviders(config.remoteHttpProviders),
@@ -137,6 +141,44 @@ function publicRemoteHttpProviders(providers) {
       hasToken: Boolean(provider.token),
       timeoutMs: provider.timeoutMs
     }));
+}
+
+function publicLocalAgents(agents) {
+  if (!Array.isArray(agents)) return [];
+
+  return agents
+    .filter((agent) => agent && agent.id && agent.name && agent.command)
+    .map((agent) => ({
+      id: String(agent.id),
+      name: agent.name,
+      command: agent.command,
+      args: normalizeStringList(agent.args),
+      match: agent.match || agent.command,
+      cwd: agent.cwd || ".",
+      hasEnv: Boolean(agent.env && Object.keys(agent.env).length)
+    }));
+}
+
+function normalizeLocalAgents(value, fallback = []) {
+  if (!Array.isArray(value)) return [];
+
+  const existingById = providerMap(fallback);
+  return value
+    .filter((agent) => agent && agent.id && agent.name && agent.command)
+    .map((agent) => {
+      const existing = existingById.get(agent.id) || {};
+      const env = normalizeEnvLines(agent.env, existing.env);
+      return {
+        ...existing,
+        id: String(agent.id).trim(),
+        name: String(agent.name).trim(),
+        command: String(agent.command).trim(),
+        args: normalizeStringList(agent.args),
+        match: String(agent.match || existing.match || agent.command).trim(),
+        cwd: String(agent.cwd || existing.cwd || ".").trim(),
+        ...(env ? { env } : {})
+      };
+    });
 }
 
 function normalizeRemoteHttpProviders(value, fallback = []) {
@@ -259,6 +301,19 @@ function normalizeSnapshotRefresh(value = {}, fallback = {}) {
       : fallbackSource.enabled === true,
     intervalMs: Number.isFinite(intervalMs) ? Math.min(Math.max(Math.round(intervalMs), 5000), 300000) : 15000
   };
+}
+
+function normalizeEnvLines(value, fallback = null) {
+  if (value === undefined || value === null || value === "") return fallback || null;
+  if (typeof value === "object" && !Array.isArray(value)) return value;
+  const entries = normalizeStringList(Array.isArray(value) ? value : String(value).split("\n"))
+    .map((line) => {
+      const index = line.indexOf("=");
+      if (index <= 0) return null;
+      return [line.slice(0, index).trim(), line.slice(index + 1).trim()];
+    })
+    .filter(Boolean);
+  return entries.length ? Object.fromEntries(entries) : null;
 }
 
 function normalizeStringList(value) {
