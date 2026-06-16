@@ -30,7 +30,7 @@ Agent Monitor does not currently run a standalone background scanner.
 
 Agent Monitor should run as a browser app, standalone desktop app, and embeddable widget.
 
-Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. `npm run desktop:build` compiles and verifies the generated `.app` bundle.
+Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. `npm run desktop:build` compiles and verifies the generated `.app` bundle. `npm run desktop:package` creates a shareable zip from the verified app bundle.
 
 ### Agent Type
 

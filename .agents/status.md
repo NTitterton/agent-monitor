@@ -34,6 +34,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Anthropic Message Batches provider for configured batch IDs.
 - Standalone embeddable widget.
 - Desktop app bundle verification through `npm run desktop:build`.
+- Desktop app zip packaging through `npm run desktop:package`.
 - Trusted-origin CORS and optional API token.
 - Local settings API and app panel for trusted origins, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches.
 - Smoke test harness.

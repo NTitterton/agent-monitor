@@ -48,6 +48,14 @@ open "dist/Agent Monitor.app"
 
 The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app. `npm run desktop:build` also verifies the generated `.app` bundle, executable, plist, and PkgInfo.
 
+To create a shareable zip of the verified app bundle:
+
+```sh
+npm run desktop:package
+```
+
+This writes `dist/Agent Monitor.zip`.
+
 ## Embed on another site
 
 For personal sites, use the standalone widget script:
@@ -304,5 +312,4 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 
 ## Next backend milestones
 
-1. Package desktop app builds for easier installation.
-2. Expand provider-specific start/resume semantics where APIs expose them.
+1. Expand provider-specific start/resume semantics where APIs expose them.
