@@ -165,10 +165,11 @@ Acceptance criteria:
 
 - `/api/config` returns sanitized setup data for all supported provider setup surfaces.
 - `PUT /api/config` can update provider setup while preserving omitted secrets.
+- `PUT /api/config` returns non-blocking validation warnings for malformed setup rows.
 - Smoke tests prove token/API-key hiding and preservation for remote HTTP, OpenAI, and Anthropic setup.
 - Smoke tests prove local agent env hiding and preservation.
 
-Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons.
+Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons. Config saves also return validation warnings for malformed provider/local-agent setup, and the Settings panel displays them.
 
 ### Transcripts
 

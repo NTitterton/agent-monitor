@@ -305,6 +305,19 @@ h2 {
   gap: 10px;
 }
 
+.settings-warning {
+  border: 1px solid #f6c66b;
+  border-radius: 6px;
+  background: #fff8e8;
+  color: #7a4d00;
+  display: grid;
+  gap: 4px;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  margin-bottom: 10px;
+  padding: 9px 10px;
+}
+
 .settings-form label {
   display: grid;
   gap: 6px;

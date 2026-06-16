@@ -150,6 +150,9 @@ class AgentMonitorApp extends HTMLElement {
       try {
         this.settingsMessage = "Saved";
         this.config = await client.updateConfig(patch);
+        if (this.config?.validationWarnings?.length) {
+          this.settingsMessage = `Saved with ${this.config.validationWarnings.length} warning${this.config.validationWarnings.length === 1 ? "" : "s"}`;
+        }
         this.render();
       } catch {
         this.settingsMessage = "Save failed";
@@ -307,6 +310,7 @@ function renderSettings(config, mode = "local", message = "") {
         <h2>Settings</h2>
         ${message ? `<span>${message}</span>` : ""}
       </div>
+      ${renderValidationWarnings(config?.validationWarnings || [])}
       <form class="settings-form">
         <label>
           <span>Trusted Origins</span>
@@ -357,6 +361,15 @@ function renderSettings(config, mode = "local", message = "") {
         <button type="submit" ${mode === "api" ? "" : "disabled"}>Save Settings</button>
       </form>
     </section>
+  `;
+}
+
+function renderValidationWarnings(warnings) {
+  if (!warnings.length) return "";
+  return `
+    <div class="settings-warning">
+      ${warnings.slice(0, 4).map((warning) => `<p>${escapeText(warning)}</p>`).join("")}
+    </div>
   `;
 }
 

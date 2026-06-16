@@ -173,6 +173,37 @@ try {
   assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.token === "remote-secret", "remote token should be preserved when omitted");
   assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "remote dashboard URL should be preserved when omitted");
 
+  const invalidConfig = await request("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      remoteHttpProviders: [
+        {
+          id: "bad-remote",
+          label: "Bad Remote",
+          source: "cloud",
+          baseUrl: "not-a-url"
+        }
+      ],
+      openAIResponsesProviders: [
+        {
+          id: "bad-openai",
+          responses: [{ id: "missing-response-id" }]
+        }
+      ]
+    })
+  });
+  assert(invalidConfig.status === 200, "invalid config update should still return validation feedback");
+  assert(invalidConfig.body.config.validationWarnings.length >= 2, "invalid config should return validation warnings");
+  assert(
+    invalidConfig.body.config.validationWarnings.some((warning) => warning.includes("baseUrl")),
+    "invalid remote URL should produce a warning"
+  );
+  assert(
+    invalidConfig.body.config.validationWarnings.some((warning) => warning.includes("responseId")),
+    "invalid response row should produce a warning"
+  );
+
   const localEnvPreserved = await request("/api/config", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },

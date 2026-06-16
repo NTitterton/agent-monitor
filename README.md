@@ -82,7 +82,7 @@ For cross-site embeds, add the site origins that may call the local API:
 
 Same-origin local app requests continue to work without putting the token into `index.html`.
 
-The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API and does not expose configured API tokens or provider credentials.
+The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, surfaces non-blocking validation warnings, and does not expose configured API tokens or provider credentials.
 
 Local standalone embed demo:
 
@@ -292,6 +292,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
 - Configure trusted embed origins, configured local agents, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
+- Surface setup validation warnings without exposing saved secrets.
 - Configure optional browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.
 - Test configured provider connections from the Sources panel.
 - Persist local server state and recent action history under `data/`.
@@ -303,6 +304,5 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 
 ## Next backend milestones
 
-1. Add richer provider setup validation and connection tests.
-2. Package desktop app builds for easier installation.
-3. Expand provider-specific start/resume semantics where APIs expose them.
+1. Package desktop app builds for easier installation.
+2. Expand provider-specific start/resume semantics where APIs expose them.

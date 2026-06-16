@@ -55,7 +55,7 @@ export async function updateConfig(patch) {
   };
 
   await writeConfig(next);
-  return publicConfig(next);
+  return publicConfig(next, validateConfigPatch(patch));
 }
 
 async function writeConfig(config) {
@@ -70,7 +70,7 @@ function configPath() {
     : defaultConfigPath;
 }
 
-function publicConfig(config) {
+function publicConfig(config, validationWarnings = []) {
   return {
     allowedOrigins: normalizeStringList(config.allowedOrigins),
     localAgents: publicLocalAgents(config.localAgents),
@@ -82,6 +82,7 @@ function publicConfig(config) {
       config.anthropicMessageBatchesProviders
     ),
     hasApiToken: Boolean(config.apiToken),
+    validationWarnings,
     providerCounts: {
       localAgents: Array.isArray(config.localAgents) ? config.localAgents.length : 0,
       remoteHttpProviders: Array.isArray(config.remoteHttpProviders) ? config.remoteHttpProviders.length : 0,
@@ -93,6 +94,78 @@ function publicConfig(config) {
         : 0
     }
   };
+}
+
+function validateConfigPatch(patch) {
+  const warnings = [];
+  if (!patch || typeof patch !== "object") return warnings;
+
+  if (Object.hasOwn(patch, "localAgents")) {
+    validateRows(patch.localAgents, "localAgents", ["id", "name", "command"], warnings);
+  }
+
+  if (Object.hasOwn(patch, "remoteHttpProviders")) {
+    validateRows(patch.remoteHttpProviders, "remoteHttpProviders", ["id", "baseUrl"], warnings);
+    for (const provider of Array.isArray(patch.remoteHttpProviders) ? patch.remoteHttpProviders : []) {
+      if (provider?.baseUrl && !isHttpUrl(provider.baseUrl)) {
+        warnings.push(`remoteHttpProviders ${provider.id || provider.baseUrl} baseUrl should be an http(s) URL.`);
+      }
+      if (provider?.dashboardUrl && !isHttpUrl(provider.dashboardUrl)) {
+        warnings.push(`remoteHttpProviders ${provider.id || provider.dashboardUrl} dashboardUrl should be an http(s) URL.`);
+      }
+    }
+  }
+
+  if (Object.hasOwn(patch, "openAIResponsesProviders")) {
+    validateRows(patch.openAIResponsesProviders, "openAIResponsesProviders", ["id"], warnings);
+    for (const provider of Array.isArray(patch.openAIResponsesProviders) ? patch.openAIResponsesProviders : []) {
+      validateRows(provider?.responses, `openAIResponsesProviders ${provider?.id || "unknown"} responses`, ["id", "responseId"], warnings);
+    }
+  }
+
+  if (Object.hasOwn(patch, "anthropicMessageBatchesProviders")) {
+    validateRows(patch.anthropicMessageBatchesProviders, "anthropicMessageBatchesProviders", ["id"], warnings);
+    for (const provider of Array.isArray(patch.anthropicMessageBatchesProviders) ? patch.anthropicMessageBatchesProviders : []) {
+      validateRows(provider?.batches, `anthropicMessageBatchesProviders ${provider?.id || "unknown"} batches`, ["id", "batchId"], warnings);
+    }
+  }
+
+  return warnings;
+}
+
+function validateRows(rows, label, requiredFields, warnings) {
+  if (!Array.isArray(rows)) {
+    warnings.push(`${label} should be a list.`);
+    return;
+  }
+
+  const seen = new Set();
+  rows.forEach((row, index) => {
+    if (!row || typeof row !== "object") {
+      warnings.push(`${label} row ${index + 1} should be an object.`);
+      return;
+    }
+
+    for (const field of requiredFields) {
+      if (!String(row[field] || "").trim()) {
+        warnings.push(`${label} row ${index + 1} missing ${field}.`);
+      }
+    }
+
+    if (row.id) {
+      if (seen.has(row.id)) warnings.push(`${label} contains duplicate id ${row.id}.`);
+      seen.add(row.id);
+    }
+  });
+}
+
+function isHttpUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 function publicOpenAIResponsesProviders(providers) {
