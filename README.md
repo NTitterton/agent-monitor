@@ -194,7 +194,7 @@ Agent Monitor calls:
 - `GET {baseUrl}/agents`
 - `POST {baseUrl}/agents/:id/actions`
 
-`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `cpu`, `memoryMb`, `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`.
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `cpu`, `memoryMb`, `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`. Remote adapters preserve the process-resource breakdown fields when providers report them.
 
 Use `tokenCountConfidence` to distinguish provider-reported totals from rough or unknown counts. Accepted values are `observed`, `estimated`, `reported`, and `unknown`.
 

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider.js";
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
+import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
 import { signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
 
 const port = 5199;
@@ -422,12 +423,76 @@ try {
   assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be preserved when omitted");
 
   await assertAccountProviderCapabilities();
+  await assertRemoteProviderNormalization();
   assertProcessResourceAggregation();
   assertProcessTreeSignalOrder();
 
   console.log("Smoke test passed");
 } finally {
   await stopServer(server);
+}
+
+async function assertRemoteProviderNormalization() {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, options = {}) => {
+    if (String(url).endsWith("/agents")) {
+      return jsonResponse({
+        agents: [
+          {
+            id: "remote-normalized",
+            name: "Remote Normalized",
+            status: "running",
+            cpu: 7.5,
+            memoryMb: 256,
+            processCpu: 2.5,
+            processMemoryMb: 100,
+            childCpu: 5,
+            childMemoryMb: 156,
+            pid: 200,
+            parentPid: 100,
+            childPids: [201, 202],
+            capabilities: ["stop"],
+            goToTarget: "https://remote.example/agents/remote-normalized"
+          }
+        ]
+      });
+    }
+
+    if (String(url).endsWith("/agents/remote-normalized/actions")) {
+      const body = JSON.parse(options.body || "{}");
+      return jsonResponse({
+        agent: {
+          id: "remote-normalized",
+          name: "Remote Normalized",
+          status: body.action === "stop" ? "waiting" : "running",
+          capabilities: ["stop"]
+        }
+      });
+    }
+
+    return jsonResponse({ error: "unexpected smoke URL" }, 404);
+  };
+
+  try {
+    const provider = createRemoteHttpProvider({
+      id: "mock-remote",
+      label: "Mock Remote",
+      baseUrl: "https://remote.example/api"
+    });
+    const [agent] = await provider.listAgents();
+    assert(agent.processCpu === 2.5, "remote provider should preserve own CPU");
+    assert(agent.childCpu === 5, "remote provider should preserve child CPU");
+    assert(agent.childMemoryMb === 156, "remote provider should preserve child memory");
+    assert(agent.pid === 200, "remote provider should preserve pid");
+    assert(agent.parentPid === 100, "remote provider should preserve parent pid");
+    assert(agent.childPids.length === 2, "remote provider should preserve child pids");
+    assert(agent.capabilities.includes("go-to"), "remote provider should add URL go-to capability");
+
+    const changedAgent = await provider.performAction("remote-normalized", "stop", "pause");
+    assert(changedAgent.status === "waiting", "remote action response should normalize returned agent");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 }
 
 function assertProcessTreeSignalOrder() {

@@ -78,6 +78,7 @@ Notes:
 - OpenAI Responses can report usage once available, but live per-second throughput may require sampling successive snapshots.
 - Anthropic Message Batches currently report request counts through the existing adapter, not true token counts.
 - Remote providers should be allowed to report their own token totals and rates.
+- Remote providers may also report `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `pid`, `parentPid`, and `childPids` when they can observe process-level execution.
 
 Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract.
 
@@ -193,6 +194,8 @@ Local process resources should represent the work owned by the agent, not only t
 - `childPids` includes descendant process IDs, not only direct children.
 
 Status: implemented for the local process provider and rendered in the app, module widget, and standalone widget. Smoke tests cover aggregate own/child resource accounting.
+
+Remote provider note: the HTTP adapter preserves provider-reported process-resource breakdown fields so remote/cloud agents can use the same UI model when those metrics are available.
 
 ### Local Process Tree Controls
 

@@ -43,6 +43,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Stable per-agent `type` field and type filter.
 - Token throughput and token count confidence in normalized snapshots, main app, widgets, and remote provider docs.
 - Local process aggregate resource accounting across matched processes and descendant child processes.
+- Remote HTTP provider preserves reported own/child process-resource breakdown fields.
 - Local process lifecycle controls signal descendant process trees before root PIDs.
 - Smoke coverage for starting and force-ending a configured local process agent.
 - `Go To` action for macOS local process agents that activates likely Terminal/iTerm, browser, or editor surfaces.
