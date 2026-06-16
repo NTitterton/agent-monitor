@@ -26,11 +26,14 @@ class AgentMonitorApp extends HTMLElement {
 
   render() {
     const agents = this.agents || [];
+    const filters = this.filters || { query: "", status: "all", source: "all" };
+    const filteredAgents = filterAgents(agents, filters);
     const running = agents.filter((agent) => agent.status === "running").length;
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
     const spend = agents.reduce((total, agent) => total + agent.costUsd, 0);
     const history = this.history || [];
     const selectedDetail = this.detail || buildDetail(this.selectedAgentId, agents, history);
+    const sources = [...new Set(agents.map((agent) => agent.source))].sort();
 
     this.innerHTML = `
       <main class="app-shell">
@@ -41,8 +44,8 @@ class AgentMonitorApp extends HTMLElement {
           </div>
           <div class="summary-grid" aria-label="Agent summary">
             <article>
-              <span>${agents.length}</span>
-              <p>Agents</p>
+              <span>${filteredAgents.length}/${agents.length}</span>
+              <p>Visible</p>
             </article>
             <article>
               <span>${running}</span>
@@ -71,8 +74,9 @@ class AgentMonitorApp extends HTMLElement {
               <h2>Agent Tasks</h2>
               <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
             </div>
+            ${renderFilters(filters, sources)}
             <div class="agent-table" role="table" aria-label="Agent task table">
-              ${renderAgentTable(agents, this.selectedAgentId)}
+              ${renderAgentTable(filteredAgents, agents, this.selectedAgentId)}
             </div>
             ${renderDetailPanel(selectedDetail)}
           </section>
@@ -81,6 +85,17 @@ class AgentMonitorApp extends HTMLElement {
     `;
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
+    this.querySelector(".filter-bar")?.addEventListener("submit", (event) => event.preventDefault());
+    this.querySelectorAll("[data-filter]").forEach((input) => {
+      input.addEventListener("input", () => {
+        this.filters = {
+          query: this.querySelector('[data-filter="query"]').value,
+          status: this.querySelector('[data-filter="status"]').value,
+          source: this.querySelector('[data-filter="source"]').value
+        };
+        this.render();
+      });
+    });
     this.querySelectorAll("[data-select-agent]").forEach((button) => {
       button.addEventListener("click", async () => {
         this.selectedAgentId = button.getAttribute("data-select-agent");
@@ -105,6 +120,29 @@ class AgentMonitorApp extends HTMLElement {
       });
     });
   }
+}
+
+function renderFilters(filters, sources) {
+  return `
+    <form class="filter-bar" aria-label="Agent filters">
+      <label>
+        <span>Search</span>
+        <input data-filter="query" type="search" value="${escapeAttribute(filters.query)}" placeholder="Name, task, provider" />
+      </label>
+      <label>
+        <span>Status</span>
+        <select data-filter="status">
+          ${["all", "running", "paused", "waiting", "ended"].map((status) => renderOption(status, filters.status)).join("")}
+        </select>
+      </label>
+      <label>
+        <span>Source</span>
+        <select data-filter="source">
+          ${["all", ...sources].map((source) => renderOption(source, filters.source, source === "all" ? "All" : labelize(source))).join("")}
+        </select>
+      </label>
+    </form>
+  `;
 }
 
 function renderHistory(history, mode = "local") {
@@ -177,7 +215,20 @@ function renderSourceList(agents, providers) {
   return `${sourceRows}${providerRows}`;
 }
 
-function renderAgentTable(agents, selectedAgentId) {
+function renderAgentTable(agents, allAgents, selectedAgentId) {
+  if (!agents.length) {
+    return `
+      <div class="table-row table-head" role="row">
+        <span>Agent</span>
+        <span>Status</span>
+        <span>Resources</span>
+        <span>Lineage</span>
+        <span>Actions</span>
+      </div>
+      <article class="empty-row">No agents match the current filters.</article>
+    `;
+  }
+
   return `
     <div class="table-row table-head" role="row">
       <span>Agent</span>
@@ -186,7 +237,7 @@ function renderAgentTable(agents, selectedAgentId) {
       <span>Lineage</span>
       <span>Actions</span>
     </div>
-    ${agents.map((agent) => renderAgentRow(agent, agents, selectedAgentId)).join("")}
+    ${agents.map((agent) => renderAgentRow(agent, allAgents, selectedAgentId)).join("")}
   `;
 }
 
@@ -329,6 +380,29 @@ function renderResourceLine(agent) {
   if (agent.pid) parts.push(`PID ${agent.pid}`);
   if (agent.tokens) parts.push(`${agent.tokens.toLocaleString()} tokens`);
   return parts.join(" · ");
+}
+
+function filterAgents(agents, filters) {
+  const query = filters.query.trim().toLowerCase();
+
+  return agents.filter((agent) => {
+    const matchesQuery =
+      !query ||
+      [agent.name, agent.provider, agent.task, agent.id, agent.providerId, agent.source]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query));
+    const matchesStatus = filters.status === "all" || agent.status === filters.status;
+    const matchesSource = filters.source === "all" || agent.source === filters.source;
+    return matchesQuery && matchesStatus && matchesSource;
+  });
+}
+
+function renderOption(value, selected, label = labelize(value)) {
+  return `<option value="${escapeAttribute(value)}" ${value === selected ? "selected" : ""}>${label}</option>`;
+}
+
+function escapeAttribute(value) {
+  return String(value || "").replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 }
 
 function renderAction(agent, action) {
