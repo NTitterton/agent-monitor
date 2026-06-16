@@ -198,6 +198,15 @@ h2 {
   font-size: 0.82rem;
 }
 
+.source-error {
+  background: #fff8f8;
+}
+
+.source-error strong,
+.source-error span {
+  color: #a62626;
+}
+
 .agent-table {
   display: grid;
   overflow-x: auto;

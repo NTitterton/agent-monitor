@@ -13,6 +13,7 @@ class AgentMonitorApp extends HTMLElement {
     this.unsubscribe = client.subscribe((snapshot) => {
       this.agents = snapshot.agents;
       this.history = snapshot.history;
+      this.providers = snapshot.providers;
       this.mode = snapshot.mode;
       this.render();
     });
@@ -59,7 +60,7 @@ class AgentMonitorApp extends HTMLElement {
         <section class="workspace">
           <aside class="panel sources-panel">
             <h2>Sources</h2>
-            ${renderSourceList(agents)}
+            ${renderSourceList(agents, this.providers || [])}
             ${renderHistory(history, this.mode)}
           </aside>
           <section class="panel agent-panel">
@@ -122,7 +123,7 @@ function renderHistory(history, mode = "local") {
   `;
 }
 
-function renderSourceList(agents) {
+function renderSourceList(agents, providers) {
   const bySource = agents.reduce((groups, agent) => {
     const sourceAgents = groups.get(agent.source) || [];
     sourceAgents.push(agent);
@@ -130,7 +131,7 @@ function renderSourceList(agents) {
     return groups;
   }, new Map());
 
-  return [...bySource.entries()]
+  const sourceRows = [...bySource.entries()]
     .map(([source, sourceAgents]) => {
       const running = sourceAgents.filter((agent) => agent.status === "running").length;
       return `
@@ -144,6 +145,23 @@ function renderSourceList(agents) {
       `;
     })
     .join("");
+
+  const providerRows = providers
+    .filter((provider) => provider.status === "error")
+    .map(
+      (provider) => `
+        <article class="source-row source-error">
+          <div>
+            <strong>${provider.label}</strong>
+            <p>${provider.error}</p>
+          </div>
+          <span>Provider error</span>
+        </article>
+      `
+    )
+    .join("");
+
+  return `${sourceRows}${providerRows}`;
 }
 
 function renderAgentTable(agents) {

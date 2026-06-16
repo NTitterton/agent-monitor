@@ -81,6 +81,39 @@ Copy `agent-monitor.config.example.json` to `agent-monitor.config.json` and add 
 
 When this file exists, Agent Monitor adds a `local-process` provider. It reads PID, CPU, memory, command, and start time from `ps`. `start` launches the configured command. `stop`, `interrupt`, and `end` send `SIGTERM`; `force-end` sends `SIGKILL`.
 
+## Connect remote HTTP providers
+
+Add remote providers to `agent-monitor.config.json`:
+
+```json
+{
+  "remoteHttpProviders": [
+    {
+      "id": "remote-runner",
+      "label": "Remote Runner",
+      "source": "cloud",
+      "baseUrl": "https://agents.example.com/api",
+      "token": "replace-me"
+    }
+  ]
+}
+```
+
+Agent Monitor calls:
+
+- `GET {baseUrl}/agents`
+- `POST {baseUrl}/agents/:id/actions`
+
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `costUsd`, `startedAt`, `endedAt`, `parentId`, and `children`.
+
+Action requests receive:
+
+```json
+{ "action": "interrupt", "prompt": "optional operator prompt" }
+```
+
+The response may return `{ "agent": {...} }` or `{ "agents": [...] }`. Provider health is surfaced through `GET /api/providers`; a failing remote provider is shown in the Sources panel without breaking other providers.
+
 ## Current capability
 
 - Track agents from multiple provider namespaces.

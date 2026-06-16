@@ -5,11 +5,13 @@ export function createAgentClient() {
   const subscribers = new Set();
   let agents = localStore.list();
   let history = [];
+  let providers = [];
   let mode = "local";
 
-  function emit(nextAgents, nextHistory = history) {
+  function emit(nextAgents, nextHistory = history, nextProviders = providers) {
     agents = nextAgents.map((agent) => ({ ...agent, children: [...agent.children] }));
     history = nextHistory.map((record) => ({ ...record }));
+    providers = nextProviders.map((provider) => ({ ...provider }));
     subscribers.forEach((subscriber) => subscriber(snapshot()));
   }
 
@@ -19,7 +21,9 @@ export function createAgentClient() {
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const payload = await response.json();
       mode = "api";
-      emit(payload.agents, payload.history || []);
+      const providerResponse = await fetch("/api/providers", { headers: { Accept: "application/json" } });
+      const providerPayload = providerResponse.ok ? await providerResponse.json() : { providers: [] };
+      emit(payload.agents, payload.history || [], providerPayload.providers || []);
     } catch {
       mode = "local";
       emit(localStore.list());
@@ -42,6 +46,7 @@ export function createAgentClient() {
     return {
       agents: list(),
       history: historyList(),
+      providers: providers.map((provider) => ({ ...provider })),
       mode
     };
   }

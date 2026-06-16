@@ -1,9 +1,8 @@
 import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { lifecycleActions } from "../src/core.js";
+import { readConfig } from "./config.js";
 
-const configPath = resolve(new URL("../agent-monitor.config.json", import.meta.url).pathname);
 const runningChildren = new Map();
 
 export function createLocalProcessProvider() {
@@ -40,19 +39,15 @@ export async function hasLocalProcessConfig() {
 }
 
 async function readConfiguredAgents() {
-  try {
-    const config = JSON.parse(await readFile(configPath, "utf8"));
-    if (!Array.isArray(config.localAgents)) return [];
-    return config.localAgents
-      .filter((agent) => agent.id && agent.name && agent.command)
-      .map((agent) => ({
-        ...agent,
-        match: agent.match || agent.command,
-        cwd: agent.cwd || "."
-      }));
-  } catch {
-    return [];
-  }
+  const config = await readConfig();
+  if (!Array.isArray(config.localAgents)) return [];
+  return config.localAgents
+    .filter((agent) => agent.id && agent.name && agent.command)
+    .map((agent) => ({
+      ...agent,
+      match: agent.match || agent.command,
+      cwd: agent.cwd || "."
+    }));
 }
 
 function startAgent(agent) {

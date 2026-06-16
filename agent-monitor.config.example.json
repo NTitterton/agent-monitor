@@ -7,5 +7,14 @@
       "match": "codex",
       "cwd": "."
     }
+  ],
+  "remoteHttpProviders": [
+    {
+      "id": "remote-runner",
+      "label": "Remote Runner",
+      "source": "cloud",
+      "baseUrl": "https://agents.example.com/api",
+      "token": "replace-me"
+    }
   ]
 }

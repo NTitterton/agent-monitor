@@ -1,5 +1,6 @@
 import { lifecycleActions } from "../src/core.js";
 import { createLocalProcessProvider, hasLocalProcessConfig } from "./localProcessProvider.js";
+import { readRemoteHttpProviders } from "./remoteHttpProvider.js";
 import { createStateStore } from "./stateStore.js";
 
 function createStateProvider({ id, label, source, stateStore }) {
@@ -54,13 +55,19 @@ export function createProviderRegistry() {
 
   async function listAgents() {
     const activeProviders = await listActiveProviders();
-    const groups = await Promise.all(activeProviders.map((provider) => provider.listAgents()));
-    return groups.flat().sort((a, b) => a.startedAt - b.startedAt);
+    const groups = await Promise.all(activeProviders.map((provider) => safeListAgents(provider)));
+    return groups.flatMap((result) => result.agents).sort((a, b) => a.startedAt - b.startedAt);
   }
 
   async function performAction(agentId, actionId, prompt = "") {
     for (const provider of await listActiveProviders()) {
-      const agents = await provider.listAgents();
+      let agents = [];
+      try {
+        agents = await provider.listAgents();
+      } catch {
+        continue;
+      }
+
       if (agents.some((agent) => agent.id === agentId)) {
         const changedAgent = await provider.performAction(agentId, actionId, prompt);
         if (!provider.recordsHistory && changedAgent) {
@@ -77,21 +84,38 @@ export function createProviderRegistry() {
   }
 
   async function listActiveProviders() {
-    if (await hasLocalProcessConfig()) {
-      return [createLocalProcessProvider(), ...providers];
-    }
+    const configuredProviders = await readRemoteHttpProviders();
 
-    return providers;
+    if (await hasLocalProcessConfig()) configuredProviders.unshift(createLocalProcessProvider());
+
+    return [...configuredProviders, ...providers];
+  }
+
+  async function listProviderStatus() {
+    const activeProviders = await listActiveProviders();
+    const results = await Promise.all(activeProviders.map((provider) => safeListAgents(provider)));
+    return results.map(({ provider, agents, error }) => ({
+      id: provider.id,
+      label: provider.label,
+      source: provider.source,
+      capabilities: provider.capabilities,
+      status: error ? "error" : "ok",
+      agentCount: agents.length,
+      error: error?.message || null
+    }));
+  }
+
+  async function safeListAgents(provider) {
+    try {
+      return { provider, agents: await provider.listAgents(), error: null };
+    } catch (error) {
+      return { provider, agents: [], error };
+    }
   }
 
   return {
     async providers() {
-      return (await listActiveProviders()).map(({ id, label, source, capabilities }) => ({
-        id,
-        label,
-        source,
-        capabilities
-      }));
+      return listProviderStatus();
     },
     listAgents,
     listHistory: stateStore.listHistory,
