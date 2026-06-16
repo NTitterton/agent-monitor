@@ -26,6 +26,12 @@ Agent Monitor does not currently run a standalone background scanner.
 
 ## New Requirements
 
+### Run Surfaces
+
+Agent Monitor should run as a browser app, standalone desktop app, and embeddable widget.
+
+Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. `npm run desktop:build` compiles and verifies the generated `.app` bundle.
+
 ### Agent Type
 
 Add an explicit `type` field to normalized agents.
