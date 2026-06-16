@@ -10,7 +10,7 @@ export function createAgentClient() {
   let mode = "local";
 
   function emit(nextAgents, nextHistory = history, nextProviders = providers, nextConfig = config) {
-    agents = nextAgents.map((agent) => ({ ...agent, children: [...agent.children] }));
+    agents = nextAgents.map(cloneAgent);
     history = nextHistory.map((record) => ({ ...record }));
     providers = nextProviders.map((provider) => ({ ...provider }));
     config = cloneConfig(nextConfig);
@@ -39,7 +39,7 @@ export function createAgentClient() {
   });
 
   function list() {
-    return agents.map((agent) => ({ ...agent, children: [...agent.children] }));
+    return agents.map(cloneAgent);
   }
 
   function historyList() {
@@ -139,6 +139,14 @@ export function createAgentClient() {
         emit(localStore.list(), history);
       }
     }
+  };
+}
+
+function cloneAgent(agent) {
+  return {
+    ...agent,
+    type: agent.type || agent.providerId || agent.source || "unknown",
+    children: Array.isArray(agent.children) ? [...agent.children] : []
   };
 }
 

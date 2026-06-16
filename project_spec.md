@@ -45,6 +45,8 @@ Relationship to existing fields:
 - `providerId` identifies the adapter instance.
 - `type` should be a stable, filterable classification for the kind of agent/provider.
 
+Status: implemented for normalized provider snapshots and app filters.
+
 Acceptance criteria:
 
 - Every agent returned by `/api/agents` has `type`.

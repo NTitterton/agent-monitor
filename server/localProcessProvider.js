@@ -20,6 +20,7 @@ export function createLocalProcessProvider() {
     id: "local-process",
     label: "Local processes",
     source: "local",
+    type: "local",
     recordsHistory: false,
     capabilities: ["list", "start", "stop", "interrupt", "end", "force-end"],
     async listAgents() {
@@ -120,6 +121,7 @@ function toProcessAgent(agent, processes) {
     name: agent.name,
     provider: "Local Process",
     providerId: "local-process",
+    type: "local",
     source: "local",
     status: isRunning ? "running" : "ended",
     parentId: agent.parentId || null,

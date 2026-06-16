@@ -5,11 +5,12 @@ import { readOpenAIResponsesProviders } from "./openAIResponsesProvider.js";
 import { readRemoteHttpProviders } from "./remoteHttpProvider.js";
 import { createStateStore } from "./stateStore.js";
 
-function createStateProvider({ id, label, source, stateStore }) {
+function createStateProvider({ id, label, source, type, stateStore }) {
   return {
     id,
     label,
     source,
+    type,
     recordsHistory: true,
     capabilities: ["list", ...lifecycleActions.map((action) => action.id)],
     async listAgents() {
@@ -31,24 +32,28 @@ export function createProviderRegistry() {
       id: "local",
       label: "Local agents",
       source: "local",
+      type: "local",
       stateStore
     }),
     createStateProvider({
       id: "openai",
       label: "OpenAI account",
       source: "user-account",
+      type: "openai",
       stateStore
     }),
     createStateProvider({
       id: "anthropic",
       label: "Anthropic account",
       source: "user-account",
+      type: "anthropic",
       stateStore
     }),
     createStateProvider({
       id: "remote",
       label: "Remote cloud agents",
       source: "cloud",
+      type: "remote",
       stateStore
     })
   ];
@@ -119,6 +124,7 @@ export function createProviderRegistry() {
       id: provider.id,
       label: provider.label,
       source: provider.source,
+      type: provider.type || provider.id,
       capabilities: provider.capabilities,
       status: error ? "error" : "ok",
       agentCount: agents.length,

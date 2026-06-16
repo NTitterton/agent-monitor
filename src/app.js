@@ -27,7 +27,7 @@ class AgentMonitorApp extends HTMLElement {
 
   render() {
     const agents = this.agents || [];
-    const filters = this.filters || { query: "", status: "all", source: "all" };
+    const filters = this.filters || { query: "", status: "all", source: "all", type: "all" };
     const filteredAgents = filterAgents(agents, filters);
     const running = agents.filter((agent) => agent.status === "running").length;
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
@@ -35,6 +35,7 @@ class AgentMonitorApp extends HTMLElement {
     const history = this.history || [];
     const selectedDetail = this.detail || buildDetail(this.selectedAgentId, agents, history);
     const sources = [...new Set(agents.map((agent) => agent.source))].sort();
+    const types = [...new Set(agents.map((agent) => agent.type || agent.providerId || agent.source))].sort();
 
     this.innerHTML = `
       <main class="app-shell">
@@ -76,7 +77,7 @@ class AgentMonitorApp extends HTMLElement {
               <h2>Agent Tasks</h2>
               <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
             </div>
-            ${renderFilters(filters, sources)}
+            ${renderFilters(filters, sources, types)}
             <div class="agent-table" role="table" aria-label="Agent task table">
               ${renderAgentTable(filteredAgents, agents, this.selectedAgentId)}
             </div>
@@ -117,7 +118,8 @@ class AgentMonitorApp extends HTMLElement {
         this.filters = {
           query: this.querySelector('[data-filter="query"]').value,
           status: this.querySelector('[data-filter="status"]').value,
-          source: this.querySelector('[data-filter="source"]').value
+          source: this.querySelector('[data-filter="source"]').value,
+          type: this.querySelector('[data-filter="type"]').value
         };
         this.render();
       });
@@ -148,7 +150,7 @@ class AgentMonitorApp extends HTMLElement {
   }
 }
 
-function renderFilters(filters, sources) {
+function renderFilters(filters, sources, types) {
   return `
     <form class="filter-bar" aria-label="Agent filters">
       <label>
@@ -165,6 +167,12 @@ function renderFilters(filters, sources) {
         <span>Source</span>
         <select data-filter="source">
           ${["all", ...sources].map((source) => renderOption(source, filters.source, source === "all" ? "All" : labelize(source))).join("")}
+        </select>
+      </label>
+      <label>
+        <span>Type</span>
+        <select data-filter="type">
+          ${["all", ...types].map((type) => renderOption(type, filters.type, type === "all" ? "All" : labelize(type))).join("")}
         </select>
       </label>
     </form>
@@ -306,6 +314,7 @@ function renderRemoteProviderRow(provider, index, mode) {
       <input data-remote-field="id" value="${escapeAttribute(provider.id || "")}" ${disabled} aria-label="Remote provider ID ${index + 1}" />
       <input data-remote-field="label" value="${escapeAttribute(provider.label || "")}" ${disabled} aria-label="Remote provider label ${index + 1}" />
       <input data-remote-field="baseUrl" value="${escapeAttribute(provider.baseUrl || "")}" ${disabled} aria-label="Remote provider URL ${index + 1}" />
+      <input data-remote-field="type" value="${escapeAttribute(provider.type || provider.id || "remote")}" ${disabled} aria-label="Remote provider type ${index + 1}" />
       <select data-remote-field="source" ${disabled} aria-label="Remote provider source ${index + 1}">
         ${["cloud", "user-account", "local"].map((source) => renderOption(source, provider.source || "cloud")).join("")}
       </select>
@@ -398,7 +407,7 @@ function renderAgentRow(agent, agents, selectedAgentId) {
     <article class="table-row ${agent.id === selectedAgentId ? "selected" : ""}" role="row">
       <div class="agent-name">
         <button class="agent-link" type="button" data-select-agent="${agent.id}">${agent.name}</button>
-        <p>${agent.provider} · ${agent.task}</p>
+        <p>${agent.provider} · ${labelize(agent.type || agent.providerId || agent.source)} · ${agent.task}</p>
       </div>
       <div>
         <span class="status-pill ${statusTone(agent.status)}">${agent.status}</span>
@@ -436,7 +445,7 @@ function renderDetailPanel(detail) {
         <article>
           <span>Provider</span>
           <strong>${agent.provider}</strong>
-          <p>${agent.providerId || agent.source || "unknown"}</p>
+          <p>${labelize(agent.type || agent.providerId || "unknown")} · ${agent.providerId || agent.source || "unknown"}</p>
         </article>
         <article>
           <span>Runtime</span>
@@ -566,12 +575,13 @@ function filterAgents(agents, filters) {
   return agents.filter((agent) => {
     const matchesQuery =
       !query ||
-      [agent.name, agent.provider, agent.task, agent.id, agent.providerId, agent.source]
+      [agent.name, agent.provider, agent.task, agent.id, agent.providerId, agent.source, agent.type]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(query));
     const matchesStatus = filters.status === "all" || agent.status === filters.status;
     const matchesSource = filters.source === "all" || agent.source === filters.source;
-    return matchesQuery && matchesStatus && matchesSource;
+    const matchesType = filters.type === "all" || (agent.type || agent.providerId || agent.source) === filters.type;
+    return matchesQuery && matchesStatus && matchesSource && matchesType;
   });
 }
 
@@ -608,6 +618,7 @@ function parseRemoteProviders(form) {
         id: fields.id,
         label: fields.label,
         baseUrl: fields.baseUrl,
+        type: fields.type || fields.id,
         source: fields.source || "cloud",
         ...(fields.token ? { token: fields.token } : {})
       };

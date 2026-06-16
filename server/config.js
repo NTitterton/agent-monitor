@@ -127,6 +127,7 @@ function publicRemoteHttpProviders(providers) {
       id: String(provider.id),
       label: provider.label || provider.id,
       source: provider.source || "cloud",
+      type: provider.type || provider.id,
       baseUrl: provider.baseUrl,
       hasToken: Boolean(provider.token),
       timeoutMs: provider.timeoutMs
@@ -151,6 +152,7 @@ function normalizeRemoteHttpProviders(value, fallback = []) {
         id: String(provider.id).trim(),
         label: String(provider.label || provider.id).trim(),
         source: String(provider.source || existing.source || "cloud").trim(),
+        type: String(provider.type || existing.type || provider.id).trim(),
         baseUrl: String(provider.baseUrl).trim().replace(/\/+$/, ""),
         ...(provider.token ? { token: String(provider.token) } : {}),
         ...(provider.timeoutMs ? { timeoutMs: Number(provider.timeoutMs) } : {})

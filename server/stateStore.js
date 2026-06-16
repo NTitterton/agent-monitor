@@ -11,6 +11,13 @@ const agentProviderIds = {
   "remote-build-7": "remote"
 };
 
+const agentTypes = {
+  "local-codex-1": "local",
+  "openai-research-2": "openai",
+  "anthropic-review-1": "anthropic",
+  "remote-build-7": "remote"
+};
+
 export function createStateStore() {
   let loaded = false;
   let state = createDefaultState();
@@ -85,6 +92,7 @@ function createDefaultState() {
     agents: initialAgents.map((agent) => ({
       ...agent,
       providerId: agentProviderIds[agent.id] || "local",
+      type: agent.type || agentTypes[agent.id] || agent.providerId || "local",
       children: [...agent.children],
       logs: normalizeLogs(agent.logs)
     })),
@@ -106,6 +114,7 @@ function normalizeState(nextState) {
       return {
         ...agent,
         providerId: agent.providerId || agentProviderIds[agent.id] || "local",
+        type: agent.type || agentTypes[agent.id] || agent.providerId || agentProviderIds[agent.id] || "remote",
         children: Array.isArray(agent.children) ? [...agent.children] : [],
         logs: logs.length ? logs : normalizeLogs(fallbackAgent?.logs)
       };

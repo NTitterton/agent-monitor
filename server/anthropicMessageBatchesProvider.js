@@ -9,6 +9,7 @@ export function createAnthropicMessageBatchesProvider(config) {
     id: config.id,
     label: config.label || "Anthropic Message Batches",
     source: "user-account",
+    type: "anthropic",
     recordsHistory: false,
     capabilities: ["list", "stop", "interrupt", "end", "force-end"],
     async listAgents() {
@@ -93,6 +94,7 @@ function normalizeBatch(batch, providerConfig, batchConfig) {
     name: batchConfig.name || batch.id,
     provider: providerConfig.label || "Anthropic Message Batches",
     providerId: providerConfig.id,
+    type: "anthropic",
     source: "user-account",
     status,
     parentId: batchConfig.parentId || null,

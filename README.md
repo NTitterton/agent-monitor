@@ -178,7 +178,7 @@ Agent Monitor calls:
 - `GET {baseUrl}/agents`
 - `POST {baseUrl}/agents/:id/actions`
 
-`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, and `childPids`.
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `cpu`, `memoryMb`, `tokens`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, and `childPids`.
 
 Agents may also include a `logs` array for recent provider, process, transcript, or operator events:
 
@@ -264,6 +264,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 ## Current capability
 
 - Track agents from multiple provider namespaces.
+- Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, and recent logs.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.

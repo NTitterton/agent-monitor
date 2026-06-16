@@ -8,6 +8,7 @@ export function createRemoteHttpProvider(config) {
     id: config.id,
     label: config.label || config.id,
     source: config.source || "cloud",
+    type: config.type || config.id || "remote",
     recordsHistory: false,
     capabilities: ["list", ...lifecycleActions.map((action) => action.id)],
     async listAgents() {
@@ -79,6 +80,7 @@ function normalizeAgent(agent, config) {
     name: agent.name || agent.id,
     provider: config.label || config.id,
     providerId: config.id,
+    type: agent.type || config.type || config.id || "remote",
     source: config.source || "cloud",
     status: agent.status || "waiting",
     parentId: agent.parentId || null,

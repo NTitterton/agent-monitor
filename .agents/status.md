@@ -36,6 +36,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Smoke test harness.
 - Lineage view and selected-agent detail panel.
 - Search/status/source filters for the agent table.
+- Stable per-agent `type` field and type filter.
 - GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.
 
 ## Blockers

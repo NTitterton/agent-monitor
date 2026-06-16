@@ -8,6 +8,7 @@ export function createOpenAIResponsesProvider(config) {
     id: config.id,
     label: config.label || "OpenAI Responses",
     source: "user-account",
+    type: "openai",
     recordsHistory: false,
     capabilities: ["list", "stop", "interrupt", "end", "force-end"],
     async listAgents() {
@@ -91,6 +92,7 @@ function normalizeResponse(response, providerConfig, responseConfig) {
     name: responseConfig.name || response.id,
     provider: providerConfig.label || "OpenAI Responses",
     providerId: providerConfig.id,
+    type: "openai",
     source: "user-account",
     status,
     parentId: responseConfig.parentId || null,

@@ -35,6 +35,7 @@ try {
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");
   assert(Array.isArray(sameOriginAgents.body.agents), "agent list should be an array");
+  assert(sameOriginAgents.body.agents.every((agent) => agent.type), "every agent should include type");
 
   const unauthorized = await request("/api/agents", {
     headers: { Origin: allowedOrigin }
@@ -95,6 +96,7 @@ try {
   assert(updatedConfig.body.config.localDiscovery.enabled === false, "config update should change discovery");
   assert(updatedConfig.body.config.localDiscovery.include[0] === "custom-agent", "config update should persist include list");
   assert(updatedConfig.body.config.remoteHttpProviders[0]?.id === "smoke-remote", "config update should add remote provider");
+  assert(updatedConfig.body.config.remoteHttpProviders[0]?.type === "smoke-remote", "remote provider should expose type");
   assert(updatedConfig.body.config.remoteHttpProviders[0]?.hasToken === true, "public remote provider should report token presence");
   assert(!("token" in updatedConfig.body.config.remoteHttpProviders[0]), "public remote provider should not expose token");
 
