@@ -93,6 +93,7 @@ const server = createServer(async (request, response) => {
       );
 
       if (!result) return sendJson(request, response, { error: "Agent not found" }, 404);
+      if (result.error) return sendJson(request, response, result, result.status || 400);
       return sendJson(request, response, result);
     }
 

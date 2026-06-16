@@ -153,7 +153,7 @@ export function createAgentClient() {
             },
             body: JSON.stringify({ action: actionId, prompt })
           });
-          if (!response.ok) throw new Error(`API returned ${response.status}`);
+          if (!response.ok) return;
           const payload = await response.json();
           emit(payload.agents, payload.history || history);
           return;

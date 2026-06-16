@@ -77,7 +77,17 @@ export function createProviderRegistry() {
         continue;
       }
 
-      if (agents.some((agent) => agent.id === agentId)) {
+      const agent = agents.find((item) => item.id === agentId);
+      if (agent) {
+        if (Array.isArray(agent.capabilities) && !agent.capabilities.includes(actionId)) {
+          return {
+            error: "Action not supported",
+            status: 409,
+            agents: await listAgents(),
+            history: await stateStore.listHistory()
+          };
+        }
+
         const changedAgent = await provider.performAction(agentId, actionId, prompt);
         invalidateSnapshots(provider.id);
         if (!provider.recordsHistory && changedAgent) {

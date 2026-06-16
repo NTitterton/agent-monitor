@@ -181,8 +181,9 @@ Agent-level capabilities should describe actions the active provider can truly p
 - Configured local agents can expose `start` because Agent Monitor can spawn their configured command.
 - Remote HTTP agents can expose `start` or future resume-like controls when the remote API advertises those capabilities.
 - OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions for tracked objects, plus optional `go-to` links, but do not expose `start` for already-created work.
+- The API should reject direct action requests that are not listed in an agent's advertised `capabilities`.
 
-Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions.
+Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions and that the API returns `409` for unsupported direct action requests.
 
 ### Local Process Resource Accounting
 

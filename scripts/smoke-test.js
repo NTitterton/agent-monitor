@@ -303,6 +303,14 @@ try {
     "lifecycle action should append an agent log"
   );
 
+  const unsupportedAction = await request("/api/agents/openai-research-2/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "start" })
+  });
+  assert(unsupportedAction.status === 409, "unsupported agent action should return conflict");
+  assert(unsupportedAction.body.error === "Action not supported", "unsupported agent action should return a clear error");
+
   const detail = await request("/api/agents/local-codex-1");
   assert(detail.status === 200, "agent detail should succeed");
   assert(detail.body.agent.id === "local-codex-1", "agent detail should return requested agent");

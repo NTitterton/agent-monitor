@@ -133,7 +133,7 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 }
 ```
 
-Agent-level `capabilities` should only include actions the provider can actually perform. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
+Agent-level `capabilities` should only include actions the provider can actually perform. The app disables unsupported controls, and the local API returns `409` for direct action requests that are not in an agent's advertised capabilities. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
 
 ## Monitor local processes
 

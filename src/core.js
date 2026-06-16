@@ -60,6 +60,7 @@ export const initialAgents = [
     costUsd: 0.18,
     startedAt: now - 1000 * 60 * 33,
     children: [],
+    capabilities: ["stop", "interrupt", "end", "force-end"],
     transcript: [
       {
         at: now - 1000 * 60 * 30,
@@ -95,6 +96,7 @@ export const initialAgents = [
     costUsd: 0.13,
     startedAt: now - 1000 * 60 * 19,
     children: [],
+    capabilities: ["stop", "interrupt", "end", "force-end"],
     transcript: [
       {
         at: now - 1000 * 60 * 17,
