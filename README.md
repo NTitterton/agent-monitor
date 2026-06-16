@@ -32,6 +32,21 @@ The desktop app is a native macOS WebKit wrapper. It starts the local Agent Moni
 
 ## Embed on another site
 
+For personal sites, use the standalone widget script:
+
+```html
+<agent-monitor-widget api-base="http://127.0.0.1:5173"></agent-monitor-widget>
+<script src="/agent-monitor-widget.js"></script>
+```
+
+Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/agents` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget stays interactive with local fallback data.
+
+Local standalone embed demo:
+
+- http://localhost:5173/embed-standalone.html
+
+Repo-module widget demo:
+
 ```html
 <agent-monitor-widget></agent-monitor-widget>
 <script type="module" src="/path/to/agent-monitor/src/widget.js"></script>
