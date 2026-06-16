@@ -86,6 +86,9 @@ function normalizeResponse(response, providerConfig, responseConfig) {
   const outputTokens = Number(usage.output_tokens || 0);
   const status = normalizeStatus(response.status);
   const startedAt = response.created_at ? response.created_at * 1000 : Date.now();
+  const endedAt = status === "ended" ? Date.now() : undefined;
+  const totalTokens = inputTokens + outputTokens;
+  const tokenRateWindowMs = Math.max(1000, (endedAt || Date.now()) - startedAt);
 
   return {
     id: responseConfig.id,
@@ -99,10 +102,13 @@ function normalizeResponse(response, providerConfig, responseConfig) {
     task: responseConfig.task || response.model || "OpenAI response",
     cpu: 0,
     memoryMb: 0,
-    tokens: inputTokens + outputTokens,
+    tokens: totalTokens,
+    tokensPerSecond: totalTokens ? Number((totalTokens / (tokenRateWindowMs / 1000)).toFixed(2)) : 0,
+    tokenRateWindowMs: totalTokens ? tokenRateWindowMs : 0,
+    tokenCountConfidence: totalTokens ? "reported" : "unknown",
     costUsd: 0,
     startedAt,
-    endedAt: status === "ended" ? Date.now() : undefined,
+    endedAt,
     children: responseConfig.children || [],
     logs: [
       {

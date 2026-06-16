@@ -13,6 +13,9 @@ export const initialAgents = [
     cpu: 38,
     memoryMb: 812,
     tokens: 18420,
+    tokensPerSecond: 7.3,
+    tokenRateWindowMs: 300000,
+    tokenCountConfidence: "estimated",
     costUsd: 0.42,
     startedAt: now - 1000 * 60 * 42,
     children: ["openai-research-2"],
@@ -37,6 +40,9 @@ export const initialAgents = [
     cpu: 4,
     memoryMb: 128,
     tokens: 9150,
+    tokensPerSecond: 4.6,
+    tokenRateWindowMs: 300000,
+    tokenCountConfidence: "reported",
     costUsd: 0.18,
     startedAt: now - 1000 * 60 * 33,
     children: [],
@@ -61,6 +67,9 @@ export const initialAgents = [
     cpu: 0,
     memoryMb: 96,
     tokens: 4620,
+    tokensPerSecond: 0,
+    tokenRateWindowMs: 0,
+    tokenCountConfidence: "estimated",
     costUsd: 0.13,
     startedAt: now - 1000 * 60 * 19,
     children: [],
@@ -85,6 +94,9 @@ export const initialAgents = [
     cpu: 0,
     memoryMb: 0,
     tokens: 1280,
+    tokensPerSecond: 0,
+    tokenRateWindowMs: 0,
+    tokenCountConfidence: "reported",
     costUsd: 0.04,
     startedAt: now - 1000 * 60 * 74,
     endedAt: now - 1000 * 60 * 11,
@@ -172,6 +184,7 @@ export function applyLifecycleAction(agent, actionId, prompt = "", at = Date.now
   if (action.nextStatus === "ended") {
     changed.cpu = 0;
     changed.memoryMb = 0;
+    changed.tokensPerSecond = 0;
     changed.endedAt = at;
   }
 
@@ -212,6 +225,12 @@ export function formatRuntime(agent) {
 
 export function formatMemory(memoryMb) {
   return memoryMb >= 1024 ? `${(memoryMb / 1024).toFixed(1)} GB` : `${memoryMb} MB`;
+}
+
+export function formatTokenRate(agent) {
+  const rate = Number(agent?.tokensPerSecond || 0);
+  if (!Number.isFinite(rate) || rate <= 0) return "";
+  return `${rate >= 10 ? rate.toFixed(0) : rate.toFixed(1)} tok/s`;
 }
 
 export function statusTone(status) {

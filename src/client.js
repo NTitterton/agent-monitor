@@ -146,6 +146,10 @@ function cloneAgent(agent) {
   return {
     ...agent,
     type: agent.type || agent.providerId || agent.source || "unknown",
+    tokens: Number(agent.tokens || 0),
+    tokensPerSecond: Number(agent.tokensPerSecond || 0),
+    tokenRateWindowMs: Number(agent.tokenRateWindowMs || 0),
+    tokenCountConfidence: agent.tokenCountConfidence || (agent.tokens ? "estimated" : "unknown"),
     children: Array.isArray(agent.children) ? [...agent.children] : []
   };
 }

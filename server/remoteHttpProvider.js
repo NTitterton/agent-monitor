@@ -75,6 +75,9 @@ function normalizeAgents(agents, config) {
 
 function normalizeAgent(agent, config) {
   const startedAt = agent.startedAt || Date.now();
+  const tokens = Number(agent.tokens || 0);
+  const tokensPerSecond = Number(agent.tokensPerSecond || 0);
+  const tokenRateWindowMs = Number(agent.tokenRateWindowMs || 0);
   return {
     id: agent.id,
     name: agent.name || agent.id,
@@ -87,7 +90,10 @@ function normalizeAgent(agent, config) {
     task: agent.task || agent.name || agent.id,
     cpu: Number(agent.cpu || 0),
     memoryMb: Number(agent.memoryMb || 0),
-    tokens: Number(agent.tokens || 0),
+    tokens: Number.isFinite(tokens) ? tokens : 0,
+    tokensPerSecond: Number.isFinite(tokensPerSecond) ? tokensPerSecond : 0,
+    tokenRateWindowMs: Number.isFinite(tokenRateWindowMs) ? tokenRateWindowMs : 0,
+    tokenCountConfidence: normalizeTokenConfidence(agent.tokenCountConfidence, tokens > 0 ? "reported" : "unknown"),
     costUsd: Number(agent.costUsd || 0),
     startedAt,
     endedAt: agent.endedAt,
@@ -95,6 +101,10 @@ function normalizeAgent(agent, config) {
     logs: normalizeLogs(agent.logs),
     remoteUrl: config.baseUrl
   };
+}
+
+function normalizeTokenConfidence(value, fallback = "unknown") {
+  return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
 }
 
 function normalizeLogs(logs) {

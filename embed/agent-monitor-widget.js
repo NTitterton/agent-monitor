@@ -8,6 +8,9 @@ const fallbackAgents = [
     cpu: 38,
     memoryMb: 812,
     tokens: 18420,
+    tokensPerSecond: 7.3,
+    tokenRateWindowMs: 300000,
+    tokenCountConfidence: "estimated",
     startedAt: Date.now() - 1000 * 60 * 42,
     children: ["openai-research-2"],
     logs: [{
@@ -26,6 +29,9 @@ const fallbackAgents = [
     cpu: 4,
     memoryMb: 128,
     tokens: 9150,
+    tokensPerSecond: 4.6,
+    tokenRateWindowMs: 300000,
+    tokenCountConfidence: "reported",
     startedAt: Date.now() - 1000 * 60 * 33,
     children: [],
     logs: [{
@@ -408,6 +414,11 @@ function formatResourceLine(agent) {
   if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
   if (agent.tokens) parts.push(`${Number(agent.tokens).toLocaleString()} tokens`);
+  const rate = Number(agent.tokensPerSecond || 0);
+  if (Number.isFinite(rate) && rate > 0) parts.push(`${rate >= 10 ? rate.toFixed(0) : rate.toFixed(1)} tok/s`);
+  if (agent.tokenCountConfidence && agent.tokenCountConfidence !== "reported") {
+    parts.push(`${agent.tokenCountConfidence} tokens`);
+  }
   return parts.join(" · ");
 }
 

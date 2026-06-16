@@ -1,4 +1,5 @@
 import {
+  formatTokenRate,
   formatMemory,
   formatRuntime,
   lifecycleActions,
@@ -104,6 +105,11 @@ function renderResourceLine(agent) {
   if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
   if (agent.tokens) parts.push(`${agent.tokens.toLocaleString()} tokens`);
+  const rate = formatTokenRate(agent);
+  if (rate) parts.push(rate);
+  if (agent.tokenCountConfidence && agent.tokenCountConfidence !== "reported") {
+    parts.push(`${agent.tokenCountConfidence} tokens`);
+  }
   return parts.join(" · ");
 }
 

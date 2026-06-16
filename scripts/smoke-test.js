@@ -36,6 +36,9 @@ try {
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");
   assert(Array.isArray(sameOriginAgents.body.agents), "agent list should be an array");
   assert(sameOriginAgents.body.agents.every((agent) => agent.type), "every agent should include type");
+  assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokens === "number"), "every agent should include numeric tokens");
+  assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokensPerSecond === "number"), "every agent should include numeric token rate");
+  assert(sameOriginAgents.body.agents.every((agent) => agent.tokenCountConfidence), "every agent should include token confidence");
 
   const unauthorized = await request("/api/agents", {
     headers: { Origin: allowedOrigin }

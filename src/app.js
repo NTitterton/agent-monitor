@@ -1,4 +1,5 @@
 import {
+  formatTokenRate,
   formatMemory,
   formatRuntime,
   lifecycleActions,
@@ -460,7 +461,7 @@ function renderDetailPanel(detail) {
         <article>
           <span>Usage</span>
           <strong>${agent.tokens ? agent.tokens.toLocaleString() : 0} tokens</strong>
-          <p>$${Number(agent.costUsd || 0).toFixed(2)}</p>
+          <p>${renderTokenUsageLine(agent)} · $${Number(agent.costUsd || 0).toFixed(2)}</p>
         </article>
       </div>
       <div class="detail-columns">
@@ -558,6 +559,20 @@ function renderResourceLine(agent) {
   if (agent.parentPid) parts.push(`PPID ${agent.parentPid}`);
   if (agent.childPids?.length) parts.push(`${agent.childPids.length} child PID${agent.childPids.length === 1 ? "" : "s"}`);
   if (agent.tokens) parts.push(`${agent.tokens.toLocaleString()} tokens`);
+  const rate = formatTokenRate(agent);
+  if (rate) parts.push(rate);
+  if (agent.tokenCountConfidence && agent.tokenCountConfidence !== "reported") {
+    parts.push(`${agent.tokenCountConfidence} tokens`);
+  }
+  return parts.join(" · ");
+}
+
+function renderTokenUsageLine(agent) {
+  const parts = [];
+  const rate = formatTokenRate(agent);
+  if (rate) parts.push(rate);
+  parts.push(`${labelize(agent.tokenCountConfidence || "unknown")} count`);
+  if (agent.tokenRateWindowMs) parts.push(`${Math.round(agent.tokenRateWindowMs / 1000)}s window`);
   return parts.join(" · ");
 }
 

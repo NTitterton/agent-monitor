@@ -93,6 +93,7 @@ function createDefaultState() {
       ...agent,
       providerId: agentProviderIds[agent.id] || "local",
       type: agent.type || agentTypes[agent.id] || agent.providerId || "local",
+      ...normalizeTokenMetrics(agent),
       children: [...agent.children],
       logs: normalizeLogs(agent.logs)
     })),
@@ -115,6 +116,7 @@ function normalizeState(nextState) {
         ...agent,
         providerId: agent.providerId || agentProviderIds[agent.id] || "local",
         type: agent.type || agentTypes[agent.id] || agent.providerId || agentProviderIds[agent.id] || "remote",
+        ...normalizeTokenMetrics(agent, fallbackAgent),
         children: Array.isArray(agent.children) ? [...agent.children] : [],
         logs: logs.length ? logs : normalizeLogs(fallbackAgent?.logs)
       };
@@ -126,9 +128,29 @@ function normalizeState(nextState) {
 function cloneAgents(agents) {
   return agents.map((agent) => ({
     ...agent,
+    ...normalizeTokenMetrics(agent),
     children: [...agent.children],
     logs: normalizeLogs(agent.logs)
   }));
+}
+
+function normalizeTokenMetrics(agent = {}, fallbackAgent = {}) {
+  const tokens = Number(agent.tokens ?? fallbackAgent.tokens ?? 0);
+  const tokensPerSecond = Number(agent.tokensPerSecond ?? fallbackAgent.tokensPerSecond ?? 0);
+  const tokenRateWindowMs = Number(agent.tokenRateWindowMs ?? fallbackAgent.tokenRateWindowMs ?? 0);
+  return {
+    tokens: Number.isFinite(tokens) ? tokens : 0,
+    tokensPerSecond: Number.isFinite(tokensPerSecond) ? tokensPerSecond : 0,
+    tokenRateWindowMs: Number.isFinite(tokenRateWindowMs) ? tokenRateWindowMs : 0,
+    tokenCountConfidence: normalizeTokenConfidence(
+      agent.tokenCountConfidence,
+      fallbackAgent.tokenCountConfidence || (tokens > 0 ? "estimated" : "unknown")
+    )
+  };
+}
+
+function normalizeTokenConfidence(value, fallback = "unknown") {
+  return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
 }
 
 function normalizeLogs(logs) {

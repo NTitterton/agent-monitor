@@ -37,6 +37,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Lineage view and selected-agent detail panel.
 - Search/status/source filters for the agent table.
 - Stable per-agent `type` field and type filter.
+- Token throughput and token count confidence in normalized snapshots, main app, widgets, and remote provider docs.
 - GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.
 
 ## Blockers

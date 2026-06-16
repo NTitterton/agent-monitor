@@ -71,6 +71,8 @@ Notes:
 - Anthropic Message Batches currently report request counts through the existing adapter, not true token counts.
 - Remote providers should be allowed to report their own token totals and rates.
 
+Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract.
+
 Acceptance criteria:
 
 - UI shows cumulative tokens and token rate when available.
