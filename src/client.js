@@ -6,12 +6,14 @@ export function createAgentClient() {
   let agents = localStore.list();
   let history = [];
   let providers = [];
+  let config = null;
   let mode = "local";
 
-  function emit(nextAgents, nextHistory = history, nextProviders = providers) {
+  function emit(nextAgents, nextHistory = history, nextProviders = providers, nextConfig = config) {
     agents = nextAgents.map((agent) => ({ ...agent, children: [...agent.children] }));
     history = nextHistory.map((record) => ({ ...record }));
     providers = nextProviders.map((provider) => ({ ...provider }));
+    config = nextConfig ? { ...nextConfig, localDiscovery: { ...(nextConfig.localDiscovery || {}) } } : null;
     subscribers.forEach((subscriber) => subscriber(snapshot()));
   }
 
@@ -23,7 +25,9 @@ export function createAgentClient() {
       mode = "api";
       const providerResponse = await fetch("/api/providers", { headers: { Accept: "application/json" } });
       const providerPayload = providerResponse.ok ? await providerResponse.json() : { providers: [] };
-      emit(payload.agents, payload.history || [], providerPayload.providers || []);
+      const configResponse = await fetch("/api/config", { headers: { Accept: "application/json" } });
+      const configPayload = configResponse.ok ? await configResponse.json() : { config: null };
+      emit(payload.agents, payload.history || [], providerPayload.providers || [], configPayload.config);
     } catch {
       mode = "local";
       emit(localStore.list());
@@ -47,6 +51,7 @@ export function createAgentClient() {
       agents: list(),
       history: historyList(),
       providers: providers.map((provider) => ({ ...provider })),
+      config: config ? { ...config, localDiscovery: { ...(config.localDiscovery || {}) } } : null,
       mode
     };
   }
@@ -65,6 +70,23 @@ export function createAgentClient() {
     },
     async refresh() {
       await refresh();
+    },
+    async updateConfig(patch) {
+      if (mode !== "api") return null;
+
+      const response = await fetch("/api/config", {
+        method: "PUT",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ config: patch })
+      });
+      if (!response.ok) throw new Error(`API returned ${response.status}`);
+      const payload = await response.json();
+      config = payload.config;
+      await refresh();
+      return payload.config;
     },
     async detail(agentId) {
       if (mode === "api") {

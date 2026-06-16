@@ -6,6 +6,7 @@ import { spawn } from "node:child_process";
 const port = 5199;
 const apiBase = `http://127.0.0.1:${port}`;
 const allowedOrigin = "https://zo.computer";
+const addedOrigin = "https://personal.example";
 const apiToken = "smoke-token";
 
 const tempDir = await mkdtemp(join(tmpdir(), "agent-monitor-smoke-"));
@@ -61,6 +62,41 @@ try {
     }
   });
   assert(authorized.status === 200, "cross-origin request with token should succeed");
+
+  const config = await request("/api/config");
+  assert(config.status === 200, "config request should succeed");
+  assert(config.body.config.hasApiToken === true, "public config should report token presence");
+  assert(!("apiToken" in config.body.config), "public config should not expose token");
+  assert(config.body.config.allowedOrigins[0] === allowedOrigin, "public config should include trusted origins");
+
+  const updatedConfig = await request("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      allowedOrigins: [allowedOrigin, addedOrigin],
+      localDiscovery: {
+        enabled: false,
+        include: ["custom-agent"],
+        exclude: ["noisy-agent"]
+      }
+    })
+  });
+  assert(updatedConfig.status === 200, "config update should succeed");
+  assert(updatedConfig.body.config.allowedOrigins.includes(addedOrigin), "config update should add origin");
+  assert(updatedConfig.body.config.localDiscovery.enabled === false, "config update should change discovery");
+  assert(updatedConfig.body.config.localDiscovery.include[0] === "custom-agent", "config update should persist include list");
+
+  const configFileAfterUpdate = JSON.parse(await readFile(configPath, "utf8"));
+  assert(configFileAfterUpdate.apiToken === apiToken, "config update should preserve token");
+  assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
+
+  const updatedOriginRequest = await request("/api/agents", {
+    headers: {
+      Origin: addedOrigin,
+      "X-Agent-Monitor-Token": apiToken
+    }
+  });
+  assert(updatedOriginRequest.status === 200, "newly trusted origin should be allowed");
 
   const action = await request("/api/agents/local-codex-1/actions", {
     method: "POST",

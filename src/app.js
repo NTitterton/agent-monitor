@@ -14,6 +14,7 @@ class AgentMonitorApp extends HTMLElement {
       this.agents = snapshot.agents;
       this.history = snapshot.history;
       this.providers = snapshot.providers;
+      this.config = snapshot.config;
       this.mode = snapshot.mode;
       this.selectedAgentId = this.selectedAgentId || snapshot.agents[0]?.id || null;
       this.render();
@@ -66,6 +67,7 @@ class AgentMonitorApp extends HTMLElement {
           <aside class="panel sources-panel">
             <h2>Sources</h2>
             ${renderSourceList(agents, this.providers || [])}
+            ${renderSettings(this.config, this.mode, this.settingsMessage)}
             ${renderLineageTree(agents)}
             ${renderHistory(history, this.mode)}
           </aside>
@@ -85,6 +87,27 @@ class AgentMonitorApp extends HTMLElement {
     `;
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
+    this.querySelector(".settings-form")?.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const patch = {
+        allowedOrigins: parseLines(form.querySelector('[data-setting="allowedOrigins"]').value),
+        localDiscovery: {
+          enabled: form.querySelector('[data-setting="localDiscoveryEnabled"]').checked,
+          include: parseLines(form.querySelector('[data-setting="localDiscoveryInclude"]').value),
+          exclude: parseLines(form.querySelector('[data-setting="localDiscoveryExclude"]').value)
+        }
+      };
+
+      try {
+        this.settingsMessage = "Saved";
+        this.config = await client.updateConfig(patch);
+        this.render();
+      } catch {
+        this.settingsMessage = "Save failed";
+        this.render();
+      }
+    });
     this.querySelector(".filter-bar")?.addEventListener("submit", (event) => event.preventDefault());
     this.querySelectorAll("[data-filter]").forEach((input) => {
       input.addEventListener("input", () => {
@@ -213,6 +236,44 @@ function renderSourceList(agents, providers) {
     .join("");
 
   return `${sourceRows}${providerRows}`;
+}
+
+function renderSettings(config, mode = "local", message = "") {
+  const discovery = config?.localDiscovery || { enabled: true, include: [], exclude: [] };
+  const providerCounts = config?.providerCounts || {};
+  return `
+    <section class="settings-block">
+      <div class="settings-heading">
+        <h2>Settings</h2>
+        ${message ? `<span>${message}</span>` : ""}
+      </div>
+      <form class="settings-form">
+        <label>
+          <span>Trusted Origins</span>
+          <textarea data-setting="allowedOrigins" rows="3" ${mode === "api" ? "" : "disabled"}>${escapeText((config?.allowedOrigins || []).join("\n"))}</textarea>
+        </label>
+        <label class="toggle-row">
+          <input data-setting="localDiscoveryEnabled" type="checkbox" ${discovery.enabled ? "checked" : ""} ${mode === "api" ? "" : "disabled"} />
+          <span>Local Discovery</span>
+        </label>
+        <label>
+          <span>Discovery Include</span>
+          <textarea data-setting="localDiscoveryInclude" rows="2" ${mode === "api" ? "" : "disabled"}>${escapeText((discovery.include || []).join("\n"))}</textarea>
+        </label>
+        <label>
+          <span>Discovery Exclude</span>
+          <textarea data-setting="localDiscoveryExclude" rows="2" ${mode === "api" ? "" : "disabled"}>${escapeText((discovery.exclude || []).join("\n"))}</textarea>
+        </label>
+        <div class="settings-meta">
+          <span>${providerCounts.localAgents || 0} local</span>
+          <span>${providerCounts.remoteHttpProviders || 0} remote</span>
+          <span>${providerCounts.openAIResponsesProviders || 0} OpenAI</span>
+          <span>${providerCounts.anthropicMessageBatchesProviders || 0} Anthropic</span>
+        </div>
+        <button type="submit" ${mode === "api" ? "" : "disabled"}>Save Settings</button>
+      </form>
+    </section>
+  `;
 }
 
 function renderAgentTable(agents, allAgents, selectedAgentId) {
@@ -434,6 +495,17 @@ function renderOption(value, selected, label = labelize(value)) {
 
 function escapeAttribute(value) {
   return String(value || "").replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+}
+
+function escapeText(value) {
+  return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+function parseLines(value) {
+  return String(value || "")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 
 function renderAction(agent, action) {

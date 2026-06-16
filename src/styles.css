@@ -275,6 +275,80 @@ h2 {
   font-size: 0.82rem;
 }
 
+.settings-block {
+  border-top: 1px solid #e6e9ef;
+  padding: 18px 20px;
+}
+
+.settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.settings-heading span {
+  color: #344d75;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.settings-form {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-form label {
+  display: grid;
+  gap: 6px;
+}
+
+.settings-form label span,
+.settings-meta {
+  color: #667085;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.settings-form textarea {
+  width: 100%;
+  min-height: 40px;
+  resize: vertical;
+  border: 1px solid #cbd2dd;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  padding: 7px 9px;
+}
+
+.settings-form textarea:disabled {
+  color: #9aa3af;
+}
+
+.toggle-row {
+  display: flex !important;
+  grid-template-columns: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle-row input {
+  width: 16px;
+  height: 16px;
+}
+
+.settings-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  text-transform: none;
+}
+
 .source-error {
   background: #fff8f8;
 }

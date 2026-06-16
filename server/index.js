@@ -2,7 +2,7 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
-import { readConfig } from "./config.js";
+import { readConfig, readPublicConfig, updateConfig } from "./config.js";
 import { createProviderRegistry } from "./providerRegistry.js";
 
 const rootDir = resolve(new URL("..", import.meta.url).pathname);
@@ -46,6 +46,15 @@ const server = createServer(async (request, response) => {
 
     if (url.pathname === "/api/providers" && request.method === "GET") {
       return sendJson(request, response, { providers: await registry.providers() });
+    }
+
+    if (url.pathname === "/api/config" && request.method === "GET") {
+      return sendJson(request, response, { config: await readPublicConfig() });
+    }
+
+    if (url.pathname === "/api/config" && request.method === "PUT") {
+      const body = await readJson(request);
+      return sendJson(request, response, { config: await updateConfig(body.config || body) });
     }
 
     const detailMatch = url.pathname.match(/^\/api\/agents\/([^/]+)$/);
@@ -153,7 +162,7 @@ async function corsHeaders(request) {
 
   return {
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Agent-Monitor-Token",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     "Access-Control-Allow-Origin": origin,
     Vary: "Origin"
   };
