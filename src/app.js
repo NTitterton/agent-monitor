@@ -1,16 +1,16 @@
 import {
-  createAgentStore,
   formatMemory,
   formatRuntime,
   lifecycleActions,
   statusTone
 } from "./core.js";
+import { createAgentClient } from "./client.js";
 
-const store = createAgentStore();
+const client = createAgentClient();
 
 class AgentMonitorApp extends HTMLElement {
   connectedCallback() {
-    this.unsubscribe = store.subscribe((agents) => {
+    this.unsubscribe = client.subscribe((agents) => {
       this.agents = agents;
       this.render();
     });
@@ -71,7 +71,7 @@ class AgentMonitorApp extends HTMLElement {
       </main>
     `;
 
-    this.querySelector("[data-refresh]")?.addEventListener("click", () => this.render());
+    this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
     this.querySelectorAll("[data-action]").forEach((button) => {
       button.addEventListener("click", () => {
         const agentId = button.getAttribute("data-agent-id");
@@ -83,7 +83,7 @@ class AgentMonitorApp extends HTMLElement {
           prompt = window.prompt(`${action.label} prompt`) || "";
         }
 
-        store.perform(agentId, actionId, prompt);
+        void client.perform(agentId, actionId, prompt);
       });
     });
   }

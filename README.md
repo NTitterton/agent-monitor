@@ -1,6 +1,6 @@
 # Agent Monitor
 
-Agent Monitor is a local-first task manager for AI agents. This first slice runs as a plain browser app and as an embeddable web component widget with no build step.
+Agent Monitor is a local-first task manager for AI agents. It runs as a browser app, exposes a small local HTTP API, and also ships an embeddable web component widget.
 
 ## Run locally
 
@@ -13,7 +13,22 @@ Then open:
 - App: http://localhost:5173/
 - Widget demo: http://localhost:5173/embed.html
 
-You can also serve the directory with any static file server.
+The default server binds to `127.0.0.1` and serves both static files and API routes. You can change the port with `PORT=5180 npm run start`.
+
+For a static-only preview without API routes:
+
+```sh
+npm run static
+```
+
+## Run as a standalone macOS app
+
+```sh
+npm run desktop:build
+open "dist/Agent Monitor.app"
+```
+
+The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app.
 
 ## Embed on another site
 
@@ -24,16 +39,38 @@ You can also serve the directory with any static file server.
 
 The widget currently uses the same local mock provider as the app. The provider boundary is in `src/core.js`; that is where OpenAI, Anthropic, local process, and cloud agent adapters should plug in.
 
+When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive.
+
+## Local API
+
+- `GET /api/agents` returns the current agent snapshot.
+- `GET /api/providers` returns configured provider adapters and lifecycle capabilities.
+- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end", "prompt": "optional text" }`.
+
+Provider adapters live in `server/providerRegistry.js`. The current adapters are in-memory implementations for local, OpenAI, Anthropic, and remote cloud namespaces. Real integrations should implement the same shape:
+
+```js
+{
+  id,
+  label,
+  source,
+  capabilities,
+  async listAgents() {},
+  async performAction(agentId, actionId, prompt) {}
+}
+```
+
 ## Current capability
 
 - Track agents from multiple provider namespaces.
 - Show status, provider, parent/child relationships, resource usage, spend, and runtime.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
+- Use a local API when available, with static fallback for hosted embeds.
 
 ## Next backend milestones
 
-1. Add a small local API service for real process/resource inspection.
-2. Define provider adapters for OpenAI, Anthropic, local agents, and remote cloud agents.
+1. Replace in-memory adapters with real local process/resource inspection.
+2. Add authenticated OpenAI, Anthropic, and remote cloud provider adapters.
 3. Persist action history and agent snapshots.
-4. Add GitHub repository remote once credentials and repo name are available.
+4. Add GitHub repository remote once `gh auth login -h github.com` has refreshed credentials.

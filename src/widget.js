@@ -1,13 +1,13 @@
 import {
-  createAgentStore,
   formatMemory,
   formatRuntime,
   lifecycleActions,
   statusTone
 } from "./core.js";
+import { createAgentClient } from "./client.js";
 import styles from "./widgetStyles.js";
 
-const store = createAgentStore();
+const client = createAgentClient();
 
 class AgentMonitorWidget extends HTMLElement {
   constructor() {
@@ -16,7 +16,7 @@ class AgentMonitorWidget extends HTMLElement {
   }
 
   connectedCallback() {
-    this.unsubscribe = store.subscribe((agents) => {
+    this.unsubscribe = client.subscribe((agents) => {
       this.agents = agents;
       this.render();
     });
@@ -52,7 +52,7 @@ class AgentMonitorWidget extends HTMLElement {
         const actionId = button.getAttribute("data-action");
         const action = lifecycleActions.find((item) => item.id === actionId);
         const prompt = action?.requiresPrompt ? window.prompt(`${action.label} prompt`) || "" : "";
-        store.perform(agentId, actionId, prompt);
+        void client.perform(agentId, actionId, prompt);
       });
     });
   }
