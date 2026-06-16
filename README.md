@@ -21,6 +21,15 @@ For a static-only preview without API routes:
 npm run static
 ```
 
+## Verify
+
+```sh
+npm run check
+npm run smoke
+```
+
+`npm run smoke` starts Agent Monitor on a temporary port with isolated config and state files. It verifies static routes, API auth, CORS preflight, lifecycle actions, and state persistence across a server restart.
+
 ## Run as a standalone macOS app
 
 ```sh

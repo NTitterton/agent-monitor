@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { applyLifecycleAction, createActionRecord, initialAgents } from "../src/core.js";
 
-const statePath = resolve(new URL("../data/agent-state.json", import.meta.url).pathname);
+const defaultStatePath = resolve(new URL("../data/agent-state.json", import.meta.url).pathname);
 
 const agentProviderIds = {
   "local-codex-1": "local",
@@ -19,6 +19,7 @@ export function createStateStore() {
     if (loaded) return;
 
     try {
+      const statePath = getStatePath();
       const file = await readFile(statePath, "utf8");
       state = normalizeState(JSON.parse(file));
     } catch {
@@ -30,6 +31,7 @@ export function createStateStore() {
   }
 
   async function persist() {
+    const statePath = getStatePath();
     await mkdir(dirname(statePath), { recursive: true });
     await writeFile(statePath, `${JSON.stringify(state, null, 2)}\n`);
   }
@@ -107,4 +109,10 @@ function normalizeState(nextState) {
 
 function cloneAgents(agents) {
   return agents.map((agent) => ({ ...agent, children: [...agent.children] }));
+}
+
+function getStatePath() {
+  return process.env.AGENT_MONITOR_STATE
+    ? resolve(process.env.AGENT_MONITOR_STATE)
+    : defaultStatePath;
 }
