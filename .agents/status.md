@@ -45,7 +45,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - `Go To` action for macOS local process agents that activates likely Terminal/iTerm, browser, or editor surfaces.
 - URL-backed `Go To` targets for remote/account agents through `goToTarget` and `goToKind`.
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
-- Unified `/api/snapshot` refresh path for agents, history, provider status, and sanitized config.
+- Unified `/api/snapshot` refresh path for agents, history, provider status, and sanitized config in the app and standalone widget.
 - Short provider snapshot cache so paired app refresh requests do not rescan adapters twice.
 - Provider connection test endpoint and Sources-panel test buttons.
 - Provider-specific action capabilities so OpenAI/Anthropic tracked objects do not expose unsupported `start` actions.

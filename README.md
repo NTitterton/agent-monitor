@@ -65,7 +65,7 @@ For personal sites, use the standalone widget script:
 <script src="/agent-monitor-widget.js"></script>
 ```
 
-Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/agents` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget stays interactive with local fallback data.
+Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/snapshot` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget stays interactive with local fallback data. The standalone widget also falls back to the older `/api/agents` snapshot shape for compatibility with older local servers.
 
 For cross-site embeds, add the site origins that may call the local API:
 
@@ -105,7 +105,7 @@ Repo-module widget demo:
 
 The widget currently uses the same local mock provider as the app. The provider boundary is in `src/core.js`; that is where OpenAI, Anthropic, local process, and cloud agent adapters should plug in.
 
-When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive.
+When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive.
 
 ## Local API
 

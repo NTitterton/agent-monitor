@@ -225,15 +225,25 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     if (!apiBase) return;
 
     try {
-      const response = await fetch(`${apiBase}/api/agents`, { headers: this.headers() });
-      if (!response.ok) throw new Error(`Agent Monitor returned ${response.status}`);
-      const payload = await response.json();
+      const payload = await this.fetchSnapshot(apiBase);
       this.agents = payload.agents || [];
       this.history = payload.history || [];
       this.render();
     } catch {
       this.render();
     }
+  }
+
+  async fetchSnapshot(apiBase) {
+    const response = await fetch(`${apiBase}/api/snapshot`, { headers: this.headers() });
+    if (response.ok) return response.json();
+    return this.fetchLegacySnapshot(apiBase);
+  }
+
+  async fetchLegacySnapshot(apiBase) {
+    const response = await fetch(`${apiBase}/api/agents`, { headers: this.headers() });
+    if (!response.ok) throw new Error(`Agent Monitor returned ${response.status}`);
+    return response.json();
   }
 
   async perform(agentId, action) {
