@@ -83,6 +83,21 @@ export function createProviderRegistry() {
     return null;
   }
 
+  async function getAgent(agentId) {
+    const agents = await listAgents();
+    const agent = agents.find((item) => item.id === agentId);
+    if (!agent) return null;
+
+    return {
+      agent,
+      parent: agent.parentId ? agents.find((item) => item.id === agent.parentId) || null : null,
+      children: agent.children
+        .map((childId) => agents.find((item) => item.id === childId))
+        .filter(Boolean),
+      history: (await stateStore.listHistory(200)).filter((record) => record.agentId === agentId)
+    };
+  }
+
   async function listActiveProviders() {
     const configuredProviders = await readRemoteHttpProviders();
 
@@ -118,6 +133,7 @@ export function createProviderRegistry() {
       return listProviderStatus();
     },
     listAgents,
+    getAgent,
     listHistory: stateStore.listHistory,
     performAction
   };

@@ -48,6 +48,13 @@ const server = createServer(async (request, response) => {
       return sendJson(request, response, { providers: await registry.providers() });
     }
 
+    const detailMatch = url.pathname.match(/^\/api\/agents\/([^/]+)$/);
+    if (detailMatch && request.method === "GET") {
+      const detail = await registry.getAgent(decodeURIComponent(detailMatch[1]));
+      if (!detail) return sendJson(request, response, { error: "Agent not found" }, 404);
+      return sendJson(request, response, detail);
+    }
+
     const actionMatch = url.pathname.match(/^\/api\/agents\/([^/]+)\/actions$/);
     if (actionMatch && request.method === "POST") {
       const body = await readJson(request);

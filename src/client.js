@@ -66,6 +66,27 @@ export function createAgentClient() {
     async refresh() {
       await refresh();
     },
+    async detail(agentId) {
+      if (mode === "api") {
+        const response = await fetch(`/api/agents/${encodeURIComponent(agentId)}`, {
+          headers: { Accept: "application/json" }
+        });
+        if (response.ok) return response.json();
+      }
+
+      const currentAgents = list();
+      const agent = currentAgents.find((item) => item.id === agentId);
+      if (!agent) return null;
+
+      return {
+        agent,
+        parent: agent.parentId ? currentAgents.find((item) => item.id === agent.parentId) || null : null,
+        children: agent.children
+          .map((childId) => currentAgents.find((item) => item.id === childId))
+          .filter(Boolean),
+        history: history.filter((record) => record.agentId === agentId)
+      };
+    },
     async perform(agentId, actionId, prompt = "") {
       const action = lifecycleActions.find((item) => item.id === actionId);
       if (!action) return;

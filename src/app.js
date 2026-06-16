@@ -15,6 +15,7 @@ class AgentMonitorApp extends HTMLElement {
       this.history = snapshot.history;
       this.providers = snapshot.providers;
       this.mode = snapshot.mode;
+      this.selectedAgentId = this.selectedAgentId || snapshot.agents[0]?.id || null;
       this.render();
     });
   }
@@ -29,6 +30,7 @@ class AgentMonitorApp extends HTMLElement {
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
     const spend = agents.reduce((total, agent) => total + agent.costUsd, 0);
     const history = this.history || [];
+    const selectedDetail = this.detail || buildDetail(this.selectedAgentId, agents, history);
 
     this.innerHTML = `
       <main class="app-shell">
@@ -70,14 +72,24 @@ class AgentMonitorApp extends HTMLElement {
               <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
             </div>
             <div class="agent-table" role="table" aria-label="Agent task table">
-              ${renderAgentTable(agents)}
+              ${renderAgentTable(agents, this.selectedAgentId)}
             </div>
+            ${renderDetailPanel(selectedDetail)}
           </section>
         </section>
       </main>
     `;
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
+    this.querySelectorAll("[data-select-agent]").forEach((button) => {
+      button.addEventListener("click", async () => {
+        this.selectedAgentId = button.getAttribute("data-select-agent");
+        this.detail = buildDetail(this.selectedAgentId, this.agents || [], this.history || []);
+        this.render();
+        this.detail = await client.detail(this.selectedAgentId);
+        this.render();
+      });
+    });
     this.querySelectorAll("[data-action]").forEach((button) => {
       button.addEventListener("click", () => {
         const agentId = button.getAttribute("data-agent-id");
@@ -165,7 +177,7 @@ function renderSourceList(agents, providers) {
   return `${sourceRows}${providerRows}`;
 }
 
-function renderAgentTable(agents) {
+function renderAgentTable(agents, selectedAgentId) {
   return `
     <div class="table-row table-head" role="row">
       <span>Agent</span>
@@ -174,20 +186,20 @@ function renderAgentTable(agents) {
       <span>Lineage</span>
       <span>Actions</span>
     </div>
-    ${agents.map((agent) => renderAgentRow(agent, agents)).join("")}
+    ${agents.map((agent) => renderAgentRow(agent, agents, selectedAgentId)).join("")}
   `;
 }
 
-function renderAgentRow(agent, agents) {
+function renderAgentRow(agent, agents, selectedAgentId) {
   const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId)?.name || agent.parentId : "Root";
   const childCount = agent.children.length;
   const childNames = agent.children
     .map((childId) => agents.find((item) => item.id === childId)?.name || childId)
     .join(", ");
   return `
-    <article class="table-row" role="row">
+    <article class="table-row ${agent.id === selectedAgentId ? "selected" : ""}" role="row">
       <div class="agent-name">
-        <strong>${agent.name}</strong>
+        <button class="agent-link" type="button" data-select-agent="${agent.id}">${agent.name}</button>
         <p>${agent.provider} · ${agent.task}</p>
       </div>
       <div>
@@ -207,6 +219,79 @@ function renderAgentRow(agent, agents) {
       </div>
     </article>
   `;
+}
+
+function renderDetailPanel(detail) {
+  if (!detail?.agent) return "";
+
+  const { agent, parent, children, history } = detail;
+  return `
+    <section class="detail-panel">
+      <div class="detail-heading">
+        <div>
+          <p class="eyebrow">Selected Agent</p>
+          <h2>${agent.name}</h2>
+        </div>
+        <span class="status-pill ${statusTone(agent.status)}">${agent.status}</span>
+      </div>
+      <div class="detail-grid">
+        <article>
+          <span>Provider</span>
+          <strong>${agent.provider}</strong>
+          <p>${agent.providerId || agent.source || "unknown"}</p>
+        </article>
+        <article>
+          <span>Runtime</span>
+          <strong>${formatRuntime(agent)}</strong>
+          <p>${formatTimestamp(agent.startedAt)}</p>
+        </article>
+        <article>
+          <span>Resources</span>
+          <strong>${formatMemory(agent.memoryMb)}</strong>
+          <p>${agent.cpu}% CPU${agent.pid ? ` · PID ${agent.pid}` : ""}</p>
+        </article>
+        <article>
+          <span>Usage</span>
+          <strong>${agent.tokens ? agent.tokens.toLocaleString() : 0} tokens</strong>
+          <p>$${Number(agent.costUsd || 0).toFixed(2)}</p>
+        </article>
+      </div>
+      <div class="detail-columns">
+        <article>
+          <h3>Lineage</h3>
+          <p><strong>Parent:</strong> ${parent?.name || "Root"}</p>
+          <p><strong>Children:</strong> ${children.length ? children.map((child) => child.name).join(", ") : "None"}</p>
+        </article>
+        <article>
+          <h3>Recent Actions</h3>
+          ${history.length ? history.slice(0, 4).map(renderDetailHistory).join("") : "<p>No actions recorded.</p>"}
+        </article>
+      </div>
+    </section>
+  `;
+}
+
+function renderDetailHistory(record) {
+  return `
+    <p>
+      <strong>${record.label}</strong>
+      <span>${formatTimestamp(record.at)}${record.prompt ? ` · ${record.prompt}` : ""}</span>
+    </p>
+  `;
+}
+
+function buildDetail(agentId, agents, history) {
+  const agent = agents.find((item) => item.id === agentId);
+  if (!agent) return null;
+
+  return {
+    agent,
+    parent: agent.parentId ? agents.find((item) => item.id === agent.parentId) || null : null,
+    children: agent.children
+      .map((childId) => agents.find((item) => item.id === childId))
+      .filter(Boolean),
+    history: history.filter((record) => record.agentId === agentId)
+  };
 }
 
 function renderLineageTree(agents) {

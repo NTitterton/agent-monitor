@@ -74,6 +74,12 @@ try {
   );
   assert(action.body.history[0]?.prompt === "smoke test", "action prompt should be recorded");
 
+  const detail = await request("/api/agents/local-codex-1");
+  assert(detail.status === 200, "agent detail should succeed");
+  assert(detail.body.agent.id === "local-codex-1", "agent detail should return requested agent");
+  assert(detail.body.children[0]?.id === "openai-research-2", "agent detail should include children");
+  assert(detail.body.history[0]?.prompt === "smoke test", "agent detail should include agent history");
+
   await stopServer(server);
   server = await startServer();
 
