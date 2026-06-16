@@ -166,8 +166,53 @@ h2 {
   padding: 18px 20px;
 }
 
-.history-block h2 {
+.history-block h2,
+.lineage-block h2 {
   margin-bottom: 12px;
+}
+
+.lineage-block {
+  border-top: 1px solid #e6e9ef;
+  padding: 18px 20px;
+}
+
+.lineage-tree {
+  display: grid;
+  gap: 8px;
+}
+
+.lineage-node {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 10px 10px calc(10px + var(--depth) * 16px);
+  border: 1px solid #e6e9ef;
+  border-radius: 6px;
+  background: #fbfcfe;
+}
+
+.lineage-node strong {
+  display: block;
+  font-size: 0.84rem;
+}
+
+.lineage-node p {
+  margin: 3px 0 0;
+  color: #667085;
+  font-size: 0.76rem;
+}
+
+.lineage-node span {
+  display: inline-grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #eef1f5;
+  color: #344054;
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 .history-row {

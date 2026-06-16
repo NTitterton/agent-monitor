@@ -288,6 +288,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           <div>
             <strong>${escapeHtml(agent.name)}</strong>
             <p>${escapeHtml(agent.provider)} · ${formatRuntime(agent)}</p>
+            <p>${escapeHtml(lineageSummary(agent))}</p>
           </div>
           <span class="status ${tone(agent.status)}">${escapeHtml(agent.status)}</span>
         </div>
@@ -378,6 +379,12 @@ function formatResourceLine(agent) {
   if (agent.pid) parts.push(`PID ${agent.pid}`);
   if (agent.tokens) parts.push(`${Number(agent.tokens).toLocaleString()} tokens`);
   return parts.join(" · ");
+}
+
+function lineageSummary(agent) {
+  const childCount = Array.isArray(agent.children) ? agent.children.length : 0;
+  const parent = agent.parentId ? `Parent ${agent.parentId}` : "Root";
+  return `${parent} · ${childCount} child${childCount === 1 ? "" : "ren"}`;
 }
 
 function escapeHtml(value) {

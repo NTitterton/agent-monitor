@@ -61,6 +61,7 @@ class AgentMonitorApp extends HTMLElement {
           <aside class="panel sources-panel">
             <h2>Sources</h2>
             ${renderSourceList(agents, this.providers || [])}
+            ${renderLineageTree(agents)}
             ${renderHistory(history, this.mode)}
           </aside>
           <section class="panel agent-panel">
@@ -173,13 +174,16 @@ function renderAgentTable(agents) {
       <span>Lineage</span>
       <span>Actions</span>
     </div>
-    ${agents.map(renderAgentRow).join("")}
+    ${agents.map((agent) => renderAgentRow(agent, agents)).join("")}
   `;
 }
 
-function renderAgentRow(agent) {
-  const parent = agent.parentId || "Root";
+function renderAgentRow(agent, agents) {
+  const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId)?.name || agent.parentId : "Root";
   const childCount = agent.children.length;
+  const childNames = agent.children
+    .map((childId) => agents.find((item) => item.id === childId)?.name || childId)
+    .join(", ");
   return `
     <article class="table-row" role="row">
       <div class="agent-name">
@@ -196,12 +200,42 @@ function renderAgentRow(agent) {
       </div>
       <div>
         <p>${parent}</p>
-        <p class="muted">${childCount} child${childCount === 1 ? "" : "ren"}</p>
+        <p class="muted">${childCount ? childNames : "No children"}</p>
       </div>
       <div class="action-row">
         ${lifecycleActions.map((action) => renderAction(agent, action)).join("")}
       </div>
     </article>
+  `;
+}
+
+function renderLineageTree(agents) {
+  const roots = agents.filter((agent) => !agent.parentId || !agents.some((item) => item.id === agent.parentId));
+
+  return `
+    <section class="lineage-block">
+      <h2>Lineage</h2>
+      <div class="lineage-tree">
+        ${roots.map((agent) => renderLineageNode(agent, agents, 0)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderLineageNode(agent, agents, depth) {
+  const children = agent.children
+    .map((childId) => agents.find((item) => item.id === childId))
+    .filter(Boolean);
+
+  return `
+    <article class="lineage-node" style="--depth: ${depth}">
+      <div>
+        <strong>${agent.name}</strong>
+        <p>${agent.provider} · ${agent.status}</p>
+      </div>
+      <span>${children.length}</span>
+    </article>
+    ${children.map((child) => renderLineageNode(child, agents, depth + 1)).join("")}
   `;
 }
 

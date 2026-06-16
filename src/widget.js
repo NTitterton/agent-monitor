@@ -79,6 +79,7 @@ function renderWidgetAgent(agent) {
         <div>
           <strong>${agent.name}</strong>
           <p>${agent.provider} · ${formatRuntime(agent)}</p>
+          <p>${lineageSummary(agent)}</p>
         </div>
         <span class="${statusTone(agent.status)}">${agent.status}</span>
       </div>
@@ -88,6 +89,12 @@ function renderWidgetAgent(agent) {
       </div>
     </article>
   `;
+}
+
+function lineageSummary(agent) {
+  const childCount = agent.children.length;
+  const parent = agent.parentId ? `Parent ${agent.parentId}` : "Root";
+  return `${parent} · ${childCount} child${childCount === 1 ? "" : "ren"}`;
 }
 
 function renderResourceLine(agent) {
