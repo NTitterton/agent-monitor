@@ -6,7 +6,7 @@ import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
 import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
 import { signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
-import { applySampledTokenRates } from "../server/providerRegistry.js";
+import { applySampledTokenRates, buildProviderErrorSnapshot } from "../server/providerRegistry.js";
 import { agentActions } from "../src/core.js";
 
 const port = 5199;
@@ -58,7 +58,9 @@ try {
   const registrySource = await readFile(new URL("../server/providerRegistry.js", import.meta.url), "utf8");
   assert(registrySource.includes("Provider did not return updated agent"), "registry should reject unconfirmed provider actions");
   assert(registrySource.includes("Provider returned a different agent"), "registry should reject mismatched provider action confirmations");
+  assert(registrySource.includes("buildProviderErrorSnapshot"), "registry should preserve cached agents on provider errors");
   assertSampledTokenRates();
+  assertProviderErrorSnapshots();
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
@@ -803,6 +805,32 @@ function assertSampledTokenRates() {
   assert(second.tokensPerSecond === 20, "token sampling should derive throughput from cumulative deltas");
   assert(second.tokenRateWindowMs === 3000, "token sampling should report the sample window");
   assert(reported.tokensPerSecond === 9, "provider-reported token rates should take precedence");
+}
+
+function assertProviderErrorSnapshots() {
+  const error = new Error("temporary provider outage");
+  const cached = {
+    agents: [
+      {
+        id: "stale-agent",
+        name: "Stale Agent",
+        scannedAt: 1000
+      }
+    ]
+  };
+  const result = buildProviderErrorSnapshot(
+    { id: "mock-provider", label: "Mock Provider" },
+    cached,
+    5000,
+    1000,
+    error
+  );
+
+  assert(result.error === error, "provider error snapshot should retain the provider error");
+  assert(result.scannedAt === 5000, "provider error snapshot should use the failed scan timestamp");
+  assert(result.agents[0]?.id === "stale-agent", "provider error snapshot should retain cached agents");
+  result.agents[0].name = "Changed";
+  assert(cached.agents[0].name === "Stale Agent", "provider error snapshot should clone cached agents");
 }
 
 async function assertAccountProviderCapabilities() {

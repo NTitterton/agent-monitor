@@ -252,7 +252,7 @@ Action requests receive:
 
 Remote provider setup can be edited from the app Settings panel. Saved provider tokens are not returned by `GET /api/config`; leaving the token field blank preserves an existing token for that provider ID.
 
-The response may return `{ "agent": {...} }` or `{ "agents": [...] }`. Provider health is surfaced through `GET /api/providers`; a failing remote provider is shown in the Sources panel without breaking other providers.
+The response may return `{ "agent": {...} }` or `{ "agents": [...] }`. Provider health is surfaced through `GET /api/providers`; a failing remote provider is shown in the Sources panel without breaking other providers. If a provider fails after a successful scan, Agent Monitor keeps that provider's last cached agents visible while marking the provider unhealthy.
 
 ## Track OpenAI Responses
 
@@ -316,6 +316,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
 - Show per-agent provider health and scan freshness in the task table and selected-agent inspector.
+- Keep last-known provider agents visible during transient provider scan failures while surfacing provider errors.
 - Sort visible tasks by newest, CPU, memory, spend, tokens, runtime, priority, and status.
 - Show task progress percentage and current step when providers report them.
 - Show task and progress details in the selected-agent inspector.

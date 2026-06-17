@@ -239,7 +239,7 @@ export function createProviderRegistry() {
       snapshotCache.set(cacheKey, result);
       return cloneSnapshotResult(result);
     } catch (error) {
-      const result = { provider, agents: [], scannedAt, cacheTtlMs: resultCacheTtlMs, error };
+      const result = buildProviderErrorSnapshot(provider, cached, scannedAt, resultCacheTtlMs, error);
       snapshotCache.set(cacheKey, result);
       return cloneSnapshotResult(result);
     }
@@ -328,4 +328,14 @@ export function applySampledTokenRates(providerId, agents, scannedAt = Date.now(
       tokenRateWindowMs: elapsedMs
     };
   });
+}
+
+export function buildProviderErrorSnapshot(provider, cached, scannedAt, cacheTtlMs, error) {
+  return {
+    provider,
+    agents: Array.isArray(cached?.agents) ? cached.agents.map((agent) => ({ ...agent })) : [],
+    scannedAt,
+    cacheTtlMs,
+    error
+  };
 }
