@@ -252,9 +252,9 @@ function renderHistory(history, mode = "local") {
         .map(
           (record) => `
             <article class="history-row">
-              <strong>${record.label}</strong>
-              <p>${record.agentName} · ${formatTimestamp(record.at)}</p>
-              ${record.prompt ? `<p class="prompt-text">${record.prompt}</p>` : ""}
+              <strong>${escapeText(record.label)}</strong>
+              <p>${escapeText(record.agentName)} · ${formatTimestamp(record.at)}</p>
+              ${record.prompt ? `<p class="prompt-text">${escapeText(record.prompt)}</p>` : ""}
             </article>
           `
         )
@@ -277,10 +277,10 @@ function renderSourceList(agents, providers, message = "") {
       return `
         <article class="source-row">
           <div>
-            <strong>${labelize(source)}</strong>
+            <strong>${escapeText(labelize(source))}</strong>
             <p>${sourceAgents.length} agents, ${running} running</p>
           </div>
-          <span>${sourceAgents.map((agent) => agent.provider).filter(unique).join(", ")} · ${formatScanFreshness(sourceAgents)}</span>
+          <span>${escapeText(sourceAgents.map((agent) => agent.provider).filter(unique).join(", "))} · ${formatScanFreshness(sourceAgents)}</span>
         </article>
       `;
     })
@@ -291,10 +291,10 @@ function renderSourceList(agents, providers, message = "") {
       (provider) => `
         <article class="source-row ${provider.status === "error" ? "source-error" : ""}">
           <div>
-            <strong>${provider.label}</strong>
-            <p>${provider.status === "error" ? provider.error : `${provider.agentCount} agents`}</p>
+            <strong>${escapeText(provider.label)}</strong>
+            <p>${provider.status === "error" ? escapeText(provider.error) : `${Number(provider.agentCount || 0)} agents`}</p>
           </div>
-          <span>${labelize(provider.status)} · ${formatScanFreshness([provider])}</span>
+          <span>${escapeText(labelize(provider.status))} · ${formatScanFreshness([provider])}</span>
           <button class="icon-button" type="button" title="Test provider connection" data-test-provider="${escapeAttribute(provider.id)}">✓</button>
         </article>
       `
@@ -316,7 +316,7 @@ function renderSettings(config, mode = "local", message = "") {
     <section class="settings-block">
       <div class="settings-heading">
         <h2>Settings</h2>
-        ${message ? `<span>${message}</span>` : ""}
+        ${message ? `<span>${escapeText(message)}</span>` : ""}
       </div>
       ${renderValidationWarnings(config?.validationWarnings || [])}
       <form class="settings-form">
@@ -507,20 +507,20 @@ function renderAgentRow(agent, agents, selectedAgentId) {
   return `
     <article class="table-row ${agent.id === selectedAgentId ? "selected" : ""}" role="row">
       <div class="agent-name">
-        <button class="agent-link" type="button" data-select-agent="${agent.id}">${agent.name}</button>
-        <p>${agent.provider} · ${labelize(agent.type || agent.providerId || agent.source)} · ${agent.task}</p>
+        <button class="agent-link" type="button" data-select-agent="${escapeAttribute(agent.id)}">${escapeText(agent.name)}</button>
+        <p>${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))} · ${escapeText(agent.task)}</p>
       </div>
       <div>
-        <span class="status-pill ${statusTone(agent.status)}">${agent.status}</span>
+        <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
         <p class="muted">${formatRuntime(agent)}</p>
       </div>
       <div class="resource-stack">
         <meter min="0" max="100" value="${agent.cpu}"></meter>
-        <p>${renderResourceLine(agent)}</p>
+        <p>${escapeText(renderResourceLine(agent))}</p>
       </div>
       <div>
-        <p>${parent}</p>
-        <p class="muted">${childCount ? childNames : "No children"}</p>
+        <p>${escapeText(parent)}</p>
+        <p class="muted">${childCount ? escapeText(childNames) : "No children"}</p>
       </div>
       <div class="action-row">
         ${agentActions.map((action) => renderAction(agent, action)).join("")}
@@ -538,15 +538,15 @@ function renderDetailPanel(detail) {
       <div class="detail-heading">
         <div>
           <p class="eyebrow">Selected Agent</p>
-          <h2>${agent.name}</h2>
+          <h2>${escapeText(agent.name)}</h2>
         </div>
-        <span class="status-pill ${statusTone(agent.status)}">${agent.status}</span>
+        <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
       </div>
       <div class="detail-grid">
         <article>
           <span>Provider</span>
-          <strong>${agent.provider}</strong>
-          <p>${labelize(agent.type || agent.providerId || "unknown")} · ${agent.providerId || agent.source || "unknown"}</p>
+          <strong>${escapeText(agent.provider)}</strong>
+          <p>${escapeText(labelize(agent.type || agent.providerId || "unknown"))} · ${escapeText(agent.providerId || agent.source || "unknown")}</p>
         </article>
         <article>
           <span>Runtime</span>
@@ -556,19 +556,19 @@ function renderDetailPanel(detail) {
         <article>
           <span>Resources</span>
           <strong>${formatMemory(agent.memoryMb)}</strong>
-          <p>${renderProcessLine(agent)}</p>
+          <p>${escapeText(renderProcessLine(agent))}</p>
         </article>
         <article>
           <span>Usage</span>
           <strong>${agent.tokens ? agent.tokens.toLocaleString() : 0} tokens</strong>
-          <p>${renderTokenUsageLine(agent)} · $${Number(agent.costUsd || 0).toFixed(2)}</p>
+          <p>${escapeText(renderTokenUsageLine(agent))} · $${Number(agent.costUsd || 0).toFixed(2)}</p>
         </article>
       </div>
       <div class="detail-columns">
         <article>
           <h3>Lineage</h3>
-          <p><strong>Parent:</strong> ${parent?.name || "Root"}</p>
-          <p><strong>Children:</strong> ${children.length ? children.map((child) => child.name).join(", ") : "None"}</p>
+          <p><strong>Parent:</strong> ${escapeText(parent?.name || "Root")}</p>
+          <p><strong>Children:</strong> ${children.length ? escapeText(children.map((child) => child.name).join(", ")) : "None"}</p>
         </article>
         <article>
           <h3>Recent Actions</h3>
@@ -595,7 +595,7 @@ function renderAgentLogs(agent) {
     .slice(0, 5)
     .map(
       (log) => `
-        <p class="log-line ${log.level || "info"}">
+        <p class="log-line ${escapeAttribute(log.level || "info")}">
           <strong>${escapeText(log.source || "agent")}</strong>
           <span>${formatTimestamp(log.at)} · ${escapeText(log.message)}</span>
         </p>
@@ -612,8 +612,8 @@ function renderAgentTranscript(agent) {
     .slice(-6)
     .map(
       (entry) => `
-        <p class="log-line ${entry.role || "assistant"}">
-          <strong>${labelize(entry.role || "assistant")}</strong>
+        <p class="log-line ${escapeAttribute(entry.role || "assistant")}">
+          <strong>${escapeText(labelize(entry.role || "assistant"))}</strong>
           <span>${formatTimestamp(entry.at)} · ${escapeText(entry.content)}</span>
         </p>
       `
@@ -624,8 +624,8 @@ function renderAgentTranscript(agent) {
 function renderDetailHistory(record) {
   return `
     <p>
-      <strong>${record.label}</strong>
-      <span>${formatTimestamp(record.at)}${record.prompt ? ` · ${record.prompt}` : ""}</span>
+      <strong>${escapeText(record.label)}</strong>
+      <span>${formatTimestamp(record.at)}${record.prompt ? ` · ${escapeText(record.prompt)}` : ""}</span>
     </p>
   `;
 }
@@ -665,8 +665,8 @@ function renderLineageNode(agent, agents, depth) {
   return `
     <article class="lineage-node" style="--depth: ${depth}">
       <div>
-        <strong>${agent.name}</strong>
-        <p>${agent.provider} · ${agent.status}</p>
+        <strong>${escapeText(agent.name)}</strong>
+        <p>${escapeText(agent.provider)} · ${escapeText(agent.status)}</p>
       </div>
       <span>${children.length}</span>
     </article>
@@ -731,7 +731,7 @@ function filterAgents(agents, filters) {
 }
 
 function renderOption(value, selected, label = labelize(value)) {
-  return `<option value="${escapeAttribute(value)}" ${value === selected ? "selected" : ""}>${label}</option>`;
+  return `<option value="${escapeAttribute(value)}" ${value === selected ? "selected" : ""}>${escapeText(label)}</option>`;
 }
 
 function escapeAttribute(value) {
@@ -873,11 +873,11 @@ function renderAction(agent, action) {
     <button
       class="${action.destructive ? "danger" : ""}"
       type="button"
-      data-agent-id="${agent.id}"
-      data-action="${action.id}"
+      data-agent-id="${escapeAttribute(agent.id)}"
+      data-action="${escapeAttribute(action.id)}"
       ${disabled ? "disabled" : ""}
     >
-      ${action.label}
+      ${escapeText(action.label)}
     </button>
   `;
 }

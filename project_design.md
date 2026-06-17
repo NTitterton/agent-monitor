@@ -83,6 +83,7 @@ graph TD
 - **Local-first:** The app should work without a hosted backend for local monitoring.
 - **Provider-extensible:** New provider integrations should plug into a small adapter contract.
 - **Safe-by-default:** Cross-origin API access should be explicitly allowed by config and optionally token-gated.
+- **Untrusted-provider rendering:** App and widget surfaces should escape provider-supplied text and attributes before rendering HTML.
 - **Embeddable with low ceremony:** The standalone widget should work from a single script tag.
 - **Testable:** Verification should be scriptable and isolated from the operator's real local state.
 
