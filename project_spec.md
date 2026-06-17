@@ -25,6 +25,7 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 - Snapshot-style API responses include `snapshotAt`, the server assembly time for that view. The browser app and embedded widgets display it separately from provider `scannedAt` freshness.
 - Provider snapshots are cached for 1000 ms by default, configurable with `AGENT_MONITOR_SCAN_CACHE_MS`, so unified snapshots and paired legacy `/api/agents` plus `/api/providers` requests reuse the same scan.
 - When `snapshotRefresh.enabled` is true, the local server also runs a background scanner at `snapshotRefresh.intervalMs`; the scanner warms provider snapshots with the same interval as the cache window and exposes status through `/api/scanner` and `/api/snapshot`.
+- `GET /api/health` identifies the local Agent Monitor server for desktop startup, port reuse, and simple local health checks.
 - The local Settings panel can rotate the write-only embed API token while public config responses expose only `hasApiToken`.
 
 ## New Requirements
@@ -33,7 +34,7 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 
 Agent Monitor should run as a browser app, standalone desktop app, and embeddable widget.
 
-Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. The browser app and widgets escape provider-supplied text and attributes before rendering. `npm run desktop:build` compiles and verifies the generated `.app` bundle, including desktop startup diagnostics that show project root and captured server output when the local server cannot start. `npm run desktop:package` creates a shareable zip from the verified app bundle.
+Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. The browser app and widgets escape provider-supplied text and attributes before rendering. `npm run desktop:build` compiles and verifies the generated `.app` bundle, including desktop startup diagnostics that show project root and captured server output when the local server cannot start. The desktop wrapper identifies already-running Agent Monitor servers through `/api/health`, reuses ports `5173`-`5183` when available, and otherwise starts on the first open port in that range. `npm run desktop:package` creates a shareable zip from the verified app bundle.
 
 ### Agent Type
 

@@ -1,4 +1,5 @@
 import Cocoa
+import Darwin
 import WebKit
 
 final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
@@ -6,7 +7,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
   private var webView: WKWebView!
   private var serverProcess: Process?
   private var serverOutput = ""
-  private let port = 5173
+  private var port = 5173
+  private let candidatePorts = Array(5173...5183)
 
   func applicationDidFinishLaunching(_ notification: Notification) {
     startServerIfNeeded()
@@ -42,7 +44,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
   }
 
   private func startServerIfNeeded() {
-    if isServerRunning() { return }
+    if let runningPort = candidatePorts.first(where: { isAgentMonitorRunning(on: $0) }) {
+      port = runningPort
+      return
+    }
+
+    guard let availablePort = candidatePorts.first(where: { !isPortOpen($0) }) else {
+      showStartupError("Agent Monitor could not find an available local port in 5173-5183.\n\n\(startupDiagnostics())")
+      return
+    }
+
+    port = availablePort
 
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
@@ -68,7 +80,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
   }
 
   private func loadAppWhenReady(attemptsRemaining: Int) {
-    if isServerRunning() {
+    if isAgentMonitorRunning(on: port) {
       webView.load(URLRequest(url: appURL()))
       return
     }
@@ -85,23 +97,43 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     }
   }
 
-  private func isServerRunning() -> Bool {
-    guard let url = URL(string: "http://127.0.0.1:\(port)/api/providers") else { return false }
+  private func isAgentMonitorRunning(on port: Int) -> Bool {
+    guard let url = URL(string: "http://127.0.0.1:\(port)/api/health") else { return false }
     var request = URLRequest(url: url)
     request.timeoutInterval = 0.2
 
     let semaphore = DispatchSemaphore(value: 0)
     var ok = false
 
-    URLSession.shared.dataTask(with: request) { _, response, _ in
+    URLSession.shared.dataTask(with: request) { data, response, _ in
       if let httpResponse = response as? HTTPURLResponse {
-        ok = (200..<300).contains(httpResponse.statusCode)
+        let body = data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+        ok = (200..<300).contains(httpResponse.statusCode) && body.contains("Agent Monitor")
       }
       semaphore.signal()
     }.resume()
 
     _ = semaphore.wait(timeout: .now() + 0.3)
     return ok
+  }
+
+  private func isPortOpen(_ port: Int) -> Bool {
+    let socketDescriptor = socket(AF_INET, SOCK_STREAM, 0)
+    if socketDescriptor < 0 { return true }
+    defer { close(socketDescriptor) }
+
+    var address = sockaddr_in()
+    address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+    address.sin_family = sa_family_t(AF_INET)
+    address.sin_port = UInt16(port).bigEndian
+    address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+
+    let result = withUnsafePointer(to: &address) {
+      $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+        connect(socketDescriptor, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
+      }
+    }
+    return result == 0
   }
 
   private func projectRoot() -> URL {

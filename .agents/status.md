@@ -37,6 +37,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Standalone embeddable widget.
 - Desktop app bundle verification through `npm run desktop:build`.
 - Desktop app startup diagnostics with captured local server output.
+- Desktop app health probing and port fallback across local ports 5173-5183.
 - Desktop app zip packaging through `npm run desktop:package`.
 - Trusted-origin CORS and optional API token.
 - Standalone widget supports custom token or bearer authorization headers.

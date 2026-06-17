@@ -220,6 +220,12 @@ try {
     "remote sample should identify URL go-to"
   );
 
+  const health = await request("/api/health");
+  assert(health.status === 200, "health request should succeed");
+  assert(health.body.name === "Agent Monitor", "health response should identify Agent Monitor");
+  assert(health.body.status === "ok", "health response should report ok status");
+  assert(typeof health.body.port === "number", "health response should include the bound port");
+
   const snapshot = await request("/api/snapshot");
   assert(snapshot.status === 200, "snapshot request should succeed");
   assert(typeof snapshot.body.snapshotAt === "number", "snapshot should include snapshot timestamp");

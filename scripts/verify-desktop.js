@@ -19,6 +19,10 @@ await assertFileContains(plistPath, [
 ]);
 await assertFileContains(pkgInfoPath, ["APPL????"]);
 await assertFileContains(swiftPath, [
+  "candidatePorts = Array(5173...5183)",
+  "/api/health",
+  "isAgentMonitorRunning(on:",
+  "isPortOpen",
   "captureServerOutput(stdout)",
   "captureServerOutput(stderr)",
   "startupDiagnostics()",

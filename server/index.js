@@ -31,6 +31,14 @@ const server = createServer(async (request, response) => {
       return sendText(request, response, "Not found", 404);
     }
 
+    if (url.pathname === "/api/health" && request.method === "GET") {
+      return sendJson(request, response, withApiMeta({
+        name: "Agent Monitor",
+        status: "ok",
+        port
+      }));
+    }
+
     if (url.pathname.startsWith("/api/") && !(await isAuthorized(request))) {
       return sendJson(request, response, { error: "Unauthorized" }, 401);
     }

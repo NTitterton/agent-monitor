@@ -46,7 +46,7 @@ npm run desktop:build
 open "dist/Agent Monitor.app"
 ```
 
-The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app. If startup fails, the app shows the project root and captured server output to make local setup issues easier to diagnose. `npm run desktop:build` also verifies the generated `.app` bundle, executable, plist, PkgInfo, and startup diagnostics.
+The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app. The wrapper reuses an already-running Agent Monitor instance when one responds on ports `5173`-`5183`, otherwise it starts the bundled server on the first available port in that range. If startup fails, the app shows the project root and captured server output to make local setup issues easier to diagnose. `npm run desktop:build` also verifies the generated `.app` bundle, executable, plist, PkgInfo, startup diagnostics, health probing, and port fallback logic.
 
 To create a shareable zip of the verified app bundle:
 
@@ -116,6 +116,7 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 ## Local API
 
 - `GET /api/snapshot` returns agents, recent history, provider status, and sanitized config in one response. The browser app uses this as its primary refresh path.
+- `GET /api/health` returns a lightweight local health check with the app name, `ok` status, current port, and `snapshotAt`.
 - `GET /api/scanner` returns server-side background scanner status.
 - `GET /api/agents` returns the current agent snapshot. Agents include `scannedAt` when they came from a provider snapshot.
 - `GET /api/agents/:id` returns the selected agent, lineage neighbors, and recent agent history. Stale detail requests for missing agents return `404` with refreshed agents, history, provider status, sanitized config, and scanner status so clients can reconcile their view.
