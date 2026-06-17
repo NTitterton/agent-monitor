@@ -220,6 +220,8 @@ Embedded-widget note: module and standalone widgets render compact provider/sour
 
 Spend note: module and standalone widgets include nonzero `costUsd` in the compact resource line so embedded views retain token/cost task-manager context.
 
+Cost note: normalized snapshots coerce `costUsd` to a number on persisted-state reads, API/client cloning, and UI summary totals so spend sorting and totals are stable even when providers report numeric strings.
+
 ### Local Process Tree Controls
 
 Local lifecycle controls should target the process tree that represents the agent.

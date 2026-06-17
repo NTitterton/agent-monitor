@@ -203,7 +203,7 @@ Agent Monitor calls:
 - `GET {baseUrl}/agents`
 - `POST {baseUrl}/agents/:id/actions`
 
-`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `currentStep`, `progressPercent`, `owner`, `workspace`, `repository`, `branch`, `queue`, `priority`, `cpu`, `memoryMb`, `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`. Remote adapters preserve the process-resource breakdown fields when providers report them.
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `currentStep`, `progressPercent`, `owner`, `workspace`, `repository`, `branch`, `queue`, `priority`, `cpu`, `memoryMb`, `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`. Remote adapters preserve the process-resource breakdown fields when providers report them. Agent Monitor normalizes `costUsd` to a number before rendering spend totals or sorting by spend.
 
 Use `tokenCountConfidence` to distinguish provider-reported totals from rough or unknown counts. Accepted values are `observed`, `estimated`, `reported`, and `unknown`. When a provider reports cumulative `tokens` but no positive `tokensPerSecond`, Agent Monitor samples successive fresh snapshots and derives a recent token rate plus `tokenRateWindowMs`.
 

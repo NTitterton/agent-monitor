@@ -242,6 +242,7 @@ function cloneAgent(agent) {
     tokensPerSecond: Number(agent.tokensPerSecond || 0),
     tokenRateWindowMs: Number(agent.tokenRateWindowMs || 0),
     tokenCountConfidence: agent.tokenCountConfidence || (agent.tokens ? "estimated" : "unknown"),
+    costUsd: Number(agent.costUsd || 0),
     currentStep: agent.currentStep || "",
     progressPercent: normalizeProgress(agent.progressPercent),
     children: Array.isArray(agent.children) ? [...agent.children] : [],

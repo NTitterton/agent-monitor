@@ -58,7 +58,7 @@ class AgentMonitorApp extends HTMLElement {
     const filteredAgents = filterAgents(agents, filters);
     const running = agents.filter((agent) => agent.status === "running").length;
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
-    const spend = agents.reduce((total, agent) => total + agent.costUsd, 0);
+    const spend = agents.reduce((total, agent) => total + Number(agent.costUsd || 0), 0);
     const history = this.history || [];
     const selectedDetail = this.detail || buildDetail(this.selectedAgentId, agents, history);
     const sources = [...new Set(agents.map((agent) => agent.source))].sort();

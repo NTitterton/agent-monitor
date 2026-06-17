@@ -119,6 +119,7 @@ function normalizeState(nextState) {
         providerId: agent.providerId || agentProviderIds[agent.id] || "local",
         type: agent.type || agentTypes[agent.id] || agent.providerId || agentProviderIds[agent.id] || "remote",
         ...normalizeTokenMetrics(agent, fallbackAgent),
+        ...normalizeCostMetrics(agent, fallbackAgent),
         ...normalizeTaskProgress(agent, fallbackAgent),
         ...normalizeGoTo(agent, fallbackAgent),
         children: Array.isArray(agent.children) ? [...agent.children] : [],
@@ -144,6 +145,7 @@ function cloneAgents(agents) {
   return agents.map((agent) => ({
     ...agent,
     ...normalizeTokenMetrics(agent),
+    ...normalizeCostMetrics(agent),
     ...normalizeTaskProgress(agent),
     ...normalizeGoTo(agent),
     children: [...agent.children],
@@ -169,6 +171,13 @@ function normalizeTokenMetrics(agent = {}, fallbackAgent = {}) {
 
 function normalizeTokenConfidence(value, fallback = "unknown") {
   return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function normalizeCostMetrics(agent = {}, fallbackAgent = {}) {
+  const costUsd = Number(agent.costUsd ?? fallbackAgent.costUsd ?? 0);
+  return {
+    costUsd: Number.isFinite(costUsd) ? costUsd : 0
+  };
 }
 
 function normalizeTaskProgress(agent = {}, fallbackAgent = {}) {
