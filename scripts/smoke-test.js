@@ -45,6 +45,8 @@ try {
     "standalone widget should render rejected API actions without local fallback"
   );
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
+  const registrySource = await readFile(new URL("../server/providerRegistry.js", import.meta.url), "utf8");
+  assert(registrySource.includes("Provider did not return updated agent"), "registry should reject unconfirmed provider actions");
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");

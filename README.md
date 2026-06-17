@@ -140,6 +140,8 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 
 Agent-level `capabilities` should only include actions the provider can actually perform. The app disables unsupported controls, and the local API validates action IDs before enforcing capabilities. Unknown action IDs return `400`; direct action requests that are not in an agent's advertised capabilities return `409`. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
 
+Provider actions must return an updated agent from the provider. If the provider accepts a command but does not return an updated agent, Agent Monitor treats that as a provider error instead of recording a successful lifecycle action.
+
 Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets and lifecycle actions that do not apply to the agent's current status.
 
 ## Monitor local processes

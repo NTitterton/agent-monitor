@@ -54,6 +54,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Smoke coverage for starting and force-ending a configured local process agent.
 - Server-side capability enforcement for unsupported direct action requests.
 - Server-side validation for unknown action IDs.
+- Server-side rejection for provider actions that do not return an updated agent.
 - Unified lifecycle action responses with refreshed agents, history, provider status, sanitized config, and scanner status.
 - Browser app action feedback for accepted and rejected lifecycle requests.
 - Browser app escaping for provider-supplied text, history prompts, and action/provider attributes.

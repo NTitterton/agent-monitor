@@ -117,6 +117,15 @@ export function createProviderRegistry() {
 
         const changedAgent = await provider.performAction(agentId, actionId, prompt);
         invalidateSnapshots(provider.id);
+        if (!changedAgent) {
+          return {
+            error: "Provider did not return updated agent",
+            status: 502,
+            agents: await listAgents(),
+            history: await stateStore.listHistory()
+          };
+        }
+
         if (!provider.recordsHistory && changedAgent) {
           await stateStore.recordAction(changedAgent, actionId, prompt);
         }
