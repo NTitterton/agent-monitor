@@ -128,7 +128,7 @@ Make scanning cadence explicit and configurable.
 Requirements:
 
 - Browser app should support optional polling instead of only manual refresh.
-- Widget polling should remain configurable with `refresh-ms`.
+- Widget polling should remain configurable with `refresh-ms`; standalone embeds should clamp the interval to a safe range and reschedule when host pages change embed attributes.
 - Local process scanning should have a visible last-scanned timestamp.
 - Scan intervals should avoid expensive resource usage by default.
 
@@ -241,7 +241,7 @@ Lineage normalization note: `parentId` and `children` are normalized as string I
 
 Embedded-widget note: module and standalone widgets render compact provider/source health and unified snapshot freshness from the unified snapshot so embeds show adapter issues and last update time without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
 
-Standalone-widget normalization note: the standalone embed normalizes incoming API/fallback snapshots for numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering, preserving stable behavior when embedded on static personal sites.
+Standalone-widget normalization note: the standalone embed normalizes incoming API/fallback snapshots for numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering, preserving stable behavior when embedded on static personal sites. It observes `api-base`, `api-token`, `auth-header`, and `refresh-ms` changes after mount so host pages can reconfigure it without remounting.
 
 Standalone-widget fallback note: local fallback lifecycle actions update runtime/resource fields consistently with the core lifecycle model and record history with agent, provider, source, type, and action metadata.
 

@@ -231,6 +231,10 @@ const styles = `
 `;
 
 class StandaloneAgentMonitorWidget extends HTMLElement {
+  static get observedAttributes() {
+    return ["api-base", "api-token", "auth-header", "refresh-ms"];
+  }
+
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
@@ -244,11 +248,22 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
   connectedCallback() {
     this.render();
     void this.refresh();
-    this.refreshTimer = window.setInterval(() => this.refresh(), Number(this.getAttribute("refresh-ms") || 15000));
+    this.scheduleRefresh();
   }
 
   disconnectedCallback() {
     window.clearInterval(this.refreshTimer);
+  }
+
+  attributeChangedCallback() {
+    if (!this.isConnected) return;
+    this.scheduleRefresh();
+    void this.refresh();
+  }
+
+  scheduleRefresh() {
+    window.clearInterval(this.refreshTimer);
+    this.refreshTimer = window.setInterval(() => this.refresh(), this.refreshMs());
   }
 
   async refresh() {
@@ -451,6 +466,11 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
 
   authHeader() {
     return this.getAttribute("auth-header")?.trim().toLowerCase() || "x-agent-monitor-token";
+  }
+
+  refreshMs() {
+    const value = Number(this.getAttribute("refresh-ms") || 15000);
+    return Number.isFinite(value) ? Math.min(Math.max(Math.round(value), 5000), 300000) : 15000;
   }
 
   headers() {

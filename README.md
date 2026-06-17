@@ -65,7 +65,7 @@ For personal sites, use the standalone widget script:
 <script src="/agent-monitor-widget.js"></script>
 ```
 
-Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/snapshot` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget stays interactive with local fallback data. The standalone widget also falls back to the older `/api/agents` snapshot shape for compatibility with older local servers.
+Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/snapshot` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget stays interactive with local fallback data. The standalone widget also falls back to the older `/api/agents` snapshot shape for compatibility with older local servers. The widget reacts when `api-base`, `api-token`, `auth-header`, or `refresh-ms` attributes change after mount, and clamps `refresh-ms` between 5000 and 300000 ms.
 
 For cross-site embeds, add the site origins that may call the local API:
 

@@ -47,6 +47,9 @@ try {
     "standalone widget should render rejected API actions without local fallback"
   );
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
+  assert(standaloneWidgetSource.includes("observedAttributes"), "standalone widget should react to embed attribute changes");
+  assert(standaloneWidgetSource.includes("scheduleRefresh()"), "standalone widget should reschedule polling when attributes change");
+  assert(standaloneWidgetSource.includes("Math.min(Math.max(Math.round(value), 5000), 300000)"), "standalone widget should clamp refresh intervals");
   assert(standaloneWidgetSource.includes("authHeader()"), "standalone widget should support configurable auth headers");
   assert(standaloneWidgetSource.includes("Authorization: `Bearer ${token}`"), "standalone widget should support bearer auth");
   assert(standaloneWidgetSource.includes("normalizeWidgetAgents"), "standalone widget should normalize incoming snapshots");
