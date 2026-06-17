@@ -121,7 +121,7 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
-- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status. Unknown action IDs return `400`; valid actions outside the target agent's `capabilities` return `409`.
+- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status, including rejected requests. Unknown action IDs return `400`; missing agents return `404`; valid actions outside the target agent's `capabilities` return `409`.
 
 Provider snapshots are reused for a short window so app refreshes and paired legacy calls to `/api/agents` plus `/api/providers` do not rescan every adapter twice. The default cache window is 1000 ms and can be changed with `AGENT_MONITOR_SCAN_CACHE_MS`.
 
@@ -138,7 +138,7 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 }
 ```
 
-Agent-level `capabilities` should only include actions the provider can actually perform. Agent Monitor filters capabilities to known unique action IDs before rendering controls or enforcing action requests. The app disables unsupported controls, and the local API validates action IDs before enforcing capabilities. Unknown action IDs return `400`; direct action requests that are not in an agent's advertised capabilities return `409`. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
+Agent-level `capabilities` should only include actions the provider can actually perform. Agent Monitor filters capabilities to known unique action IDs before rendering controls or enforcing action requests. The app disables unsupported controls, and the local API validates action IDs before enforcing capabilities. Unknown action IDs return `400`; stale requests for missing agents return `404`; direct action requests that are not in an agent's advertised capabilities return `409`. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
 
 Provider actions must return the updated target agent from the provider. If the provider accepts a command but does not return an updated agent, or returns a different agent ID, Agent Monitor treats that as a provider error instead of recording a successful lifecycle action.
 

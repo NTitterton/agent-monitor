@@ -145,7 +145,12 @@ export function createProviderRegistry() {
       }
     }
 
-    return null;
+    return {
+      error: "Agent not found",
+      status: 404,
+      agents: await listAgents(),
+      history: await stateStore.listHistory()
+    };
   }
 
   async function getAgent(agentId) {

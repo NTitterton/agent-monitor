@@ -409,6 +409,19 @@ try {
   assert(invalidAction.body.error === "Invalid action", "invalid agent action should return a clear error");
   assert(Array.isArray(invalidAction.body.providers), "invalid action should return provider status");
 
+  const missingAgentAction = await request("/api/agents/missing-agent/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "stop" })
+  });
+  assert(missingAgentAction.status === 404, "missing agent action should return not found");
+  assert(missingAgentAction.body.error === "Agent not found", "missing agent action should return a clear error");
+  assert(Array.isArray(missingAgentAction.body.agents), "missing agent action should return agents");
+  assert(Array.isArray(missingAgentAction.body.history), "missing agent action should return history");
+  assert(Array.isArray(missingAgentAction.body.providers), "missing agent action should return provider status");
+  assert(missingAgentAction.body.config?.hasApiToken === true, "missing agent action should return sanitized config");
+  assert(missingAgentAction.body.scanner, "missing agent action should return scanner status");
+
   const detail = await request("/api/agents/local-codex-1");
   assert(detail.status === 200, "agent detail should succeed");
   assert(detail.body.agent.id === "local-codex-1", "agent detail should return requested agent");
