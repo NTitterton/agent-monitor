@@ -433,8 +433,8 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
   }
 
   refreshMs() {
-    const value = Number(this.getAttribute("refresh-ms") || 15000);
-    return Number.isFinite(value) ? Math.min(Math.max(Math.round(value), 5000), 300000) : 15000;
+    const value = Number(this.getAttribute("refresh-ms") || 3000);
+    return Number.isFinite(value) ? Math.min(Math.max(Math.round(value), 1000), 300000) : 3000;
   }
 
   headers() {
@@ -512,7 +512,7 @@ function renderProviderSummary(providers, agents, snapshotAt = null) {
 function renderScannerSummary(scanner) {
   if (!scanner) return "";
   const state = scanner.enabled ? (scanner.running ? "Scanning now" : "Discovery on") : "Discovery off";
-  const detail = scanner.lastFinishedAt ? `finished ${formatTimestamp(scanner.lastFinishedAt)}` : `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  const detail = scanner.lastFinishedAt ? `finished ${formatTimestamp(scanner.lastFinishedAt)}` : `${Math.round(Number(scanner.intervalMs || 3000) / 1000)}s interval`;
   const counts = `${Number(scanner.agentCount || 0)} agents · ${Number(scanner.providerCount || 0)} providers`;
   const error = scanner.lastError ? ` · ${scanner.lastError}` : "";
   return `<p class="source-summary">${escapeHtml(state)} · ${escapeHtml(detail)} · ${escapeHtml(counts)}${escapeHtml(error)}</p>`;
@@ -606,7 +606,7 @@ function normalizeScanner(scanner) {
   return {
     enabled: scanner.enabled === true,
     running: scanner.running === true,
-    intervalMs: finiteNumber(scanner.intervalMs, 15000),
+    intervalMs: finiteNumber(scanner.intervalMs, 3000),
     lastScanAt: normalizeOptionalTimestamp(scanner.lastScanAt),
     lastFinishedAt: normalizeOptionalTimestamp(scanner.lastFinishedAt),
     lastError: normalizeOptionalString(scanner.lastError),

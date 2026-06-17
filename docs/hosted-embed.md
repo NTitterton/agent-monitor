@@ -29,7 +29,7 @@ Copy `embed/agent-monitor-widget.js` into your site's static assets, for example
 <agent-monitor-widget
   api-base="http://127.0.0.1:5173"
   api-token="replace-with-your-local-widget-token"
-  refresh-ms="15000"
+  refresh-ms="3000"
 ></agent-monitor-widget>
 <script src="/assets/agent-monitor-widget.js"></script>
 ```
@@ -41,7 +41,7 @@ If your site prefers bearer auth headers, use:
   api-base="http://127.0.0.1:5173"
   api-token="replace-with-your-local-widget-token"
   auth-header="authorization"
-  refresh-ms="15000"
+  refresh-ms="3000"
 ></agent-monitor-widget>
 <script src="/assets/agent-monitor-widget.js"></script>
 ```
@@ -65,7 +65,7 @@ Configure trusted origins and a widget token from the app Settings panel, or in 
   ],
   "snapshotRefresh": {
     "enabled": true,
-    "intervalMs": 15000
+    "intervalMs": 3000
   }
 }
 ```
@@ -77,7 +77,7 @@ The public config API only reports whether a token exists; it does not return th
 - If `api-base` is reachable, the widget reads `/api/snapshot` and sends lifecycle actions to `/api/agents/:id/actions`.
 - If the API is unreachable, the widget renders an empty fallback state so the hosted page still loads cleanly without showing fake agents.
 - If the API is reachable but rejects an action, the widget shows the rejection and does not mutate local fallback state.
-- `refresh-ms` is clamped between 5000 and 300000 ms.
+- `refresh-ms` is clamped between 1000 and 300000 ms.
 - The widget reacts to changes in `api-base`, `api-token`, `auth-header`, and `refresh-ms` without remounting.
 
 ## Browser Security Notes

@@ -19,7 +19,7 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 
 - The browser app fetches a snapshot on initial load and when the Refresh button is clicked.
 - The module widget uses the same client behavior as the browser app.
-- The standalone embeddable widget polls every 15 seconds by default via `refresh-ms`.
+- The standalone embeddable widget polls every 3 seconds by default via `refresh-ms`.
 - The local process provider runs `ps` and active local agent discovery whenever `/api/agents` or `/api/providers` asks providers for a fresh snapshot.
 - The browser app and standalone embeddable widget use `GET /api/snapshot` to fetch agents, history, provider status, and sanitized config in one response.
 - Snapshot-style API responses include `snapshotAt`, the server assembly time for that view. The browser app and embedded widgets display it separately from provider `scannedAt` freshness.
@@ -148,18 +148,18 @@ Make scanning cadence explicit and configurable.
 
 Requirements:
 
-- Browser app should support optional polling instead of only manual refresh.
+- Browser app should poll by default instead of requiring manual refresh for newly discovered local agents.
 - Widget polling should remain configurable with `refresh-ms`; standalone embeds should clamp the interval to a safe range and reschedule when host pages change embed attributes.
 - Local process scanning should have a visible last-scanned timestamp.
 - Scan intervals should avoid expensive resource usage by default.
 
 Initial proposal:
 
-- Browser app default: manual refresh plus optional 10-15 second polling setting.
+- Browser app default: 3 second polling, configurable from Settings and explicitly disableable. Intervals are clamped to 1-300 seconds so the UI can feel live without accepting pathological values.
 - Standalone widget default: 15 seconds.
 - Local process scan: on each provider snapshot request, with possible short in-memory cache if polling becomes aggressive.
 
-Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, source-list scan freshness display, a unified snapshot endpoint used by the app and standalone widget, a server-side background scanner that follows `snapshotRefresh`, an Active Discovery Sources-panel row with scanner timing/count/error details, and provider snapshot caching to avoid duplicate scans during refresh.
+Status: implemented for default browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, source-list scan freshness display, a unified snapshot endpoint used by the app and standalone widget, a server-side background scanner that follows `snapshotRefresh`, an Active Discovery Sources-panel row with scanner timing/count/error details, and provider snapshot caching to avoid duplicate scans during refresh. Missing `snapshotRefresh` config defaults to enabled at 3 seconds, while explicit `enabled: false` preserves manual-only mode.
 
 Task-level health note: the browser top summary shows provider issue count, while the task table and selected-agent inspector show provider health and scan freshness for each agent, so provider failures are visible directly beside affected work rather than only in the Sources panel.
 

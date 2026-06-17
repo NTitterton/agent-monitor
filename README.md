@@ -69,7 +69,7 @@ For personal sites, use the standalone widget script:
 <script src="/agent-monitor-widget.js"></script>
 ```
 
-Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/snapshot` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget renders an empty fallback state instead of fake agents. The standalone widget also falls back to the older `/api/agents` snapshot shape for compatibility with older local servers. The widget reacts when `api-base`, `api-token`, `auth-header`, or `refresh-ms` attributes change after mount, and clamps `refresh-ms` between 5000 and 300000 ms.
+Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/snapshot` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget renders an empty fallback state instead of fake agents. The standalone widget also falls back to the older `/api/agents` snapshot shape for compatibility with older local servers. The widget reacts when `api-base`, `api-token`, `auth-header`, or `refresh-ms` attributes change after mount, and clamps `refresh-ms` between 1000 and 300000 ms.
 
 For cross-site embeds, add the site origins that may call the local API:
 
@@ -100,7 +100,7 @@ For a hosted personal-site checklist, including `zo.computer`-style static hosti
 
 The app sidebar includes a collapsible Settings menu for trusted origins, the write-only embed API token, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, preserves non-blocking validation warnings across the save refresh, and does not expose configured API tokens or provider credentials. The desktop browser layout is sized as a one-screen operations console: the Sources rail and agent task list scroll independently while the header and filters stay reachable, the task list is weighted as the dominant Activity Monitor-style region, and selected-agent detail lives in a compact expandable inspector.
 
-When snapshot refresh is enabled, the browser app polls at the configured interval and the local server runs a matching background scanner. Scanner status is available as an Active Discovery row in the Sources panel and at `GET /api/scanner`, including enabled/running state, interval, scan timing, provider count, agent count, and any scanner error.
+By default, the browser app polls every 3 seconds and the local server runs a matching background scanner, so newly opened local agent sessions appear without pressing Refresh. Scanner status is available as an Active Discovery row in the Sources panel and at `GET /api/scanner`, including enabled/running state, interval, scan timing, provider count, agent count, and any scanner error. You can disable or change the cadence from Settings.
 
 Local standalone embed demo:
 
@@ -362,7 +362,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Use a local API when available, with empty static fallback for hosted embeds.
 - Configure trusted embed origins, configured local agents, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
 - Surface setup validation warnings without exposing saved secrets.
-- Configure optional browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.
+- Configure browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.
 - Test configured provider connections from the Sources panel.
 - Persist local server state and recent action history under `data/`.
 - Persist per-agent logs and transcripts for state-backed agents.

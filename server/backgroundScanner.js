@@ -5,7 +5,7 @@ export function createBackgroundScanner({ registry }) {
   let running = false;
   let status = {
     enabled: false,
-    intervalMs: 15000,
+    intervalMs: 3000,
     lastScanAt: null,
     lastFinishedAt: null,
     lastError: null,
@@ -23,7 +23,7 @@ export function createBackgroundScanner({ registry }) {
     config = config || (await readConfig());
     const refresh = config.snapshotRefresh || {};
     const enabled = refresh.enabled === true || process.env.AGENT_MONITOR_BACKGROUND_SCAN === "1";
-    const intervalMs = normalizeInterval(refresh.intervalMs || process.env.AGENT_MONITOR_BACKGROUND_SCAN_MS || 15000);
+    const intervalMs = normalizeInterval(refresh.intervalMs || process.env.AGENT_MONITOR_BACKGROUND_SCAN_MS || 3000);
     status = {
       ...status,
       enabled,
@@ -92,5 +92,5 @@ export function createBackgroundScanner({ registry }) {
 
 function normalizeInterval(value) {
   const intervalMs = Number(value);
-  return Number.isFinite(intervalMs) ? Math.min(Math.max(Math.round(intervalMs), 5000), 300000) : 15000;
+  return Number.isFinite(intervalMs) ? Math.min(Math.max(Math.round(intervalMs), 1000), 300000) : 3000;
 }

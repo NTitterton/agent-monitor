@@ -53,7 +53,7 @@ try {
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
   assert(standaloneWidgetSource.includes("observedAttributes"), "standalone widget should react to embed attribute changes");
   assert(standaloneWidgetSource.includes("scheduleRefresh()"), "standalone widget should reschedule polling when attributes change");
-  assert(standaloneWidgetSource.includes("Math.min(Math.max(Math.round(value), 5000), 300000)"), "standalone widget should clamp refresh intervals");
+  assert(standaloneWidgetSource.includes("Math.min(Math.max(Math.round(value), 1000), 300000)"), "standalone widget should clamp refresh intervals");
   assert(standaloneWidgetSource.includes("authHeader()"), "standalone widget should support configurable auth headers");
   assert(standaloneWidgetSource.includes("Authorization: `Bearer ${token}`"), "standalone widget should support bearer auth");
   assert(standaloneWidgetSource.includes("normalizeWidgetAgents"), "standalone widget should normalize incoming snapshots");
@@ -86,6 +86,7 @@ try {
   assertProviderAgentNormalization();
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
+  assert(!appSource.includes("data-test-provider"), "Sources panel should not render provider test checkmark buttons");
   assert(appSource.includes("actionKindLabel"), "browser app should label lifecycle versus surface history");
   assert(appSource.includes("return \"Unknown\""), "browser app should guard invalid timestamps");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
@@ -186,9 +187,13 @@ try {
   assert(stylesSource.includes(".settings-block:not([open])"), "collapsed settings should avoid occupying the Sources rail");
   assert(stylesSource.includes(".agent-table") && stylesSource.includes("overflow: auto"), "agent table should be the scrollable task list");
   assert(stylesSource.includes("min-height: 60%"), "agent table should retain most of the main panel");
+  assert(stylesSource.includes("align-content: start"), "sparse agent tables should not stretch rows vertically");
   assert(stylesSource.includes(".detail-panel[open]"), "selected-agent detail should expand only when opened");
   assert(stylesSource.includes("max-height: 32%"), "selected-agent detail should stay bounded below the task list");
   assert(stylesSource.includes("min-height: 30px"), "task table header should stay compact");
+  const configSource = await readFile(new URL("../server/config.js", import.meta.url), "utf8");
+  assert(configSource.includes("?? 3000"), "snapshot refresh should default to a realtime 3s cadence");
+  assert(configSource.includes("Math.max(Math.round(intervalMs), 1000)"), "snapshot refresh should allow 1s minimum intervals");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("agents: []"), "state store should default to no hardcoded agents");
   assert(stateStoreSource.includes("deprecatedSeedAgentIds"), "state store should migrate old seeded agent rows out of persisted state");

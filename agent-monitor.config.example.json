@@ -18,6 +18,10 @@
     "include": [],
     "exclude": []
   },
+  "snapshotRefresh": {
+    "enabled": true,
+    "intervalMs": 3000
+  },
   "remoteHttpProviders": [
     {
       "id": "remote-runner",

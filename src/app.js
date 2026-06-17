@@ -38,7 +38,7 @@ class AgentMonitorApp extends HTMLElement {
   configurePolling(config, mode) {
     const refresh = config?.snapshotRefresh || {};
     const enabled = mode === "api" && refresh.enabled === true;
-    const intervalMs = Number(refresh.intervalMs || 15000);
+    const intervalMs = Number(refresh.intervalMs || 3000);
     const nextKey = enabled ? `${intervalMs}` : "";
     if (this.pollingKey === nextKey) return;
 
@@ -122,7 +122,7 @@ class AgentMonitorApp extends HTMLElement {
           <aside class="panel sources-panel">
             <h2>Sources</h2>
             ${renderScannerStatus(this.scanner)}
-            ${renderSourceList(agents, this.providers || [], this.providerTestMessage)}
+            ${renderSourceList(agents, this.providers || [])}
             ${renderSettings(this.config, this.mode, this.settingsMessage)}
             ${renderLineageTree(agents)}
             ${renderHistory(history, this.mode)}
@@ -144,20 +144,6 @@ class AgentMonitorApp extends HTMLElement {
     `;
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
-    this.querySelectorAll("[data-test-provider]").forEach((button) => {
-      button.addEventListener("click", async () => {
-        const providerId = button.getAttribute("data-test-provider");
-        try {
-          const provider = await client.testProvider(providerId);
-          this.providerTestMessage = provider
-            ? `${provider.label}: ${provider.status}${provider.error ? ` (${provider.error})` : ""}`
-            : "Provider unavailable";
-        } catch {
-          this.providerTestMessage = "Provider test failed";
-        }
-        this.render();
-      });
-    });
     this.querySelector(".settings-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -173,7 +159,7 @@ class AgentMonitorApp extends HTMLElement {
         localAgents: parseLocalAgents(form),
         snapshotRefresh: {
           enabled: form.querySelector('[data-setting="snapshotRefreshEnabled"]').checked,
-          intervalMs: Number(form.querySelector('[data-setting="snapshotRefreshIntervalMs"]').value || 15000)
+          intervalMs: Number(form.querySelector('[data-setting="snapshotRefreshIntervalMs"]').value || 3000)
         },
         remoteHttpProviders: parseRemoteProviders(form),
         openAIResponsesProviders: parseOpenAIProviders(form),
@@ -341,7 +327,7 @@ function actionKindLabel(record) {
   return record.actionKind === "surface" ? "Surface" : "Lifecycle";
 }
 
-function renderSourceList(agents, providers, message = "") {
+function renderSourceList(agents, providers) {
   const bySource = agents.reduce((groups, agent) => {
     const sourceAgents = groups.get(agent.source) || [];
     sourceAgents.push(agent);
@@ -373,13 +359,12 @@ function renderSourceList(agents, providers, message = "") {
             <p>${provider.status === "error" ? escapeText(provider.error) : `${Number(provider.agentCount || 0)} agents`}</p>
           </div>
           <span>${escapeText(labelize(provider.status))} · ${formatScanFreshness([provider])}</span>
-          <button class="icon-button" type="button" title="Test provider connection" data-test-provider="${escapeAttribute(provider.id)}">✓</button>
         </article>
       `
     )
     .join("");
 
-  return `${message ? `<p class="source-message">${escapeText(message)}</p>` : ""}${sourceRows}${providerRows}`;
+  return `${sourceRows}${providerRows}`;
 }
 
 function activeAgentCount(agents) {
@@ -389,7 +374,7 @@ function activeAgentCount(agents) {
 function renderScannerStatus(scanner) {
   if (!scanner) return "";
   const state = scanner.enabled ? (scanner.running ? "Scanning now" : "Background scan on") : "Background scan off";
-  const interval = `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  const interval = `${formatSeconds(Number(scanner.intervalMs || 3000))} interval`;
   const detail = scanner.lastFinishedAt ? `finished ${formatScanFreshness([{ scannedAt: scanner.lastFinishedAt }])}` : "not finished";
   return `
     <article class="source-row ${scanner.lastError ? "source-error" : ""}">
@@ -414,7 +399,7 @@ function scannerSummaryLine(scanner, detail) {
 
 function renderSettings(config, mode = "local", message = "") {
   const discovery = config?.localDiscovery || { enabled: true, include: [], exclude: [] };
-  const snapshotRefresh = config?.snapshotRefresh || { enabled: false, intervalMs: 15000 };
+  const snapshotRefresh = config?.snapshotRefresh || { enabled: true, intervalMs: 3000 };
   const providerCounts = config?.providerCounts || {};
   const localAgents = config?.localAgents || [];
   const remoteProviders = config?.remoteHttpProviders || [];
@@ -446,7 +431,7 @@ function renderSettings(config, mode = "local", message = "") {
         </label>
         <label>
           <span>Refresh Interval (ms)</span>
-          <input data-setting="snapshotRefreshIntervalMs" type="number" min="5000" max="300000" step="1000" value="${Number(snapshotRefresh.intervalMs || 15000)}" ${mode === "api" ? "" : "disabled"} />
+          <input data-setting="snapshotRefreshIntervalMs" type="number" min="1000" max="300000" step="1000" value="${Number(snapshotRefresh.intervalMs || 3000)}" ${mode === "api" ? "" : "disabled"} />
         </label>
         <label>
           <span>Discovery Include</span>
@@ -1317,6 +1302,12 @@ function formatTimestamp(value) {
   const timestamp = Number(value);
   if (!Number.isFinite(timestamp) || timestamp <= 0) return "Unknown";
   return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatSeconds(milliseconds) {
+  const seconds = Number(milliseconds) / 1000;
+  if (!Number.isFinite(seconds) || seconds <= 0) return "3s";
+  return `${seconds % 1 === 0 ? seconds.toFixed(0) : seconds.toFixed(1)}s`;
 }
 
 function formatScanFreshness(items) {

@@ -581,12 +581,14 @@ function normalizeLocalDiscovery(value = {}, fallback = {}) {
 function normalizeSnapshotRefresh(value = {}, fallback = {}) {
   const source = value && typeof value === "object" ? value : {};
   const fallbackSource = fallback && typeof fallback === "object" ? fallback : {};
-  const intervalMs = Number(source.intervalMs ?? fallbackSource.intervalMs ?? 15000);
+  const intervalMs = Number(source.intervalMs ?? fallbackSource.intervalMs ?? 3000);
   return {
     enabled: Object.hasOwn(source, "enabled")
       ? source.enabled === true
-      : fallbackSource.enabled === true,
-    intervalMs: Number.isFinite(intervalMs) ? Math.min(Math.max(Math.round(intervalMs), 5000), 300000) : 15000
+      : Object.hasOwn(fallbackSource, "enabled")
+        ? fallbackSource.enabled === true
+        : true,
+    intervalMs: Number.isFinite(intervalMs) ? Math.min(Math.max(Math.round(intervalMs), 1000), 300000) : 3000
   };
 }
 

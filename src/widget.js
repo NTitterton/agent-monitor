@@ -27,10 +27,8 @@ class AgentMonitorWidget extends HTMLElement {
       this.actionMessage = snapshot.actionMessage;
       this.render();
     });
-    const refreshMs = Number(this.getAttribute("refresh-ms") || 0);
-    if (refreshMs > 0) {
-      this.refreshTimer = window.setInterval(() => client.refresh(), Math.max(refreshMs, 5000));
-    }
+    const refreshMs = Number(this.getAttribute("refresh-ms") || 3000);
+    this.refreshTimer = window.setInterval(() => client.refresh(), clampRefreshMs(refreshMs));
   }
 
   disconnectedCallback() {
@@ -115,7 +113,7 @@ function renderActionMessage(message) {
 function renderScannerSummary(scanner) {
   if (!scanner) return "";
   const state = scanner.enabled ? (scanner.running ? "Scanning now" : "Discovery on") : "Discovery off";
-  const detail = scanner.lastFinishedAt ? `finished ${formatTimestamp(scanner.lastFinishedAt)}` : `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  const detail = scanner.lastFinishedAt ? `finished ${formatTimestamp(scanner.lastFinishedAt)}` : `${Math.round(Number(scanner.intervalMs || 3000) / 1000)}s interval`;
   const counts = `${Number(scanner.agentCount || 0)} agents · ${Number(scanner.providerCount || 0)} providers`;
   const error = scanner.lastError ? ` · ${scanner.lastError}` : "";
   return `<p class="source-summary">${escapeText(state)} · ${escapeText(detail)} · ${escapeText(counts)}${escapeText(error)}</p>`;
@@ -336,6 +334,11 @@ function escapeAttribute(value) {
 
 function escapeText(value) {
   return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
+
+function clampRefreshMs(value) {
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.min(Math.max(Math.round(number), 1000), 300000) : 3000;
 }
 
 customElements.define("agent-monitor-widget", AgentMonitorWidget);
