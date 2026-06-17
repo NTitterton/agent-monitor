@@ -724,15 +724,20 @@ function tone(status) {
 }
 
 function formatRuntime(agent) {
-  const end = agent.endedAt || Date.now();
-  const totalMinutes = Math.max(1, Math.round((end - agent.startedAt) / 60000));
+  const startedAt = Number(agent?.startedAt);
+  if (!Number.isFinite(startedAt) || startedAt <= 0) return "Unknown runtime";
+  const endedAt = Number(agent?.endedAt);
+  const end = Number.isFinite(endedAt) && endedAt > 0 ? endedAt : Date.now();
+  const totalMinutes = Math.max(1, Math.round((end - startedAt) / 60000));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return hours ? `${hours}h ${minutes}m` : `${minutes}m`;
 }
 
 function formatTimestamp(value) {
-  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const timestamp = Number(value);
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return "Unknown";
+  return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function formatMemory(memoryMb) {

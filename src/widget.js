@@ -248,7 +248,9 @@ function formatSpend(costUsd) {
 }
 
 function formatTimestamp(value) {
-  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const timestamp = Number(value);
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return "Unknown";
+  return new Date(timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function renderLatestLog(agent) {

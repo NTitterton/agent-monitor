@@ -251,7 +251,7 @@ Resource note: normalized snapshots coerce CPU and memory resource fields to fin
 
 Timestamp note: the remote HTTP adapter accepts numeric millisecond timestamps and parseable date strings for agent `startedAt`/`endedAt`, log `at`, and transcript `at` fields, normalizing them to milliseconds before rendering runtime, sorting, or timelines.
 
-Client/persistence note: client snapshots and persisted state also normalize token metrics, token confidence, and log/transcript timestamps so legacy API responses or older state files cannot leak `NaN` values into task sorting or timelines.
+Client/persistence note: client snapshots and persisted state also normalize token metrics, token confidence, and log/transcript timestamps so legacy API responses or older state files cannot leak `NaN` values into task sorting or timelines. App and widget timestamp/runtime formatters render unknown values explicitly instead of surfacing `NaN` or `Invalid Date`.
 
 Process ID note: remote HTTP adapter responses and client snapshots normalize `pid`, `parentPid`, and `childPids` to finite numbers, dropping invalid child PID entries so process lineage displays have a stable shape.
 

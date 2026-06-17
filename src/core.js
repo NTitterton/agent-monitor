@@ -292,8 +292,11 @@ export function createActionRecord(agent, actionId, prompt = "", at = Date.now()
 }
 
 export function formatRuntime(agent) {
-  const end = agent.endedAt || Date.now();
-  const totalMinutes = Math.max(1, Math.round((end - agent.startedAt) / 60000));
+  const startedAt = Number(agent?.startedAt);
+  if (!Number.isFinite(startedAt) || startedAt <= 0) return "Unknown runtime";
+  const endedAt = Number(agent?.endedAt);
+  const end = Number.isFinite(endedAt) && endedAt > 0 ? endedAt : Date.now();
+  const totalMinutes = Math.max(1, Math.round((end - startedAt) / 60000));
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return hours ? `${hours}h ${minutes}m` : `${minutes}m`;

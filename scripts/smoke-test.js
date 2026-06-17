@@ -66,6 +66,7 @@ try {
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
   assert(appSource.includes("actionKindLabel"), "browser app should label lifecycle versus surface history");
+  assert(appSource.includes("return \"Unknown\""), "browser app should guard invalid timestamps");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
   assert(appSource.includes("compareAgents"), "browser app should support task-table sorting");
   assert(appSource.includes("priority-desc"), "browser app should sort by task priority");
@@ -97,6 +98,8 @@ try {
   assert(clientSource.includes("normalizeTokenConfidence"), "client should normalize token confidence");
   assert(clientSource.includes("normalizeTimestamp"), "client should normalize timeline timestamps");
   assert(clientSource.includes("snapshotAt"), "client should preserve unified snapshot timestamps");
+  const coreSource = await readFile(new URL("../src/core.js", import.meta.url), "utf8");
+  assert(coreSource.includes("Unknown runtime"), "core runtime formatting should guard invalid timestamps");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
@@ -105,6 +108,7 @@ try {
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("actionKindLabel"), "module widget should label lifecycle versus surface history");
+  assert(moduleWidgetSource.includes("return \"Unknown\""), "module widget should guard invalid timestamps");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
   assert(moduleWidgetSource.includes("escapeAttribute(agent.id)"), "module widget should escape provider-supplied attributes");
   assert(moduleWidgetSource.includes("actionDisabledReason"), "module widget should explain disabled action controls");
@@ -132,6 +136,8 @@ try {
   assert(standaloneWidgetSource.includes("collectActionPrompt"), "standalone widget should cancel prompt actions when the prompt is canceled");
   assert(standaloneWidgetSource.includes("window.confirm"), "standalone widget should confirm destructive actions");
   assert(standaloneWidgetSource.includes("actionKindLabel"), "standalone widget should label lifecycle versus surface history");
+  assert(standaloneWidgetSource.includes("Unknown runtime"), "standalone widget should guard invalid runtimes");
+  assert(standaloneWidgetSource.includes("return \"Unknown\""), "standalone widget should guard invalid timestamps");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");
