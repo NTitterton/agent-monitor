@@ -74,8 +74,8 @@ function renderWidgetHistory(history) {
   const latest = history[0];
   return `
     <footer>
-      <strong>${latest.label}</strong>
-      <span>${latest.agentName}</span>
+      <strong>${escapeText(latest.label)}</strong>
+      <span>${escapeText(latest.agentName)}</span>
     </footer>
   `;
 }
@@ -84,8 +84,8 @@ function renderActionMessage(message) {
   if (!message) return "";
 
   return `
-    <p class="action-message ${message.tone || "ok"}">
-      ${message.text || ""}
+    <p class="action-message ${escapeAttribute(message.tone || "ok")}">
+      ${escapeText(message.text || "")}
     </p>
   `;
 }
@@ -95,13 +95,13 @@ function renderWidgetAgent(agent) {
     <article>
       <div class="agent-line">
         <div>
-          <strong>${agent.name}</strong>
-          <p>${agent.provider} · ${formatRuntime(agent)}</p>
-          <p>${lineageSummary(agent)}</p>
+          <strong>${escapeText(agent.name)}</strong>
+          <p>${escapeText(agent.provider)} · ${formatRuntime(agent)}</p>
+          <p>${escapeText(lineageSummary(agent))}</p>
         </div>
-        <span class="${statusTone(agent.status)}">${agent.status}</span>
+        <span class="${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
       </div>
-      <p class="metrics">${renderResourceLine(agent)}</p>
+      <p class="metrics">${escapeText(renderResourceLine(agent))}</p>
       ${renderLatestLog(agent)}
       <div class="actions">
         ${agentActions.map((action) => renderAction(agent, action)).join("")}
@@ -136,7 +136,7 @@ function renderResourceLine(agent) {
 function renderLatestLog(agent) {
   const log = Array.isArray(agent.logs) ? agent.logs[0] : null;
   if (!log) return "";
-  return `<p class="log-preview">${log.source || "agent"} · ${log.message}</p>`;
+  return `<p class="log-preview">${escapeText(log.source || "agent")} · ${escapeText(log.message)}</p>`;
 }
 
 function renderAction(agent, action) {
@@ -149,13 +149,21 @@ function renderAction(agent, action) {
     <button
       class="${action.destructive ? "danger" : ""}"
       type="button"
-      data-agent-id="${agent.id}"
-      data-action="${action.id}"
+      data-agent-id="${escapeAttribute(agent.id)}"
+      data-action="${escapeAttribute(action.id)}"
       ${disabled ? "disabled" : ""}
     >
-      ${action.label}
+      ${escapeText(action.label)}
     </button>
   `;
+}
+
+function escapeAttribute(value) {
+  return String(value || "").replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+}
+
+function escapeText(value) {
+  return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 customElements.define("agent-monitor-widget", AgentMonitorWidget);
