@@ -111,6 +111,7 @@ try {
   assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
   assert(appSource.includes("Provider Object"), "browser app detail panel should render provider object metadata");
   assert(appSource.includes("providerObjectLine"), "browser app detail panel should summarize provider object metadata");
+  assert(appSource.includes("<details class=\"detail-panel\""), "browser app detail panel should be a collapsible inspector");
   assert(appSource.includes("Provider Issues"), "browser app summary should render provider issue count");
   assert(appSource.includes("<p>Active</p>"), "browser app summary should render active provider-status count");
   assert(appSource.includes("activeAgentCount(agents)"), "browser app summary should count provider-specific active statuses");
@@ -155,7 +156,7 @@ try {
   assert(stylesSource.includes(".settings-block:not([open])"), "collapsed settings should avoid occupying the Sources rail");
   assert(stylesSource.includes(".agent-table") && stylesSource.includes("overflow: auto"), "agent table should be the scrollable task list");
   assert(stylesSource.includes("flex: 1 1 78%"), "agent table should dominate the main panel");
-  assert(stylesSource.includes("max-height: 16%"), "selected-agent detail should stay compact below the task list");
+  assert(stylesSource.includes(".detail-panel[open]"), "selected-agent detail should expand only when opened");
   assert(stylesSource.includes("min-height: 34px"), "task table header should stay compact");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");

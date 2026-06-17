@@ -650,8 +650,8 @@ function renderDetailPanel(detail, providers = []) {
   const { agent, history, lineage } = detail;
   const provider = providerForAgent(agent, providers);
   return `
-    <section class="detail-panel">
-      <div class="detail-heading">
+    <details class="detail-panel">
+      <summary class="detail-heading">
         <div>
           <p class="eyebrow">Selected Agent</p>
           <h2>${escapeText(agent.name)}</h2>
@@ -662,7 +662,7 @@ function renderDetailPanel(detail, providers = []) {
             ${agentActions.map((action) => renderAction(agent, action)).join("")}
           </div>
         </div>
-      </div>
+      </summary>
       <div class="detail-grid">
         <article>
           <span>Task</span>
@@ -724,7 +724,7 @@ function renderDetailPanel(detail, providers = []) {
           ${renderAgentTranscript(agent)}
         </article>
       </div>
-    </section>
+    </details>
   `;
 }
 

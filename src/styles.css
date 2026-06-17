@@ -623,21 +623,31 @@ h2 {
 
 .detail-panel {
   border-top: 1px solid #e6e9ef;
-  flex: 0 0 clamp(92px, 14%, 140px);
-  padding: 10px 14px;
-  max-height: 16%;
+  flex: 0 0 auto;
+  padding: 8px 14px;
+  max-height: 42%;
   overflow-y: auto;
+}
+
+.detail-panel[open] {
+  flex-basis: clamp(148px, 22%, 240px);
 }
 
 .detail-heading {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.detail-heading::-webkit-details-marker {
+  display: none;
 }
 
 .detail-heading .eyebrow {
-  margin-bottom: 6px;
+  margin-bottom: 3px;
 }
 
 .detail-controls {
