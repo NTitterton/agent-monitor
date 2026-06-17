@@ -118,7 +118,10 @@ export function createAgentClient() {
       const payload = await response.json();
       config = payload.config;
       await refresh();
-      return payload.config;
+      if (payload.config?.validationWarnings?.length && config) {
+        config = { ...config, validationWarnings: [...payload.config.validationWarnings] };
+      }
+      return cloneConfig(config || payload.config);
     },
     async testProvider(providerId) {
       if (mode !== "api") return null;

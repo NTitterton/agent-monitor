@@ -174,7 +174,7 @@ Acceptance criteria:
 - Smoke tests prove token/API-key hiding and preservation for remote HTTP, OpenAI, and Anthropic setup.
 - Smoke tests prove local agent env hiding and preservation.
 
-Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons. Config saves also return validation warnings for malformed provider/local-agent setup, and the Settings panel displays them.
+Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons. Config saves also return validation warnings for malformed provider/local-agent setup, the client preserves those warnings across the post-save refresh, and the Settings panel displays them.
 
 ### Provider Action Semantics
 

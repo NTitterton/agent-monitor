@@ -68,6 +68,8 @@ try {
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
   assert(appSource.includes("this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history)"), "browser app selected detail should refresh from snapshots");
+  const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
+  assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
