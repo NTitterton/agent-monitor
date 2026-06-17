@@ -59,6 +59,7 @@ Acceptance criteria:
 - Every agent returned by `/api/agents` has `type`.
 - The app can filter or group by `type`.
 - Existing `source`, `provider`, and `providerId` behavior remains backward compatible.
+- Status filtering is derived from current snapshots rather than a fixed local-only status list.
 
 ### Token Rate
 

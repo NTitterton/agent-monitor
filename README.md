@@ -313,6 +313,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Record lifecycle history with provider, source, and type metadata.
 - Show named parent/child lineage in the browser app and embedded widgets.
 - Show compact provider/source health in embedded widgets.
+- Derive status filters from provider snapshots so provider-specific states remain filterable.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.

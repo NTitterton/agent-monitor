@@ -62,6 +62,7 @@ class AgentMonitorApp extends HTMLElement {
     const history = this.history || [];
     const selectedDetail = this.detail || buildDetail(this.selectedAgentId, agents, history);
     const sources = [...new Set(agents.map((agent) => agent.source))].sort();
+    const statuses = [...new Set(agents.map((agent) => agent.status))].filter(Boolean).sort();
     const types = [...new Set(agents.map((agent) => agent.type || agent.providerId || agent.source))].sort();
 
     this.innerHTML = `
@@ -105,7 +106,7 @@ class AgentMonitorApp extends HTMLElement {
               <h2>Agent Tasks</h2>
               <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
             </div>
-            ${renderFilters(filters, sources, types)}
+            ${renderFilters(filters, sources, types, statuses)}
             ${renderActionMessage(this.actionMessage)}
             <div class="agent-table" role="table" aria-label="Agent task table">
               ${renderAgentTable(filteredAgents, agents, this.selectedAgentId)}
@@ -207,7 +208,7 @@ function renderActionMessage(message) {
   return `<p class="action-message ${message.tone || "ok"}">${escapeText(message.text || "")}</p>`;
 }
 
-function renderFilters(filters, sources, types) {
+function renderFilters(filters, sources, types, statuses) {
   return `
     <form class="filter-bar" aria-label="Agent filters">
       <label>
@@ -217,7 +218,7 @@ function renderFilters(filters, sources, types) {
       <label>
         <span>Status</span>
         <select data-filter="status">
-          ${["all", "running", "paused", "waiting", "ended"].map((status) => renderOption(status, filters.status)).join("")}
+          ${["all", ...statuses].map((status) => renderOption(status, filters.status, status === "all" ? "All" : labelize(status))).join("")}
         </select>
       </label>
       <label>

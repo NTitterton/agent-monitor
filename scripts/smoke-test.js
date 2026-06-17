@@ -47,6 +47,7 @@ try {
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
+  assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
   assert(
     appSource.includes("escapeText(agent.name)") &&
       appSource.includes("escapeAttribute(agent.id)") &&
