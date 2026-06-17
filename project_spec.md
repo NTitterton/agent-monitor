@@ -198,6 +198,8 @@ Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthro
 
 Reliability note: provider-backed actions that do not return an updated agent, or return an updated agent with a different ID than the action target, are treated as provider errors and are not recorded as successful lifecycle history.
 
+API reliability note: malformed JSON request bodies return `400` with `Invalid JSON`, so clients and widgets can distinguish bad operator/client input from server failures.
+
 Provider failure note: provider action exceptions return `502` with refreshed agents, history, provider status, sanitized config, and scanner status. Local configured-agent `start` waits for the child-process spawn result; missing executables or other immediate spawn failures return a provider error and are not recorded as successful lifecycle history.
 
 History status: lifecycle history records include provider, provider ID, source, and type metadata. Existing persisted history without those fields is normalized with empty metadata fields on read.

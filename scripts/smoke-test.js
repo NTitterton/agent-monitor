@@ -459,6 +459,14 @@ try {
   assert(invalidAction.body.error === "Invalid action", "invalid agent action should return a clear error");
   assert(Array.isArray(invalidAction.body.providers), "invalid action should return provider status");
 
+  const malformedAction = await request("/api/agents/local-codex-1/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{"
+  });
+  assert(malformedAction.status === 400, "malformed agent action JSON should return bad request");
+  assert(malformedAction.body.error === "Invalid JSON", "malformed agent action JSON should return a clear error");
+
   const missingAgentAction = await request("/api/agents/missing-agent/actions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

@@ -124,7 +124,9 @@ const server = createServer(async (request, response) => {
 
     return serveStatic(url.pathname, response);
   } catch (error) {
-    return sendJson(request, response, { error: error.message || "Internal server error" }, 500);
+    const status = error.status || 500;
+    const message = status >= 500 ? error.message || "Internal server error" : error.message;
+    return sendJson(request, response, { error: message }, status);
   }
 });
 
@@ -176,7 +178,13 @@ async function readJson(request) {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   if (!chunks.length) return {};
-  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    const error = new Error("Invalid JSON");
+    error.status = 400;
+    throw error;
+  }
 }
 
 async function sendOptions(request, response) {
