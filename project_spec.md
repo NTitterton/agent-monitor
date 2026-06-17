@@ -131,7 +131,7 @@ Acceptance criteria:
 - Local process Go To is best-effort and platform-specific.
 - If no target is known, the button is hidden or disabled with a clear unavailable state.
 
-Status: partial implementation for macOS local process agents and URL-backed remote/account agents. `Go To` activates likely Terminal/iTerm, browser, or editor surfaces from local process metadata and process ancestry, exposes local `goToKind`, `goToTarget`, and `windowTitle` hints, and opens `goToTarget` URLs for remote dashboards/provider pages. Unsupported or unavailable Go To controls are disabled with explanatory titles. Exact terminal tab selection still needs deeper host integration.
+Status: partial implementation for macOS local process agents and URL-backed remote/account agents. `Go To` activates likely Terminal/iTerm, browser, or editor surfaces from local process metadata and process ancestry, exposes local `goToKind`, `goToTarget`, and `windowTitle` hints, opens visible browser URLs when a local browser-hosted process command includes one, and opens `goToTarget` URLs for remote dashboards/provider pages. Unsupported or unavailable Go To controls are disabled with explanatory titles. Exact terminal tab selection still needs deeper host integration.
 
 Open questions:
 
@@ -332,9 +332,8 @@ Status: implemented for state-backed agents, remote HTTP provider payloads, and 
 
 ## Near-Term Implementation Plan
 
-1. Add `type` to all provider normalizers and update filters.
-2. Continue refining provider-specific token confidence as integrations expose richer live usage signals.
-3. Add `goTo` metadata and a disabled/available UI state.
-4. Add configurable polling cadence to app settings.
-5. Add provider setup validation and connection-test actions.
-6. Document platform-specific Go To behavior before implementing OS automation.
+1. Improve platform-specific Go To targeting for terminal tabs, browser tabs, and editor workspaces where documented automation APIs are available.
+2. Add broader provider-specific start/resume creation flows where APIs expose them.
+3. Add richer live usage/cost sampling when account providers expose streaming or incremental usage telemetry.
+4. Add stronger end-to-end desktop launch verification beyond bundle structure checks.
+5. Add richer embedded-site deployment docs for hosted personal sites calling a local Agent Monitor API.

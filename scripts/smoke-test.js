@@ -952,6 +952,25 @@ function assertLocalSurfaceInference() {
   assert(chromeSurface.windowTitle === "Google Chrome", "Chrome-hosted agents should identify Chrome");
   assert(chromeSurface.goToTarget === "pid:10", "local surfaces should target the agent PID");
 
+  const chromeUrlSurface = inferLocalSurface(
+    { command: "codex" },
+    { pid: 11, ppid: 9, command: "codex" },
+    [
+      {
+        pid: 9,
+        ppid: 1,
+        command: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --app=https://agent-monitor.local/task/123"
+      },
+      { pid: 11, ppid: 9, command: "codex" }
+    ]
+  );
+  assert(chromeUrlSurface.goToKind === "url", "Browser-hosted agents with visible URLs should expose URL go-to");
+  assert(
+    chromeUrlSurface.goToTarget === "https://agent-monitor.local/task/123",
+    "Browser-hosted local go-to should target the visible URL"
+  );
+  assert(chromeUrlSurface.windowTitle === "Google Chrome agent-monitor.local", "Browser URL go-to should identify host");
+
   const terminalSurface = inferLocalSurface(
     { command: "claude" },
     { pid: 20, ppid: 19, command: "claude" },

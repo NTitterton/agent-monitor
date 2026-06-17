@@ -190,7 +190,7 @@ Configured local agents can be edited from the app Settings panel. Saved local a
 }
 ```
 
-Discovered agents are shown with PID, PPID, child process count, scan freshness, and resource usage. When two monitored local agents are related by OS parent process ID, Agent Monitor links them in the lineage tree. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`. On macOS, the `Go To` action activates the likely local surface for discovered terminal, browser, or editor-backed processes, and local agents expose `goToKind`, `goToTarget`, and `windowTitle` hints inferred from process ancestry when available.
+Discovered agents are shown with PID, PPID, child process count, scan freshness, and resource usage. When two monitored local agents are related by OS parent process ID, Agent Monitor links them in the lineage tree. Lifecycle stop/end actions signal the discovered process by PID; `start` is only available for explicitly configured `localAgents`. On macOS, the `Go To` action activates the likely local surface for discovered terminal, browser, or editor-backed processes, and local agents expose `goToKind`, `goToTarget`, and `windowTitle` hints inferred from process ancestry when available. Browser-hosted local agents expose a direct URL target when their browser process command includes an `http://` or `https://` URL, so the app/widget can open that task surface directly.
 
 ## Connect remote HTTP providers
 

@@ -261,7 +261,17 @@ export function inferLocalSurface(agent = {}, processInfo = null, processes = []
     .filter(Boolean);
   const commandText = [agent.command, ...commandChain].filter(Boolean).join("\n");
   const applicationName = inferApplicationName(commandText);
+  const browserUrl = extractCommandUrl(commandText);
   const pid = processInfo?.pid || agent.pid || null;
+
+  if (browserUrl && applicationName && surfaceKindForApplication(applicationName) === "browser") {
+    return {
+      goToKind: "url",
+      goToTarget: browserUrl,
+      windowTitle: `${applicationName} ${new URL(browserUrl).hostname}`,
+      applicationName
+    };
+  }
 
   if (applicationName) {
     return {
@@ -311,6 +321,16 @@ function surfaceKindForApplication(applicationName) {
   if (["Google Chrome", "Chromium", "Safari"].includes(applicationName)) return "browser";
   if (["Terminal", "iTerm2"].includes(applicationName)) return "terminal";
   return "process";
+}
+
+function extractCommandUrl(command) {
+  const match = String(command || "").match(/https?:\/\/[^\s"'<>\\)]+/i);
+  if (!match) return "";
+  try {
+    return new URL(match[0]).href;
+  } catch {
+    return "";
+  }
 }
 
 function buildProcessLogs(agent, processInfo, childPids, isRunning) {
