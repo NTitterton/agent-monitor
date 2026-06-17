@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider.js";
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
 import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
-import { inferLocalSurface, signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
+import { inferLocalSurface, signalForAction, signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
 import { applySampledTokenRates, buildProviderErrorSnapshot, normalizeProviderAgent } from "../server/providerRegistry.js";
 import { agentActions } from "../src/core.js";
 
@@ -87,6 +87,8 @@ try {
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
   assert(!appSource.includes("data-test-provider"), "Sources panel should not render provider test checkmark buttons");
+  assert(appSource.includes("previousSourcesScrollTop"), "browser app should preserve Sources scroll across live refreshes");
+  assert(appSource.includes("compact-source-row"), "Sources panel should consolidate provider/source rows");
   assert(appSource.includes("actionKindLabel"), "browser app should label lifecycle versus surface history");
   assert(appSource.includes("return \"Unknown\""), "browser app should guard invalid timestamps");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
@@ -108,7 +110,7 @@ try {
   assert(
     appSource.includes("escapeText(agent.name)") &&
       appSource.includes("escapeAttribute(agent.id)") &&
-      appSource.includes("escapeText(provider.label)") &&
+      appSource.includes("escapeText([...sourceLines, ...providerLines].join") &&
       appSource.includes("escapeText(record.prompt)"),
     "browser app should escape provider-supplied agent, provider, and history text"
   );
@@ -1012,6 +1014,9 @@ function assertProcessTreeSignalOrder() {
     { pid: 14, ppid: 99 }
   ]);
   assert(pids.join(",") === "12,13,11,10", "local lifecycle signals should target descendants before root");
+  assert(signalForAction("interrupt") === "SIGINT", "local interrupt should send SIGINT to terminal agents");
+  assert(signalForAction("stop") === "SIGTERM", "local stop should send SIGTERM");
+  assert(signalForAction("force-end") === "SIGKILL", "local force-end should send SIGKILL");
 }
 
 function assertLocalSurfaceInference() {
@@ -1056,6 +1061,17 @@ function assertLocalSurfaceInference() {
   );
   assert(terminalSurface.goToKind === "terminal", "Terminal-hosted agents should expose terminal go-to");
   assert(terminalSurface.windowTitle === "Terminal", "Terminal-hosted agents should identify Terminal");
+
+  const ghosttySurface = inferLocalSurface(
+    { command: "claude" },
+    { pid: 22, ppid: 21, command: "claude" },
+    [
+      { pid: 21, ppid: 1, command: "/Applications/Ghostty.app/Contents/MacOS/ghostty" },
+      { pid: 22, ppid: 21, command: "claude" }
+    ]
+  );
+  assert(ghosttySurface.goToKind === "terminal", "Ghostty-hosted agents should expose terminal go-to");
+  assert(ghosttySurface.windowTitle === "Ghostty", "Ghostty-hosted agents should identify Ghostty");
 
   const editorSurface = inferLocalSurface(
     { command: "aider" },

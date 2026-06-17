@@ -246,9 +246,13 @@ h2 {
 
 .source-row {
   display: grid;
-  gap: 12px;
-  padding: 16px 20px;
+  gap: 6px;
+  padding: 12px 14px;
   border-top: 1px solid #e6e9ef;
+}
+
+.compact-source-row {
+  gap: 8px;
 }
 
 .history-block {
@@ -344,7 +348,8 @@ h2 {
 
 .source-row span {
   color: #344054;
-  font-size: 0.82rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
 }
 
 .source-message {

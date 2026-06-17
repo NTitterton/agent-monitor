@@ -121,7 +121,7 @@ async function signalAgent(agent, actionId) {
   const pid = child?.pid || processInfo?.pid;
   if (!pid) return;
 
-  const signal = actionId === "force-end" ? "SIGKILL" : "SIGTERM";
+  const signal = signalForAction(actionId);
   for (const targetPid of signalPidsForProcessTree(pid, processes)) {
     try {
       process.kill(targetPid, signal);
@@ -129,6 +129,12 @@ async function signalAgent(agent, actionId) {
       // The target may have exited between snapshot and signal.
     }
   }
+}
+
+export function signalForAction(actionId) {
+  if (actionId === "force-end") return "SIGKILL";
+  if (actionId === "interrupt") return "SIGINT";
+  return "SIGTERM";
 }
 
 function toProcessAgent(agent, processes) {
@@ -247,7 +253,9 @@ async function goToAgent(agent, processes) {
   await run("osascript", [
     "-e",
     `tell application "System Events"
-      if exists process "iTerm2" then
+      if exists process "Ghostty" then
+        tell application "Ghostty" to activate
+      else if exists process "iTerm2" then
         tell application "iTerm2" to activate
       else
         tell application "Terminal" to activate
@@ -316,6 +324,7 @@ function inferApplicationName(command) {
   if (/Safari/i.test(command)) return "Safari";
   if (/Cursor/i.test(command)) return "Cursor";
   if (/Visual Studio Code|\/Code\.app/i.test(command)) return "Visual Studio Code";
+  if (/Ghostty|ghostty/i.test(command)) return "Ghostty";
   if (/iTerm2|iTerm\.app/i.test(command)) return "iTerm2";
   if (/Terminal\.app|\/Terminal\s|login\s+-fp|\/bin\/zsh|\/bin\/bash/i.test(command)) return "Terminal";
   return "";
@@ -323,7 +332,7 @@ function inferApplicationName(command) {
 
 function surfaceKindForApplication(applicationName) {
   if (["Google Chrome", "Chromium", "Safari"].includes(applicationName)) return "browser";
-  if (["Terminal", "iTerm2"].includes(applicationName)) return "terminal";
+  if (["Terminal", "iTerm2", "Ghostty"].includes(applicationName)) return "terminal";
   return "process";
 }
 

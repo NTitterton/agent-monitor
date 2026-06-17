@@ -146,6 +146,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Built-in seed agents removed from runtime state and standalone widget fallback; Agent Monitor now shows discovered/configured/persisted real agents only, while old seed IDs are filtered from persisted state on read.
 - Sparse agent tables keep normal row heights and leave empty space below; rows no longer stretch vertically to fill the task list.
 - Live browser and widget surfaces auto-refresh by default on a 3s cadence, with refresh intervals clamped to 1s-300s; Sources no longer renders provider test checkmark buttons.
+- Sources rail consolidates source/provider counts into a compact summary and preserves scroll during live refresh; local process Go To recognizes Ghostty, and local interrupt sends SIGINT.
 
 ## Blockers
 

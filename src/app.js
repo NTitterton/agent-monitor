@@ -74,6 +74,7 @@ class AgentMonitorApp extends HTMLElement {
     const statuses = [...new Set(agents.map((agent) => agent.status))].filter(Boolean).sort();
     const types = [...new Set(agents.map((agent) => agent.type || agent.providerId || agent.source))].sort();
     const providers = agentProviderOptions(agents);
+    const previousSourcesScrollTop = this.querySelector(".sources-panel")?.scrollTop || 0;
 
     this.innerHTML = `
       <main class="app-shell">
@@ -142,6 +143,9 @@ class AgentMonitorApp extends HTMLElement {
         </section>
       </main>
     `;
+
+    const sourcesPanel = this.querySelector(".sources-panel");
+    if (sourcesPanel) sourcesPanel.scrollTop = previousSourcesScrollTop;
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
     this.querySelector(".settings-form")?.addEventListener("submit", async (event) => {
@@ -335,36 +339,33 @@ function renderSourceList(agents, providers) {
     return groups;
   }, new Map());
 
-  const sourceRows = [...bySource.entries()]
-    .map(([source, sourceAgents]) => {
-      const active = activeAgentCount(sourceAgents);
-      return `
-        <article class="source-row">
-          <div>
-            <strong>${escapeText(labelize(source))}</strong>
-            <p>${sourceAgents.length} agents, ${active} active</p>
-          </div>
-          <span>${escapeText(sourceAgents.map((agent) => agent.provider).filter(unique).join(", "))} · ${formatScanFreshness(sourceAgents)}</span>
-        </article>
-      `;
-    })
-    .join("");
+  const sourceLines = [...bySource.entries()].map(([source, sourceAgents]) => {
+    const active = activeAgentCount(sourceAgents);
+    return `${sourceAgents.length} ${labelize(source).toLowerCase()}${active ? `, ${active} active` : ""}`;
+  });
+  const providerLines = providers.map((provider) => {
+    const status = provider.status === "error" ? `error: ${provider.error || "unavailable"}` : "ok";
+    return `${Number(provider.agentCount || 0)} ${providerLabel(provider)} · ${status}`;
+  });
+  const providerIssues = providers.filter((provider) => provider.status === "error").length;
+  return `
+    <article class="source-row compact-source-row ${providerIssues ? "source-error" : ""}">
+      <div>
+        <strong>${agents.length} agents</strong>
+        <p>${activeAgentCount(agents)} active · ${providerIssues} provider issues</p>
+      </div>
+      <span>${escapeText([...sourceLines, ...providerLines].join(" · ") || "No agents discovered yet")}</span>
+    </article>
+  `;
+}
 
-  const providerRows = providers
-    .map(
-      (provider) => `
-        <article class="source-row ${provider.status === "error" ? "source-error" : ""}">
-          <div>
-            <strong>${escapeText(provider.label)}</strong>
-            <p>${provider.status === "error" ? escapeText(provider.error) : `${Number(provider.agentCount || 0)} agents`}</p>
-          </div>
-          <span>${escapeText(labelize(provider.status))} · ${formatScanFreshness([provider])}</span>
-        </article>
-      `
-    )
-    .join("");
-
-  return `${sourceRows}${providerRows}`;
+function providerLabel(provider) {
+  const type = String(provider.type || provider.id || "provider").toLowerCase();
+  if (type === "local") return "local";
+  if (type === "openai") return "openai";
+  if (type === "anthropic") return "anthropic";
+  if (type === "remote") return "remote";
+  return type;
 }
 
 function activeAgentCount(agents) {
