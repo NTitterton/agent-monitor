@@ -127,6 +127,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Launchable Anthropic Message Batch rows expose `Start`, create a single-request batch, and persist the returned batch ID for subsequent tracking.
 - Smoke coverage proves launchable Anthropic Message Batch `Start` writes the created batch ID into isolated config state.
 - Remote HTTP agents without advertised lifecycle capabilities are view-only except for URL-backed `Go To`.
+- Remote HTTP adapter accepts wrapped or bare list/action response shapes.
 - Capability normalization to known unique action IDs across provider, registry, state, and client snapshots.
 - Non-blocking setup validation warnings from `/api/config` and Settings panel display.
 - Client preserves config validation warnings across post-save refreshes.

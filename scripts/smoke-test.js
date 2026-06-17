@@ -68,6 +68,9 @@ try {
   assert(registrySource.includes("Provider did not return updated agent"), "registry should reject unconfirmed provider actions");
   assert(registrySource.includes("Provider returned a different agent"), "registry should reject mismatched provider action confirmations");
   assert(registrySource.includes("buildProviderErrorSnapshot"), "registry should preserve cached agents on provider errors");
+  const remoteProviderSource = await readFile(new URL("../server/remoteHttpProvider.js", import.meta.url), "utf8");
+  assert(remoteProviderSource.includes("extractAgents"), "remote provider should accept flexible agent list payloads");
+  assert(remoteProviderSource.includes("extractAgent"), "remote provider should accept flexible action agent payloads");
   assertSampledTokenRates();
   assertProviderErrorSnapshots();
   assertProviderAgentNormalization();
@@ -798,61 +801,57 @@ async function assertRemoteProviderNormalization() {
     fetchCalls.push({ url: String(url), method: options.method || "GET" });
 
     if (String(url).endsWith("/agents")) {
-      return jsonResponse({
-        agents: [
-          {
-            id: "remote-normalized",
-            name: "Remote Normalized",
-            status: "running",
-            startedAt: "2026-01-02T03:04:05.000Z",
-            endedAt: "2026-01-02T04:04:05.000Z",
-            owner: "platform-team",
-            workspace: "agent-monitor",
-            repository: "NTitterton/agent-monitor",
-            branch: "main",
-            parentId: 123,
-            children: [456, "remote-child"],
-            queue: "ci",
-            priority: "high",
-            currentStep: "Running tests",
-            progressPercent: 42.4,
-            cpu: "7.5",
-            memoryMb: "256",
-            processCpu: "2.5",
-            processMemoryMb: 100,
-            childCpu: 5,
-            childMemoryMb: 156,
-            pid: "200",
-            parentPid: "100",
-            childPids: ["201", 202, "not-a-pid"],
-            remote_id: 98765,
-            model: "remote-model",
-            request_counts: { processing: "2", succeeded: 1, ignored: "nope" },
-            capabilities: ["stop", "bogus", "stop"],
-            goToTarget: "https://remote.example/agents/remote-normalized",
-            logs: [{ at: "2026-01-02T03:05:05.000Z", message: "remote log" }],
-            transcript: [{ at: "2026-01-02T03:06:05.000Z", role: "assistant", content: "remote transcript" }]
-          },
-          {
-            id: "remote-view-only",
-            name: "Remote View Only",
-            status: "running",
-            startedAt: "2026-01-02T03:04:05.000Z",
-            goToTarget: "https://remote.example/agents/remote-view-only"
-          }
-        ]
-      });
+      return jsonResponse([
+        {
+          id: "remote-normalized",
+          name: "Remote Normalized",
+          status: "running",
+          startedAt: "2026-01-02T03:04:05.000Z",
+          endedAt: "2026-01-02T04:04:05.000Z",
+          owner: "platform-team",
+          workspace: "agent-monitor",
+          repository: "NTitterton/agent-monitor",
+          branch: "main",
+          parentId: 123,
+          children: [456, "remote-child"],
+          queue: "ci",
+          priority: "high",
+          currentStep: "Running tests",
+          progressPercent: 42.4,
+          cpu: "7.5",
+          memoryMb: "256",
+          processCpu: "2.5",
+          processMemoryMb: 100,
+          childCpu: 5,
+          childMemoryMb: 156,
+          pid: "200",
+          parentPid: "100",
+          childPids: ["201", 202, "not-a-pid"],
+          remote_id: 98765,
+          model: "remote-model",
+          request_counts: { processing: "2", succeeded: 1, ignored: "nope" },
+          capabilities: ["stop", "bogus", "stop"],
+          goToTarget: "https://remote.example/agents/remote-normalized",
+          logs: [{ at: "2026-01-02T03:05:05.000Z", message: "remote log" }],
+          transcript: [{ at: "2026-01-02T03:06:05.000Z", role: "assistant", content: "remote transcript" }]
+        },
+        {
+          id: "remote-view-only",
+          name: "Remote View Only",
+          status: "running",
+          startedAt: "2026-01-02T03:04:05.000Z",
+          goToTarget: "https://remote.example/agents/remote-view-only"
+        }
+      ]);
     }
 
     if (String(url).endsWith("/agents/remote-normalized/actions")) {
       const body = JSON.parse(options.body || "{}");
       return jsonResponse({
-        agent: {
-          id: "remote-normalized",
-          name: "Remote Normalized",
-          status: body.action === "stop" ? "waiting" : "running",
-          capabilities: ["stop"]
-        }
+        id: "remote-normalized",
+        name: "Remote Normalized",
+        status: body.action === "stop" ? "waiting" : "running",
+        capabilities: ["stop"]
       });
     }
 

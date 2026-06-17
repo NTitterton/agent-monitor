@@ -13,12 +13,12 @@ export function createRemoteHttpProvider(config) {
     capabilities: ["list", ...lifecycleActions.map((action) => action.id)],
     async listAgents() {
       const payload = await request(config, "/agents", { method: "GET" });
-      return normalizeAgents(payload.agents || [], config);
+      return normalizeAgents(extractAgents(payload), config);
     },
     async performAction(agentId, actionId, prompt = "") {
       if (actionId === "go-to") {
         const payload = await request(config, "/agents", { method: "GET" });
-        return normalizeAgents(payload.agents || [], config).find((agent) => agent.id === agentId) || null;
+        return normalizeAgents(extractAgents(payload), config).find((agent) => agent.id === agentId) || null;
       }
 
       const payload = await request(config, `/agents/${encodeURIComponent(agentId)}/actions`, {
@@ -26,8 +26,9 @@ export function createRemoteHttpProvider(config) {
         body: JSON.stringify({ action: actionId, prompt })
       });
 
-      if (payload.agent) return normalizeAgent(payload.agent, config);
-      const agents = normalizeAgents(payload.agents || [], config);
+      const agent = extractAgent(payload);
+      if (agent) return normalizeAgent(agent, config);
+      const agents = normalizeAgents(extractAgents(payload), config);
       return agents.find((agent) => agent.id === agentId) || null;
     }
   };
@@ -76,6 +77,21 @@ async function request(config, pathname, options) {
 
 function normalizeAgents(agents, config) {
   return agents.map((agent) => normalizeAgent(agent, config));
+}
+
+function extractAgents(payload) {
+  if (Array.isArray(payload)) return payload;
+  return Array.isArray(payload?.agents) ? payload.agents : [];
+}
+
+function extractAgent(payload) {
+  if (isAgentPayload(payload?.agent)) return payload.agent;
+  if (isAgentPayload(payload)) return payload;
+  return null;
+}
+
+function isAgentPayload(payload) {
+  return !!payload && typeof payload === "object" && !Array.isArray(payload) && typeof payload.id !== "undefined";
 }
 
 function normalizeAgent(agent, config) {
