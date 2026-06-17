@@ -109,7 +109,7 @@ The module widget uses the same client as the browser app, so it reads from the 
 
 When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive. The app and widgets escape provider-supplied text/attributes and show lifecycle action feedback; if the API is reachable but rejects an action, the standalone widget leaves its current state unchanged instead of applying a local fallback action and shows the rejection message in the widget. Standalone widget snapshots normalize numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering. Local fallback actions update runtime/resource fields and record action history with agent, provider, source, type, and action metadata.
 
-Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, and provider issue count when an adapter is failing. Agent cards are ordered by task pressure, with active/high-priority/high-CPU agents first. They also show compact remote context when providers report owner, workspace, repository, branch, queue, or priority fields, and include nonzero per-agent spend in the resource line.
+Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, snapshot freshness, and provider issue count when an adapter is failing. Agent cards are ordered by task pressure, with active/high-priority/high-CPU agents first. They also show compact remote context when providers report owner, workspace, repository, branch, queue, or priority fields, and include nonzero per-agent spend in the resource line.
 
 ## Local API
 
@@ -124,7 +124,7 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
 - `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status, including rejected requests. Unknown action IDs return `400`; missing agents return `404`; valid actions outside the target agent's `capabilities` return `409`.
 
-Snapshot-style API responses include `snapshotAt`, the server time when the response view was assembled. The browser app shows that timestamp in the top bar, while per-provider `scannedAt` values still describe adapter freshness.
+Snapshot-style API responses include `snapshotAt`, the server time when the response view was assembled. The browser app shows that timestamp in the top bar, and embedded widgets include it in their source summary, while per-provider `scannedAt` values still describe adapter freshness.
 
 Malformed JSON request bodies return `400` with `Invalid JSON` instead of being treated as server errors.
 

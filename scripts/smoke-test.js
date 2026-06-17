@@ -48,6 +48,8 @@ try {
   );
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
   assert(standaloneWidgetSource.includes("normalizeWidgetAgents"), "standalone widget should normalize incoming snapshots");
+  assert(standaloneWidgetSource.includes("this.snapshotAt = normalizeOptionalTimestamp(payload.snapshotAt)"), "standalone widget should preserve snapshot freshness");
+  assert(standaloneWidgetSource.includes("Updated ${formatTimestamp(snapshotAt)}"), "standalone widget should render snapshot freshness");
   assert(standaloneWidgetSource.includes("normalizePidList"), "standalone widget should normalize process ID lists");
   assert(standaloneWidgetSource.includes("normalizeTokenConfidence"), "standalone widget should normalize token confidence");
   assert(standaloneWidgetSource.includes("tokensPerSecond: ending ? 0"), "standalone widget fallback should stop token throughput on ended actions");
@@ -96,6 +98,8 @@ try {
   assert(moduleWidgetSource.includes("actionDisabledReason"), "module widget should explain disabled action controls");
   assert(moduleWidgetSource.includes("lineageSummary(agent, agents)"), "module widget should resolve lineage names from the snapshot");
   assert(moduleWidgetSource.includes("renderProviderSummary"), "module widget should render provider/source health");
+  assert(moduleWidgetSource.includes("this.snapshotAt = snapshot.snapshotAt"), "module widget should preserve snapshot freshness");
+  assert(moduleWidgetSource.includes("Updated ${formatTimestamp(snapshotAt)}"), "module widget should render snapshot freshness");
   assert(moduleWidgetSource.includes("agentContextLine"), "module widget should render remote agent context");
   assert(moduleWidgetSource.includes("formatSpend(agent.costUsd)"), "module widget should render agent spend");
   assert(moduleWidgetSource.includes("sortWidgetAgents"), "module widget should order agents by task pressure");

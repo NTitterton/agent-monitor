@@ -22,7 +22,7 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 - The standalone embeddable widget polls every 15 seconds by default via `refresh-ms`.
 - The local process provider runs `ps` and active local agent discovery whenever `/api/agents` or `/api/providers` asks providers for a fresh snapshot.
 - The browser app and standalone embeddable widget use `GET /api/snapshot` to fetch agents, history, provider status, and sanitized config in one response.
-- Snapshot-style API responses include `snapshotAt`, the server assembly time for that view. The browser app displays it separately from provider `scannedAt` freshness.
+- Snapshot-style API responses include `snapshotAt`, the server assembly time for that view. The browser app and embedded widgets display it separately from provider `scannedAt` freshness.
 - Provider snapshots are cached for 1000 ms by default, configurable with `AGENT_MONITOR_SCAN_CACHE_MS`, so unified snapshots and paired legacy `/api/agents` plus `/api/providers` requests reuse the same scan.
 - When `snapshotRefresh.enabled` is true, the local server also runs a background scanner at `snapshotRefresh.intervalMs`; the scanner warms provider snapshots with the same interval as the cache window and exposes status through `/api/scanner` and `/api/snapshot`.
 
@@ -230,7 +230,7 @@ Lineage note: the browser app and widgets resolve known parent/child agent IDs i
 
 Lineage normalization note: `parentId` and `children` are normalized as string IDs at provider, registry, persisted-state, and client snapshot boundaries so cross-provider lineage joins are stable even when a provider reports numeric IDs.
 
-Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
+Embedded-widget note: module and standalone widgets render compact provider/source health and unified snapshot freshness from the unified snapshot so embeds show adapter issues and last update time without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
 
 Standalone-widget normalization note: the standalone embed normalizes incoming API/fallback snapshots for numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering, preserving stable behavior when embedded on static personal sites.
 

@@ -21,6 +21,7 @@ class AgentMonitorWidget extends HTMLElement {
       this.agents = snapshot.agents;
       this.history = snapshot.history;
       this.providers = snapshot.providers;
+      this.snapshotAt = snapshot.snapshotAt;
       this.actionMessage = snapshot.actionMessage;
       this.render();
     });
@@ -50,7 +51,7 @@ class AgentMonitorWidget extends HTMLElement {
           </div>
           <span>${agents.length} total</span>
         </header>
-        ${renderProviderSummary(this.providers || [], agents)}
+        ${renderProviderSummary(this.providers || [], agents, this.snapshotAt)}
         <div class="list">
           ${visibleAgents.map((agent) => renderWidgetAgent(agent, agents)).join("")}
         </div>
@@ -103,7 +104,7 @@ function renderActionMessage(message) {
   `;
 }
 
-function renderProviderSummary(providers, agents) {
+function renderProviderSummary(providers, agents, snapshotAt = null) {
   if (!providers.length && !agents.length) return "";
 
   const sources = new Set([
@@ -113,9 +114,10 @@ function renderProviderSummary(providers, agents) {
   const issues = providers.filter((provider) => provider.status === "error").length;
   const providerCount = providers.length || new Set(agents.map((agent) => agent.provider).filter(Boolean)).size;
   const issueText = issues ? ` · ${issues} issue${issues === 1 ? "" : "s"}` : "";
+  const snapshotText = snapshotAt ? ` · Updated ${formatTimestamp(snapshotAt)}` : "";
   return `
     <p class="source-summary">
-      ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeText(issueText)}
+      ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeText(issueText)}${escapeText(snapshotText)}
     </p>
   `;
 }
@@ -218,6 +220,10 @@ function renderResourceLine(agent) {
 function formatSpend(costUsd) {
   const spend = Number(costUsd || 0);
   return Number.isFinite(spend) && spend > 0 ? `$${spend.toFixed(2)}` : "";
+}
+
+function formatTimestamp(value) {
+  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function renderLatestLog(agent) {

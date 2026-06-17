@@ -237,6 +237,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     this.agents = normalizeWidgetAgents(fallbackAgents);
     this.providers = [];
     this.history = [];
+    this.snapshotAt = null;
     this.actionMessage = null;
   }
 
@@ -259,6 +260,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       this.agents = normalizeWidgetAgents(payload.agents || []);
       this.history = payload.history || [];
       this.providers = payload.providers || [];
+      this.snapshotAt = normalizeOptionalTimestamp(payload.snapshotAt);
       this.render();
     } catch {
       this.render();
@@ -304,6 +306,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         this.agents = payload?.agents ? normalizeWidgetAgents(payload.agents) : this.agents;
         this.history = payload?.history || this.history;
         this.providers = payload?.providers || this.providers;
+        this.snapshotAt = normalizeOptionalTimestamp(payload?.snapshotAt) || this.snapshotAt;
         this.actionMessage = {
           tone: response.status >= 500 ? "error" : "warn",
           text: payload?.error || `Action failed (${response.status})`
@@ -315,6 +318,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       this.agents = payload.agents ? normalizeWidgetAgents(payload.agents) : this.agents;
       this.history = payload.history || this.history;
       this.providers = payload.providers || this.providers;
+      this.snapshotAt = normalizeOptionalTimestamp(payload.snapshotAt) || this.snapshotAt;
       this.actionMessage = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
       this.render();
     } catch {
@@ -367,6 +371,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         },
         ...this.history
       ].slice(0, 8);
+      this.snapshotAt = null;
       this.actionMessage = { tone: "ok", text: `${action.label} applied locally to ${agent.name}` };
     }
     this.render();
@@ -385,7 +390,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           </div>
           <span>${this.agents.length} total</span>
         </header>
-        ${renderProviderSummary(this.providers, this.agents)}
+        ${renderProviderSummary(this.providers, this.agents, this.snapshotAt)}
         ${visibleAgents.map((agent) => this.renderAgent(agent)).join("")}
         ${this.renderActionMessage()}
         ${this.renderFooter()}
@@ -490,7 +495,7 @@ function actionTitle(agent, action) {
   return `${action.label} ${agent.name}`;
 }
 
-function renderProviderSummary(providers, agents) {
+function renderProviderSummary(providers, agents, snapshotAt = null) {
   if (!providers.length && !agents.length) return "";
 
   const sources = new Set([
@@ -500,9 +505,10 @@ function renderProviderSummary(providers, agents) {
   const issues = providers.filter((provider) => provider.status === "error").length;
   const providerCount = providers.length || new Set(agents.map((agent) => agent.provider).filter(Boolean)).size;
   const issueText = issues ? ` · ${issues} issue${issues === 1 ? "" : "s"}` : "";
+  const snapshotText = snapshotAt ? ` · Updated ${formatTimestamp(snapshotAt)}` : "";
   return `
     <p class="source-summary">
-      ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeHtml(issueText)}
+      ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeHtml(issueText)}${escapeHtml(snapshotText)}
     </p>
   `;
 }
@@ -607,6 +613,11 @@ function normalizeTimestamp(value, fallback = Date.now()) {
   return Number.isNaN(parsed) ? fallback : parsed;
 }
 
+function normalizeOptionalTimestamp(value) {
+  if (value === null || value === undefined || value === "") return null;
+  return normalizeTimestamp(value, null);
+}
+
 function normalizeLogs(logs) {
   if (!Array.isArray(logs)) return [];
   return logs
@@ -674,6 +685,10 @@ function formatRuntime(agent) {
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return hours ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
+function formatTimestamp(value) {
+  return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
 function formatMemory(memoryMb) {
