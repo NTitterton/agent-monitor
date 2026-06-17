@@ -47,7 +47,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - String parent/child lineage ID normalization across provider, registry, state, and client snapshots.
 - Compact provider/source health summaries in embedded widgets.
 - Embedded widget task-pressure ordering by status, priority, CPU, start time, and name.
-- Search/status/source filters for the agent table.
+- Search/status/source/type/provider filters for the agent table.
 - Browser search includes remote context fields such as current step, owner, workspace, repository, branch, queue, and priority.
 - Agent table sorting by newest, CPU, memory, spend, tokens, runtime, priority, and operational status pressure.
 - Snapshot-derived status filter options for provider-specific states.

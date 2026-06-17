@@ -73,6 +73,9 @@ try {
   assert(appSource.includes("actionKindLabel"), "browser app should label lifecycle versus surface history");
   assert(appSource.includes("return \"Unknown\""), "browser app should guard invalid timestamps");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
+  assert(appSource.includes("agentProviderOptions"), "browser app should derive provider filter options from snapshots");
+  assert(appSource.includes('data-filter="provider"'), "browser app should expose a provider filter");
+  assert(appSource.includes("matchesProvider"), "browser app should filter by provider ID");
   assert(appSource.includes("searchableAgentFields"), "browser app should search task-manager context fields");
   assert(appSource.includes("agent.repository"), "browser app search should include remote repository context");
   assert(appSource.includes("agent.queue"), "browser app search should include queue context");

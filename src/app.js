@@ -59,7 +59,7 @@ class AgentMonitorApp extends HTMLElement {
 
   render() {
     const agents = this.agents || [];
-    const filters = this.filters || { query: "", status: "all", source: "all", type: "all", sort: "started-desc" };
+    const filters = { query: "", status: "all", source: "all", type: "all", provider: "all", sort: "started-desc", ...(this.filters || {}) };
     const filteredAgents = filterAgents(agents, filters);
     const running = agents.filter((agent) => agent.status === "running").length;
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
@@ -70,6 +70,7 @@ class AgentMonitorApp extends HTMLElement {
     const sources = [...new Set(agents.map((agent) => agent.source))].sort();
     const statuses = [...new Set(agents.map((agent) => agent.status))].filter(Boolean).sort();
     const types = [...new Set(agents.map((agent) => agent.type || agent.providerId || agent.source))].sort();
+    const providers = agentProviderOptions(agents);
 
     this.innerHTML = `
       <main class="app-shell">
@@ -116,7 +117,7 @@ class AgentMonitorApp extends HTMLElement {
               <h2>Agent Tasks</h2>
               <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
             </div>
-            ${renderFilters(filters, sources, types, statuses)}
+            ${renderFilters(filters, sources, types, providers, statuses)}
             ${renderActionMessage(this.actionMessage)}
             <div class="agent-table" role="table" aria-label="Agent task table">
               ${renderAgentTable(filteredAgents, agents, this.providers || [], this.selectedAgentId)}
@@ -184,6 +185,7 @@ class AgentMonitorApp extends HTMLElement {
           status: this.querySelector('[data-filter="status"]').value,
           source: this.querySelector('[data-filter="source"]').value,
           type: this.querySelector('[data-filter="type"]').value,
+          provider: this.querySelector('[data-filter="provider"]').value,
           sort: this.querySelector('[data-filter="sort"]').value
         };
         this.render();
@@ -224,7 +226,7 @@ function collectActionPrompt(action) {
   return window.prompt(`${action.label} prompt`);
 }
 
-function renderFilters(filters, sources, types, statuses) {
+function renderFilters(filters, sources, types, providers, statuses) {
   return `
     <form class="filter-bar" aria-label="Agent filters">
       <label>
@@ -247,6 +249,12 @@ function renderFilters(filters, sources, types, statuses) {
         <span>Type</span>
         <select data-filter="type">
           ${["all", ...types].map((type) => renderOption(type, filters.type, type === "all" ? "All" : labelize(type))).join("")}
+        </select>
+      </label>
+      <label>
+        <span>Provider</span>
+        <select data-filter="provider">
+          ${[{ id: "all", label: "All" }, ...providers].map((provider) => renderOption(provider.id, filters.provider, provider.label)).join("")}
         </select>
       </label>
       <label>
@@ -870,8 +878,22 @@ function filterAgents(agents, filters) {
     const matchesStatus = filters.status === "all" || agent.status === filters.status;
     const matchesSource = filters.source === "all" || agent.source === filters.source;
     const matchesType = filters.type === "all" || (agent.type || agent.providerId || agent.source) === filters.type;
-    return matchesQuery && matchesStatus && matchesSource && matchesType;
+    const matchesProvider = (filters.provider || "all") === "all" || agent.providerId === filters.provider;
+    return matchesQuery && matchesStatus && matchesSource && matchesType && matchesProvider;
   }).sort((a, b) => compareAgents(a, b, filters.sort || "started-desc"));
+}
+
+function agentProviderOptions(agents) {
+  const seen = new Map();
+  for (const agent of agents) {
+    const id = agent.providerId || agent.provider || agent.source;
+    if (!id || seen.has(id)) continue;
+    seen.set(id, {
+      id,
+      label: [agent.provider, id].filter(Boolean).filter(unique).join(" · ")
+    });
+  }
+  return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label));
 }
 
 function searchableAgentFields(agent) {

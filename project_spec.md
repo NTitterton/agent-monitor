@@ -59,7 +59,7 @@ Status: implemented for normalized provider snapshots and app filters.
 Acceptance criteria:
 
 - Every agent returned by `/api/agents` has `type`.
-- The app can filter or group by `type`.
+- The app can filter or group by `type` and by provider instance.
 - Browser search covers task-manager context fields including task/current step, owner, workspace, repository, branch, queue, priority, provider, source, type, and local/window target hints.
 - The app can sort visible tasks by task-manager fields including CPU, memory, spend, tokens, runtime, priority, operational status pressure, and start time.
 - Existing `source`, `provider`, and `providerId` behavior remains backward compatible.
