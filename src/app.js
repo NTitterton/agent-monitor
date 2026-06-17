@@ -62,6 +62,7 @@ class AgentMonitorApp extends HTMLElement {
     const filters = { query: "", status: "all", source: "all", type: "all", provider: "all", sort: "started-desc", ...(this.filters || {}) };
     const filteredAgents = filterAgents(agents, filters);
     const running = agents.filter((agent) => agent.status === "running").length;
+    const cpu = agents.reduce((total, agent) => total + Number(agent.cpu || 0), 0);
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
     const spend = agents.reduce((total, agent) => total + Number(agent.costUsd || 0), 0);
     const history = this.history || [];
@@ -91,6 +92,10 @@ class AgentMonitorApp extends HTMLElement {
             <article>
               <span>${formatMemory(memory)}</span>
               <p>Memory</p>
+            </article>
+            <article>
+              <span>${formatCpu(cpu)}</span>
+              <p>CPU</p>
             </article>
             <article>
               <span>$${spend.toFixed(2)}</span>
@@ -1141,6 +1146,12 @@ function labelize(value) {
 
 function unique(value, index, values) {
   return values.indexOf(value) === index;
+}
+
+function formatCpu(cpu) {
+  const value = Number(cpu || 0);
+  if (!Number.isFinite(value)) return "0%";
+  return `${Number.isInteger(value) ? value : value.toFixed(1)}%`;
 }
 
 function formatTimestamp(value) {

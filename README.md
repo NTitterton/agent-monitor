@@ -323,6 +323,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Track agents from multiple provider namespaces.
 - Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
+- Show aggregate CPU, memory, spend, running count, visible count, and provider issue count in the top summary.
 - Show per-agent provider health and scan freshness in the task table and selected-agent inspector.
 - Show provider issue count in the top summary when adapters are failing.
 - Keep last-known provider agents visible during transient provider scan failures while surfacing provider errors.
