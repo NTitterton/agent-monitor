@@ -279,7 +279,10 @@ function renderHistory(history, mode = "local") {
         .map(
           (record) => `
             <article class="history-row">
-              <strong>${escapeText(record.label)}</strong>
+              <div class="history-title">
+                <strong>${escapeText(record.label)}</strong>
+                <span>${escapeText(actionKindLabel(record))}</span>
+              </div>
               <p>${escapeText(historyAgentLine(record))} · ${formatTimestamp(record.at)}</p>
               ${record.prompt ? `<p class="prompt-text">${escapeText(record.prompt)}</p>` : ""}
             </article>
@@ -300,6 +303,10 @@ function historyAgentLine(record) {
     .filter(Boolean)
     .filter(unique)
     .join(" · ");
+}
+
+function actionKindLabel(record) {
+  return record.actionKind === "surface" ? "Surface" : "Lifecycle";
 }
 
 function renderSourceList(agents, providers, message = "") {
@@ -717,7 +724,7 @@ function providerHealthLine(agent, provider) {
 function renderDetailHistory(record) {
   return `
     <p>
-      <strong>${escapeText(record.label)}</strong>
+      <strong>${escapeText(record.label)} · ${escapeText(actionKindLabel(record))}</strong>
       <span>${formatTimestamp(record.at)}${record.prompt ? ` · ${escapeText(record.prompt)}` : ""}</span>
     </p>
   `;

@@ -23,8 +23,8 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Node local API with provider registry.
 - macOS WebKit desktop wrapper.
 - Persistent state and lifecycle history.
-- Lifecycle history records include provider, provider ID, source, and type metadata.
-- Persisted lifecycle history is normalized for timestamps, IDs, labels, prompts, and agent/provider metadata.
+- Action history records include provider, provider ID, source, type, and action-kind metadata.
+- Persisted action history is normalized for timestamps, IDs, labels, prompts, action kinds, and agent/provider metadata.
 - Per-agent logs from state, local process, remote HTTP, OpenAI, and Anthropic providers.
 - Per-agent transcripts in normalized state, remote provider payloads, OpenAI response output, and selected-agent details.
 - Local process provider with PID, CPU, memory, start, and signal controls.
@@ -92,6 +92,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - URL-backed `Go To` targets for remote/account agents through `goToTarget` and `goToKind`.
 - Direct API `Go To` calls for URL-backed remote/account agents return current agent snapshots without mutation/cancel calls.
 - Action history records classify lifecycle actions separately from surface actions such as `Go To`.
+- Browser app and widgets label lifecycle versus surface action history.
 - Explanatory disabled-action titles for unavailable lifecycle, unadvertised provider capability, and `Go To` controls across app and widgets.
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
 - Unified API `snapshotAt` timestamps surfaced in the browser topbar and embedded widget source summaries.

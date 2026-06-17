@@ -79,7 +79,7 @@ function renderWidgetHistory(history) {
   const latest = history[0];
   return `
     <footer>
-      <strong>${escapeText(latest.label)}</strong>
+      <strong>${escapeText(latest.label)} · ${escapeText(actionKindLabel(latest))}</strong>
       <span>${escapeText(historyAgentLine(latest))}</span>
     </footer>
   `;
@@ -92,6 +92,10 @@ function collectActionPrompt(action) {
 
 function historyAgentLine(record) {
   return [record.agentName, record.provider, record.type || record.source].filter(Boolean).join(" · ");
+}
+
+function actionKindLabel(record) {
+  return record.actionKind === "surface" ? "Surface" : "Lifecycle";
 }
 
 function renderActionMessage(message) {

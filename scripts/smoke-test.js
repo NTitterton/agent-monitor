@@ -65,6 +65,7 @@ try {
   assertProviderAgentNormalization();
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
+  assert(appSource.includes("actionKindLabel"), "browser app should label lifecycle versus surface history");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
   assert(appSource.includes("compareAgents"), "browser app should support task-table sorting");
   assert(appSource.includes("priority-desc"), "browser app should sort by task priority");
@@ -99,6 +100,7 @@ try {
   assert(stateStoreSource.includes("normalizeActionKind"), "state store should normalize history action kind");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
+  assert(moduleWidgetSource.includes("actionKindLabel"), "module widget should label lifecycle versus surface history");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
   assert(moduleWidgetSource.includes("escapeAttribute(agent.id)"), "module widget should escape provider-supplied attributes");
   assert(moduleWidgetSource.includes("actionDisabledReason"), "module widget should explain disabled action controls");
@@ -119,6 +121,7 @@ try {
   assert(standaloneWidgetSource.includes("formatSpend(agent.costUsd)"), "standalone widget should render agent spend");
   assert(standaloneWidgetSource.includes("sortWidgetAgents"), "standalone widget should order agents by task pressure");
   assert(standaloneWidgetSource.includes("collectActionPrompt"), "standalone widget should cancel prompt actions when the prompt is canceled");
+  assert(standaloneWidgetSource.includes("actionKindLabel"), "standalone widget should label lifecycle versus surface history");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");

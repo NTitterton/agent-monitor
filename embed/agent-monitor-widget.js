@@ -433,7 +433,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     }
 
     const latest = this.history[0];
-    return `<footer><strong>${escapeHtml(latest.label)}</strong><span>${escapeHtml(historyAgentLine(latest))}</span></footer>`;
+    return `<footer><strong>${escapeHtml(latest.label)} · ${escapeHtml(actionKindLabel(latest))}</strong><span>${escapeHtml(historyAgentLine(latest))}</span></footer>`;
   }
 
   renderActionMessage() {
@@ -653,6 +653,10 @@ function normalizeCapabilities(capabilities) {
 
 function historyAgentLine(record) {
   return [record.agentName, record.provider, record.type || record.source].filter(Boolean).join(" · ");
+}
+
+function actionKindLabel(record) {
+  return record.actionKind === "surface" ? "Surface" : "Lifecycle";
 }
 
 async function readJsonResponse(response) {

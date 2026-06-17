@@ -119,7 +119,7 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 - `GET /api/agents/:id` returns the selected agent, lineage neighbors, and recent agent history. Stale detail requests for missing agents return `404` with refreshed agents, history, provider status, sanitized config, and scanner status so clients can reconcile their view.
 - `GET /api/providers` returns configured provider adapters, lifecycle capabilities, and `scannedAt` freshness metadata.
 - `POST /api/providers/:id/test` runs one provider snapshot check and returns that provider's health plus refreshed agents, history, provider status, sanitized config, and scanner status.
-- `GET /api/history` returns recent lifecycle actions.
+- `GET /api/history` returns recent action records, including lifecycle controls and surface navigation actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
 - `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status, including rejected requests. Unknown action IDs return `400`; missing agents return `404`; valid actions outside the target agent's `capabilities` return `409`.
@@ -328,7 +328,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Show task and progress details in the selected-agent inspector.
 - Refresh selected-agent details from each snapshot so lifecycle actions and polling keep the inspector current.
 - Show owner/workspace/repository/branch/queue/priority context for remote agents when providers report it.
-- Record lifecycle history with provider, source, and type metadata.
+- Record action history with provider, source, type, and action-kind metadata.
 - Show named parent/child lineage in the browser app and embedded widgets.
 - Show compact provider/source health in embedded widgets.
 - Order embedded widget cards by task pressure so active/high-priority/high-CPU agents surface first.

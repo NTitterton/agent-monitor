@@ -290,6 +290,20 @@ h2 {
   font-size: 0.88rem;
 }
 
+.history-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.history-title span {
+  color: #475467;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
 .history-row p,
 .empty-history,
 .prompt-text {
