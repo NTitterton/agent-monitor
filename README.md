@@ -203,7 +203,7 @@ Agent Monitor calls:
 - `GET {baseUrl}/agents`
 - `POST {baseUrl}/agents/:id/actions`
 
-`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `currentStep`, `progressPercent`, `cpu`, `memoryMb`, `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`. Remote adapters preserve the process-resource breakdown fields when providers report them.
+`GET /agents` should return `{ "agents": [...] }`. Each agent can include `id`, `name`, `type`, `status`, `task`, `currentStep`, `progressPercent`, `owner`, `workspace`, `repository`, `branch`, `queue`, `priority`, `cpu`, `memoryMb`, `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `tokens`, `tokensPerSecond`, `tokenRateWindowMs`, `tokenCountConfidence`, `costUsd`, `startedAt`, `endedAt`, `parentId`, `children`, `pid`, `parentPid`, `childPids`, `goToTarget`, `goToKind`, and `windowTitle`. Remote adapters preserve the process-resource breakdown fields when providers report them.
 
 Use `tokenCountConfidence` to distinguish provider-reported totals from rough or unknown counts. Accepted values are `observed`, `estimated`, `reported`, and `unknown`.
 
@@ -312,6 +312,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
 - Show task progress percentage and current step when providers report them.
 - Show task and progress details in the selected-agent inspector.
+- Show owner/workspace/repository/branch/queue/priority context for remote agents when providers report it.
 - Record lifecycle history with provider, source, and type metadata.
 - Show named parent/child lineage in the browser app and embedded widgets.
 - Show compact provider/source health in embedded widgets.

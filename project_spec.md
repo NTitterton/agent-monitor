@@ -210,6 +210,8 @@ Remote provider note: the HTTP adapter preserves provider-reported process-resou
 
 Progress note: remote providers may report `currentStep` and `progressPercent`; normalized snapshots preserve them, app/widget resource lines display them, and the selected-agent inspector has a task card for task/progress details.
 
+Context note: remote providers may report `owner`, `workspace`, `repository`, `branch`, `queue`, and `priority`; the HTTP adapter preserves them and the selected-agent inspector shows them in a context card.
+
 Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
 
 Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app.

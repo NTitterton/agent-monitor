@@ -59,6 +59,7 @@ try {
   );
   assert(appSource.includes("actionDisabledReason"), "browser app should explain disabled action controls");
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
+  assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
@@ -513,6 +514,12 @@ async function assertRemoteProviderNormalization() {
             id: "remote-normalized",
             name: "Remote Normalized",
             status: "running",
+            owner: "platform-team",
+            workspace: "agent-monitor",
+            repository: "NTitterton/agent-monitor",
+            branch: "main",
+            queue: "ci",
+            priority: "high",
             currentStep: "Running tests",
             progressPercent: 42.4,
             cpu: 7.5,
@@ -553,6 +560,12 @@ async function assertRemoteProviderNormalization() {
       baseUrl: "https://remote.example/api"
     });
     const [agent] = await provider.listAgents();
+    assert(agent.owner === "platform-team", "remote provider should preserve owner");
+    assert(agent.workspace === "agent-monitor", "remote provider should preserve workspace");
+    assert(agent.repository === "NTitterton/agent-monitor", "remote provider should preserve repository");
+    assert(agent.branch === "main", "remote provider should preserve branch");
+    assert(agent.queue === "ci", "remote provider should preserve queue");
+    assert(agent.priority === "high", "remote provider should preserve priority");
     assert(agent.currentStep === "Running tests", "remote provider should preserve current step");
     assert(agent.progressPercent === 42, "remote provider should normalize progress percent");
     assert(agent.processCpu === 2.5, "remote provider should preserve own CPU");

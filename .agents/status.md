@@ -48,6 +48,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Token throughput and token count confidence in normalized snapshots, main app, widgets, and remote provider docs.
 - Optional `currentStep` and `progressPercent` task-progress metadata in normalized snapshots, app, widgets, and remote provider docs.
 - Selected-agent task card with task, current step, and progress details.
+- Optional owner/workspace/repository/branch/queue/priority remote-agent context in normalized snapshots and selected-agent details.
 - Local process aggregate resource accounting across matched processes and descendant child processes.
 - Remote HTTP provider preserves reported own/child process-resource breakdown fields.
 - Local process lifecycle controls signal descendant process trees before root PIDs.

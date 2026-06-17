@@ -578,6 +578,11 @@ function renderDetailPanel(detail) {
           <p>${escapeText(taskProgressLine(agent) || "No progress reported")}</p>
         </article>
         <article>
+          <span>Context</span>
+          <strong>${escapeText(agentContextTitle(agent))}</strong>
+          <p>${escapeText(agentContextLine(agent) || "No context reported")}</p>
+        </article>
+        <article>
           <span>Provider</span>
           <strong>${escapeText(agent.provider)}</strong>
           <p>${escapeText(labelize(agent.type || agent.providerId || "unknown"))} · ${escapeText(agent.providerId || agent.source || "unknown")}</p>
@@ -736,6 +741,20 @@ function taskProgressLine(agent) {
   return [
     Number.isFinite(Number(agent.progressPercent)) ? `${Number(agent.progressPercent)}%` : "",
     agent.currentStep || ""
+  ].filter(Boolean).join(" · ");
+}
+
+function agentContextTitle(agent) {
+  return agent.workspace || agent.repository || agent.windowTitle || agent.queue || "Agent context";
+}
+
+function agentContextLine(agent) {
+  return [
+    agent.owner ? `owner ${agent.owner}` : "",
+    agent.repository && agent.branch ? `${agent.repository}@${agent.branch}` : agent.branch || "",
+    agent.queue ? `queue ${agent.queue}` : "",
+    agent.priority ? `priority ${agent.priority}` : "",
+    agent.remoteUrl || agent.goToTarget || ""
   ].filter(Boolean).join(" · ");
 }
 
