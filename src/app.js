@@ -61,7 +61,7 @@ class AgentMonitorApp extends HTMLElement {
     const agents = this.agents || [];
     const filters = { query: "", status: "all", source: "all", type: "all", provider: "all", sort: "started-desc", ...(this.filters || {}) };
     const filteredAgents = filterAgents(agents, filters);
-    const running = agents.filter((agent) => agent.status === "running").length;
+    const active = activeAgentCount(agents);
     const cpu = agents.reduce((total, agent) => total + Number(agent.cpu || 0), 0);
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
     const tokens = agents.reduce((total, agent) => total + Number(agent.tokens || 0), 0);
@@ -88,8 +88,8 @@ class AgentMonitorApp extends HTMLElement {
               <p>Visible</p>
             </article>
             <article>
-              <span>${running}</span>
-              <p>Running</p>
+              <span>${active}</span>
+              <p>Active</p>
             </article>
             <article>
               <span>${formatMemory(memory)}</span>
@@ -351,12 +351,12 @@ function renderSourceList(agents, providers, message = "") {
 
   const sourceRows = [...bySource.entries()]
     .map(([source, sourceAgents]) => {
-      const running = sourceAgents.filter((agent) => agent.status === "running").length;
+      const active = activeAgentCount(sourceAgents);
       return `
         <article class="source-row">
           <div>
             <strong>${escapeText(labelize(source))}</strong>
-            <p>${sourceAgents.length} agents, ${running} running</p>
+            <p>${sourceAgents.length} agents, ${active} active</p>
           </div>
           <span>${escapeText(sourceAgents.map((agent) => agent.provider).filter(unique).join(", "))} · ${formatScanFreshness(sourceAgents)}</span>
         </article>
@@ -380,6 +380,10 @@ function renderSourceList(agents, providers, message = "") {
     .join("");
 
   return `${message ? `<p class="source-message">${escapeText(message)}</p>` : ""}${sourceRows}${providerRows}`;
+}
+
+function activeAgentCount(agents) {
+  return agents.filter((agent) => statusRank(agent) >= 40).length;
 }
 
 function renderScannerStatus(scanner) {

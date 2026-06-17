@@ -62,10 +62,10 @@ Acceptance criteria:
 - Every agent returned by `/api/agents` has `type`.
 - The app can filter or group by `type` and by provider instance.
 - Browser search covers task-manager context fields including task/current step, owner, workspace, repository, branch, queue, priority, provider, source, type, local/window target hints, provider object IDs, provider models, and provider request counts.
-- The top summary shows aggregate task-manager totals including visible agents, running agents, CPU, memory, tokens, token throughput, spend, and provider issues.
+- The top summary shows aggregate task-manager totals including visible agents, active provider-status work, CPU, memory, tokens, token throughput, spend, and provider issues.
 - The app can sort visible tasks by task-manager fields including CPU, memory, spend, tokens, runtime, priority, operational status pressure, and start time.
 - Existing `source`, `provider`, and `providerId` behavior remains backward compatible.
-- Status filtering is derived from current snapshots rather than a fixed local-only status list. Status-pressure sorting ranks active/queued work ahead of paused, failed/cancelled, and completed work.
+- Status filtering is derived from current snapshots rather than a fixed local-only status list. Status-pressure sorting and summary active counts rank active/queued work ahead of paused, failed/cancelled, and completed work.
 
 ### Token Rate
 
@@ -247,7 +247,7 @@ Lineage note: the browser app and widgets resolve known parent/child agent IDs i
 
 Lineage normalization note: `parentId` and `children` are normalized as string IDs at provider, registry, persisted-state, and client snapshot boundaries so cross-provider lineage joins are stable even when a provider reports numeric IDs.
 
-Embedded-widget note: module and standalone widgets render compact provider/source health, active-discovery scanner status, and unified snapshot freshness from the unified snapshot so embeds show adapter issues, discovery state, and last update time without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
+Embedded-widget note: module and standalone widgets render compact provider/source health, active-discovery scanner status, active provider-status counts, and unified snapshot freshness from the unified snapshot so embeds show adapter issues, discovery state, pressure, and last update time without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
 
 Standalone-widget normalization note: the standalone embed normalizes incoming API/fallback snapshots for numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering, preserving stable behavior when embedded on static personal sites. It observes `api-base`, `api-token`, `auth-header`, and `refresh-ms` changes after mount so host pages can reconfigure it without remounting.
 

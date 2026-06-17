@@ -324,7 +324,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Track agents from multiple provider namespaces.
 - Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
-- Show aggregate CPU, memory, tokens, token throughput, spend, running count, visible count, and provider issue count in the top summary.
+- Show aggregate CPU, memory, tokens, token throughput, spend, active work count, visible count, and provider issue count in the top summary.
 - Show per-agent provider health and scan freshness in the task table and selected-agent inspector.
 - Show provider issue count in the top summary when adapters are failing.
 - Keep last-known provider agents visible during transient provider scan failures while surfacing provider errors.
@@ -341,7 +341,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Preserve unresolved parent/child lineage IDs in the selected-agent inspector when related agents are absent from the current snapshot.
 - Show compact provider/source health and active-discovery scanner status in embedded widgets.
 - Show compact provider object metadata in embedded widgets.
-- Order embedded widget cards by task pressure so active/high-priority/high-CPU agents surface first.
+- Order embedded widget cards by task pressure and summarize active provider-specific statuses so active/high-priority/high-CPU agents surface first.
 - Derive status filters from provider snapshots so provider-specific states remain filterable.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Cancel prompt-based lifecycle actions before dispatch by closing the prompt.

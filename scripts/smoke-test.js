@@ -112,6 +112,8 @@ try {
   assert(appSource.includes("Provider Object"), "browser app detail panel should render provider object metadata");
   assert(appSource.includes("providerObjectLine"), "browser app detail panel should summarize provider object metadata");
   assert(appSource.includes("Provider Issues"), "browser app summary should render provider issue count");
+  assert(appSource.includes("<p>Active</p>"), "browser app summary should render active provider-status count");
+  assert(appSource.includes("activeAgentCount(agents)"), "browser app summary should count provider-specific active statuses");
   assert(appSource.includes("<p>CPU</p>"), "browser app summary should render aggregate CPU");
   assert(appSource.includes("formatCpu(cpu)"), "browser app summary should format aggregate CPU");
   assert(appSource.includes("<p>Tokens</p>"), "browser app summary should render aggregate tokens");
@@ -170,6 +172,7 @@ try {
   assert(moduleWidgetSource.includes("providerObjectLine"), "module widget should render provider object metadata");
   assert(moduleWidgetSource.includes("formatSpend(agent.costUsd)"), "module widget should render agent spend");
   assert(moduleWidgetSource.includes("sortWidgetAgents"), "module widget should order agents by task pressure");
+  assert(moduleWidgetSource.includes("${active} active"), "module widget should summarize active provider-status count");
   assert(moduleWidgetSource.includes("processing: 50"), "module widget should rank provider-specific active statuses");
   assert(moduleWidgetSource.includes("collectActionPrompt"), "module widget should cancel prompt actions when the prompt is canceled");
   assert(moduleWidgetSource.includes("window.confirm"), "module widget should confirm destructive actions");
@@ -184,6 +187,7 @@ try {
   assert(standaloneWidgetSource.includes("providerObjectLine"), "standalone widget should render provider object metadata");
   assert(standaloneWidgetSource.includes("formatSpend(agent.costUsd)"), "standalone widget should render agent spend");
   assert(standaloneWidgetSource.includes("sortWidgetAgents"), "standalone widget should order agents by task pressure");
+  assert(standaloneWidgetSource.includes("${active} active"), "standalone widget should summarize active provider-status count");
   assert(standaloneWidgetSource.includes("processing: 50"), "standalone widget should rank provider-specific active statuses");
   assert(standaloneWidgetSource.includes("collectActionPrompt"), "standalone widget should cancel prompt actions when the prompt is canceled");
   assert(standaloneWidgetSource.includes("window.confirm"), "standalone widget should confirm destructive actions");

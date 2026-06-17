@@ -41,7 +41,7 @@ class AgentMonitorWidget extends HTMLElement {
   render() {
     const agents = this.agents || [];
     const visibleAgents = sortWidgetAgents(agents);
-    const running = agents.filter((agent) => agent.status === "running").length;
+    const active = activeAgentCount(agents);
 
     this.shadowRoot.innerHTML = `
       <style>${styles}</style>
@@ -49,7 +49,7 @@ class AgentMonitorWidget extends HTMLElement {
         <header>
           <div>
             <p>Agent Monitor</p>
-            <h2>${running} running</h2>
+            <h2>${active} active</h2>
           </div>
           <span>${agents.length} total</span>
         </header>
@@ -141,6 +141,10 @@ function renderProviderSummary(providers, agents, snapshotAt = null) {
 
 function sortWidgetAgents(agents) {
   return [...agents].sort(compareWidgetAgents);
+}
+
+function activeAgentCount(agents) {
+  return agents.filter((agent) => statusRank(agent) >= 40).length;
 }
 
 function compareWidgetAgents(a, b) {
