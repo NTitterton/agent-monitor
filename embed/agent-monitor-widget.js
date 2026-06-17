@@ -531,7 +531,26 @@ function compareWidgetAgents(a, b) {
 }
 
 function statusRank(agent) {
-  return { running: 4, waiting: 3, paused: 2, ended: 1 }[String(agent.status || "").toLowerCase()] || 0;
+  const status = String(agent.status || "").toLowerCase();
+  return {
+    running: 50,
+    processing: 50,
+    in_progress: 50,
+    waiting: 40,
+    queued: 40,
+    pending: 40,
+    paused: 30,
+    error: 20,
+    failed: 20,
+    cancelled: 20,
+    canceled: 20,
+    expired: 20,
+    ended: 10,
+    completed: 10,
+    complete: 10,
+    succeeded: 10,
+    done: 10
+  }[status] || 0;
 }
 
 function priorityRank(agent) {

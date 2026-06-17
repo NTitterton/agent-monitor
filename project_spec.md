@@ -59,9 +59,9 @@ Acceptance criteria:
 
 - Every agent returned by `/api/agents` has `type`.
 - The app can filter or group by `type`.
-- The app can sort visible tasks by task-manager fields including CPU, memory, spend, tokens, runtime, priority, status, and start time.
+- The app can sort visible tasks by task-manager fields including CPU, memory, spend, tokens, runtime, priority, operational status pressure, and start time.
 - Existing `source`, `provider`, and `providerId` behavior remains backward compatible.
-- Status filtering is derived from current snapshots rather than a fixed local-only status list.
+- Status filtering is derived from current snapshots rather than a fixed local-only status list. Status-pressure sorting ranks active/queued work ahead of paused, failed/cancelled, and completed work.
 
 ### Token Rate
 

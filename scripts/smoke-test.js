@@ -69,6 +69,8 @@ try {
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
   assert(appSource.includes("compareAgents"), "browser app should support task-table sorting");
   assert(appSource.includes("priority-desc"), "browser app should sort by task priority");
+  assert(appSource.includes("Status Pressure"), "browser app should present operational status sorting");
+  assert(appSource.includes("statusRank(b) - statusRank(a)"), "browser app should sort statuses by task pressure");
   assert(appSource.includes("collectActionPrompt"), "browser app should cancel prompt actions when the prompt is canceled");
   assert(
     appSource.includes("escapeText(agent.name)") &&
@@ -112,6 +114,7 @@ try {
   assert(moduleWidgetSource.includes("agentContextLine"), "module widget should render remote agent context");
   assert(moduleWidgetSource.includes("formatSpend(agent.costUsd)"), "module widget should render agent spend");
   assert(moduleWidgetSource.includes("sortWidgetAgents"), "module widget should order agents by task pressure");
+  assert(moduleWidgetSource.includes("processing: 50"), "module widget should rank provider-specific active statuses");
   assert(moduleWidgetSource.includes("collectActionPrompt"), "module widget should cancel prompt actions when the prompt is canceled");
   assert(standaloneWidgetSource.includes("actionDisabledReason"), "standalone widget should explain disabled action controls");
   assert(standaloneWidgetSource.includes("did not advertise"), "standalone widget should explain unadvertised provider capabilities");
@@ -120,6 +123,7 @@ try {
   assert(standaloneWidgetSource.includes("agentContextLine"), "standalone widget should render remote agent context");
   assert(standaloneWidgetSource.includes("formatSpend(agent.costUsd)"), "standalone widget should render agent spend");
   assert(standaloneWidgetSource.includes("sortWidgetAgents"), "standalone widget should order agents by task pressure");
+  assert(standaloneWidgetSource.includes("processing: 50"), "standalone widget should rank provider-specific active statuses");
   assert(standaloneWidgetSource.includes("collectActionPrompt"), "standalone widget should cancel prompt actions when the prompt is canceled");
   assert(standaloneWidgetSource.includes("actionKindLabel"), "standalone widget should label lifecycle versus surface history");
 

@@ -251,7 +251,7 @@ function renderFilters(filters, sources, types, statuses) {
             ["tokens-desc", "Tokens"],
             ["runtime-desc", "Runtime"],
             ["priority-desc", "Priority"],
-            ["status-asc", "Status"]
+            ["status-asc", "Status Pressure"]
           ]
             .map(([value, label]) => renderOption(value, filters.sort, label))
             .join("")}
@@ -869,9 +869,32 @@ function compareAgents(a, b, sort) {
     "tokens-desc": () => Number(b.tokens || 0) - Number(a.tokens || 0),
     "runtime-desc": () => runtime(b) - runtime(a),
     "priority-desc": () => priority(b) - priority(a),
-    "status-asc": () => String(a.status || "").localeCompare(String(b.status || ""))
+    "status-asc": () => statusRank(b) - statusRank(a)
   };
   return (comparisons[sort]?.() || 0) || String(a.name || "").localeCompare(String(b.name || ""));
+}
+
+function statusRank(agent) {
+  const status = String(agent.status || "").toLowerCase();
+  return {
+    running: 50,
+    processing: 50,
+    in_progress: 50,
+    waiting: 40,
+    queued: 40,
+    pending: 40,
+    paused: 30,
+    error: 20,
+    failed: 20,
+    cancelled: 20,
+    canceled: 20,
+    expired: 20,
+    ended: 10,
+    completed: 10,
+    complete: 10,
+    succeeded: 10,
+    done: 10
+  }[status] || 0;
 }
 
 function renderOption(value, selected, label = labelize(value)) {
