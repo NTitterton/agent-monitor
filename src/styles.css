@@ -181,6 +181,28 @@ h2 {
   padding: 7px 9px;
 }
 
+.action-message {
+  margin: 0 20px 12px;
+  border: 1px solid #bfd3f2;
+  border-radius: 6px;
+  background: #eef5ff;
+  color: #244c7a;
+  font-size: 0.84rem;
+  padding: 9px 10px;
+}
+
+.action-message.warn {
+  border-color: #f6c66b;
+  background: #fff8e8;
+  color: #7a4d00;
+}
+
+.action-message.error {
+  border-color: #efb6b6;
+  background: #fff8f8;
+  color: #a62626;
+}
+
 .icon-button {
   width: 36px;
   padding: 0;

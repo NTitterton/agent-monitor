@@ -39,6 +39,8 @@ try {
   assert(standaloneWidgetSource.includes("/api/snapshot"), "standalone widget should prefer the unified snapshot API");
   assert(standaloneWidgetSource.includes("/api/agents"), "standalone widget should keep legacy agent API fallback");
   assert(standaloneWidgetSource.includes("if (!response.ok) return;"), "standalone widget should not locally apply rejected API actions");
+  const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
+  assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");

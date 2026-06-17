@@ -8,12 +8,14 @@ export function createAgentClient() {
   let providers = [];
   let config = null;
   let mode = "local";
+  let actionMessage = null;
 
-  function emit(nextAgents, nextHistory = history, nextProviders = providers, nextConfig = config) {
+  function emit(nextAgents, nextHistory = history, nextProviders = providers, nextConfig = config, nextActionMessage = actionMessage) {
     agents = nextAgents.map(cloneAgent);
     history = nextHistory.map((record) => ({ ...record }));
     providers = nextProviders.map((provider) => ({ ...provider }));
     config = cloneConfig(nextConfig);
+    actionMessage = cloneActionMessage(nextActionMessage);
     subscribers.forEach((subscriber) => subscriber(snapshot()));
   }
 
@@ -64,6 +66,7 @@ export function createAgentClient() {
       history: historyList(),
       providers: providers.map((provider) => ({ ...provider })),
       config: cloneConfig(config),
+      actionMessage: cloneActionMessage(actionMessage),
       mode
     };
   }
@@ -153,10 +156,19 @@ export function createAgentClient() {
             },
             body: JSON.stringify({ action: actionId, prompt })
           });
-          if (!response.ok) return;
+          if (!response.ok) {
+            const errorPayload = await readJsonResponse(response);
+            const message = {
+              tone: response.status >= 500 ? "error" : "warn",
+              text: errorPayload?.error || `Action failed (${response.status})`
+            };
+            emit(errorPayload?.agents || agents, errorPayload?.history || history, providers, config, message);
+            return message;
+          }
           const payload = await response.json();
-          emit(payload.agents, payload.history || history);
-          return;
+          const message = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
+          emit(payload.agents, payload.history || history, providers, config, message);
+          return message;
         } catch {
           mode = "local";
         }
@@ -165,10 +177,24 @@ export function createAgentClient() {
       localStore.perform(agentId, actionId, prompt);
       if (agent) {
         history = [createActionRecord(agent, actionId, prompt), ...history].filter(Boolean).slice(0, 25);
-        emit(localStore.list(), history);
+        const message = { tone: "ok", text: `${action.label} applied locally to ${agent.name}` };
+        emit(localStore.list(), history, providers, config, message);
+        return message;
       }
     }
   };
+}
+
+async function readJsonResponse(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
+}
+
+function cloneActionMessage(message) {
+  return message ? { ...message } : null;
 }
 
 function isUrlGoTo(agent) {

@@ -183,9 +183,10 @@ Agent-level capabilities should describe actions the active provider can truly p
 - OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions for tracked objects, plus optional `go-to` links, but do not expose `start` for already-created work.
 - The API should reject unknown action IDs before dispatching to providers.
 - The API should reject direct action requests that are not listed in an agent's advertised `capabilities`.
+- The browser app should surface accepted and rejected action results to the operator.
 - Widgets should not apply local fallback mutations when a reachable API rejects an action.
 
-Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions.
+Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. The browser app renders action feedback messages from the client snapshot.
 
 ### Local Process Resource Accounting
 

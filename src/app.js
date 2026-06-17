@@ -16,6 +16,7 @@ class AgentMonitorApp extends HTMLElement {
       this.history = snapshot.history;
       this.providers = snapshot.providers;
       this.config = snapshot.config;
+      this.actionMessage = snapshot.actionMessage;
       this.mode = snapshot.mode;
       this.selectedAgentId = this.selectedAgentId || snapshot.agents[0]?.id || null;
       this.configurePolling(snapshot.config, snapshot.mode);
@@ -103,6 +104,7 @@ class AgentMonitorApp extends HTMLElement {
               <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
             </div>
             ${renderFilters(filters, sources, types)}
+            ${renderActionMessage(this.actionMessage)}
             <div class="agent-table" role="table" aria-label="Agent task table">
               ${renderAgentTable(filteredAgents, agents, this.selectedAgentId)}
             </div>
@@ -181,7 +183,7 @@ class AgentMonitorApp extends HTMLElement {
       });
     });
     this.querySelectorAll("[data-action]").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         const agentId = button.getAttribute("data-agent-id");
         const actionId = button.getAttribute("data-action");
         const action = agentActions.find((item) => item.id === actionId);
@@ -191,10 +193,16 @@ class AgentMonitorApp extends HTMLElement {
           prompt = window.prompt(`${action.label} prompt`) || "";
         }
 
-        void client.perform(agentId, actionId, prompt);
+        this.actionMessage = await client.perform(agentId, actionId, prompt);
+        this.render();
       });
     });
   }
+}
+
+function renderActionMessage(message) {
+  if (!message) return "";
+  return `<p class="action-message ${message.tone || "ok"}">${escapeText(message.text || "")}</p>`;
 }
 
 function renderFilters(filters, sources, types) {
