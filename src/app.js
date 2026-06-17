@@ -536,6 +536,7 @@ function renderAgentRow(agent, agents, selectedAgentId) {
       <div class="agent-name">
         <button class="agent-link" type="button" data-select-agent="${escapeAttribute(agent.id)}">${escapeText(agent.name)}</button>
         <p>${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))} · ${escapeText(agent.task)}</p>
+        ${renderTaskProgress(agent)}
       </div>
       <div>
         <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
@@ -703,6 +704,8 @@ function renderLineageNode(agent, agents, depth) {
 
 function renderResourceLine(agent) {
   const parts = [`${agent.cpu}% CPU`, formatMemory(agent.memoryMb)];
+  if (Number.isFinite(Number(agent.progressPercent))) parts.push(`${Number(agent.progressPercent)}% progress`);
+  if (agent.currentStep) parts.push(agent.currentStep);
   if (agent.childCpu || agent.childMemoryMb) {
     parts.push(`children ${Number(agent.childCpu || 0)}% / ${formatMemory(Number(agent.childMemoryMb || 0))}`);
   }
@@ -716,6 +719,18 @@ function renderResourceLine(agent) {
     parts.push(`${agent.tokenCountConfidence} tokens`);
   }
   return parts.join(" · ");
+}
+
+function renderTaskProgress(agent) {
+  if (!agent.currentStep && !Number.isFinite(Number(agent.progressPercent))) return "";
+  return `<p class="muted">${escapeText(taskProgressLine(agent))}</p>`;
+}
+
+function taskProgressLine(agent) {
+  return [
+    Number.isFinite(Number(agent.progressPercent)) ? `${Number(agent.progressPercent)}%` : "",
+    agent.currentStep || ""
+  ].filter(Boolean).join(" · ");
 }
 
 function renderTokenUsageLine(agent) {

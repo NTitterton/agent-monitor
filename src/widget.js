@@ -148,6 +148,8 @@ function lineageSummary(agent, agents = []) {
 
 function renderResourceLine(agent) {
   const parts = [`${agent.cpu}% CPU`, formatMemory(agent.memoryMb)];
+  if (Number.isFinite(Number(agent.progressPercent))) parts.push(`${Number(agent.progressPercent)}% progress`);
+  if (agent.currentStep) parts.push(agent.currentStep);
   if (agent.childCpu || agent.childMemoryMb) {
     parts.push(`children ${Number(agent.childCpu || 0)}% / ${formatMemory(Number(agent.childMemoryMb || 0))}`);
   }

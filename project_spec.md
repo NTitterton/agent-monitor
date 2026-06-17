@@ -204,6 +204,8 @@ Status: implemented for the local process provider and rendered in the app, modu
 
 Remote provider note: the HTTP adapter preserves provider-reported process-resource breakdown fields so remote/cloud agents can use the same UI model when those metrics are available.
 
+Progress note: remote providers may report `currentStep` and `progressPercent`; normalized snapshots preserve them and app/widget resource lines display them.
+
 Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
 
 Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app.
@@ -242,6 +244,8 @@ Status: implemented for state-backed agents, remote HTTP provider payloads, and 
   "provider": "Local Process",
   "providerId": "local-process",
   "status": "running",
+  "currentStep": "Running tests",
+  "progressPercent": 42,
   "tokens": 18420,
   "tokensPerSecond": 12.4,
   "tokenRateWindowMs": 15000,

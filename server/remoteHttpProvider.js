@@ -89,6 +89,8 @@ function normalizeAgent(agent, config) {
     status: agent.status || "waiting",
     parentId: agent.parentId || null,
     task: agent.task || agent.name || agent.id,
+    currentStep: String(agent.currentStep || agent.step || "").trim(),
+    progressPercent: normalizeProgress(agent.progressPercent ?? agent.progress),
     cpu: Number(agent.cpu || 0),
     memoryMb: Number(agent.memoryMb || 0),
     processCpu: Number(agent.processCpu || 0),
@@ -125,6 +127,11 @@ function normalizeCapabilities(capabilities, goToTarget) {
 
 function normalizeTokenConfidence(value, fallback = "unknown") {
   return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function normalizeProgress(value) {
+  const progress = Number(value);
+  return Number.isFinite(progress) ? Math.min(Math.max(Math.round(progress), 0), 100) : null;
 }
 
 function normalizeLogs(logs) {

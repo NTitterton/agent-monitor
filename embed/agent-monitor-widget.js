@@ -540,6 +540,8 @@ function isUrlGoTo(agent) {
 
 function formatResourceLine(agent) {
   const parts = [`${Number(agent.cpu || 0)}% CPU`, formatMemory(Number(agent.memoryMb || 0))];
+  if (Number.isFinite(Number(agent.progressPercent))) parts.push(`${Number(agent.progressPercent)}% progress`);
+  if (agent.currentStep) parts.push(agent.currentStep);
   if (agent.childCpu || agent.childMemoryMb) {
     parts.push(`children ${Number(agent.childCpu || 0)}% / ${formatMemory(Number(agent.childMemoryMb || 0))}`);
   }

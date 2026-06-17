@@ -509,6 +509,8 @@ async function assertRemoteProviderNormalization() {
             id: "remote-normalized",
             name: "Remote Normalized",
             status: "running",
+            currentStep: "Running tests",
+            progressPercent: 42.4,
             cpu: 7.5,
             memoryMb: 256,
             processCpu: 2.5,
@@ -547,6 +549,8 @@ async function assertRemoteProviderNormalization() {
       baseUrl: "https://remote.example/api"
     });
     const [agent] = await provider.listAgents();
+    assert(agent.currentStep === "Running tests", "remote provider should preserve current step");
+    assert(agent.progressPercent === 42, "remote provider should normalize progress percent");
     assert(agent.processCpu === 2.5, "remote provider should preserve own CPU");
     assert(agent.childCpu === 5, "remote provider should preserve child CPU");
     assert(agent.childMemoryMb === 156, "remote provider should preserve child memory");

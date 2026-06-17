@@ -242,6 +242,8 @@ function cloneAgent(agent) {
     tokensPerSecond: Number(agent.tokensPerSecond || 0),
     tokenRateWindowMs: Number(agent.tokenRateWindowMs || 0),
     tokenCountConfidence: agent.tokenCountConfidence || (agent.tokens ? "estimated" : "unknown"),
+    currentStep: agent.currentStep || "",
+    progressPercent: normalizeProgress(agent.progressPercent),
     children: Array.isArray(agent.children) ? [...agent.children] : [],
     childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
     transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
@@ -274,6 +276,11 @@ function cloneConfig(config) {
         }))
       : []
   };
+}
+
+function normalizeProgress(value) {
+  const progress = Number(value);
+  return Number.isFinite(progress) ? Math.min(Math.max(Math.round(progress), 0), 100) : null;
 }
 
 function cloneScanner(scanner) {
