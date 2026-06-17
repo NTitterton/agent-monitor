@@ -26,7 +26,7 @@ graph TD
         SeedProviders["Seed Providers<br/>local/openai/anthropic/remote"]
         LocalProcess["Local Process Provider<br/>ps + process signals"]
         RemoteHTTP["Remote HTTP Provider<br/>configured baseUrl"]
-        OpenAIResponses["OpenAI Responses Provider<br/>configured response IDs"]
+        OpenAIResponses["OpenAI Responses Provider<br/>tracked + launchable rows"]
         AnthropicBatches["Anthropic Message Batches Provider<br/>configured batch IDs"]
     end
 

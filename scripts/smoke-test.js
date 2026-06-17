@@ -18,6 +18,8 @@ const apiToken = "smoke-token";
 const tempDir = await mkdtemp(join(tmpdir(), "agent-monitor-smoke-"));
 const configPath = join(tempDir, "agent-monitor.config.json");
 const statePath = join(tempDir, "agent-state.json");
+process.env.AGENT_MONITOR_CONFIG = configPath;
+process.env.AGENT_MONITOR_STATE = statePath;
 
 await writeFile(
   configPath,
@@ -1091,6 +1093,16 @@ async function assertAccountProviderCapabilities() {
     const openAIGoTo = await openAIProvider.performAction("mock-response", "go-to");
     assert(openAIGoTo.id === "mock-response", "OpenAI go-to should return the tracked response without cancellation");
 
+    const configBeforeLaunch = JSON.parse(await readFile(configPath, "utf8"));
+    configBeforeLaunch.openAIResponsesProviders = [
+      {
+        id: "mock-openai-launch",
+        apiKey: "test",
+        responses: [{ id: "mock-launch", name: "Mock Launch", model: "gpt-smoke", input: "configured input" }]
+      }
+    ];
+    await writeFile(configPath, `${JSON.stringify(configBeforeLaunch, null, 2)}\n`);
+
     const launchableOpenAIProvider = createOpenAIResponsesProvider({
       id: "mock-openai-launch",
       apiKey: "test",
@@ -1103,6 +1115,11 @@ async function assertAccountProviderCapabilities() {
     const startedOpenAI = await launchableOpenAIProvider.performAction("mock-launch", "start", "launch prompt");
     assert(startedOpenAI.id === "mock-launch", "OpenAI start should return the configured launchable agent");
     assert(startedOpenAI.remoteId === "resp_created", "OpenAI start should track the created response id");
+    const configAfterLaunch = JSON.parse(await readFile(configPath, "utf8"));
+    assert(
+      configAfterLaunch.openAIResponsesProviders[0]?.responses[0]?.responseId === "resp_created",
+      "OpenAI start should persist the created response id"
+    );
 
     const anthropicProvider = createAnthropicMessageBatchesProvider({
       id: "mock-anthropic",
