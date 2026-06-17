@@ -140,6 +140,7 @@ function toProcessAgent(agent, processes) {
   const childProcesses = pid ? descendantProcesses(processes, pid) : [];
   const childPids = childProcesses.map((item) => item.pid);
   const resources = summarizeProcessResources(processInfo, childProcesses);
+  const surface = inferLocalSurface(agent, processInfo, processes);
 
   return {
     id: agent.id,
@@ -168,6 +169,9 @@ function toProcessAgent(agent, processes) {
     pid,
     parentPid: processInfo?.ppid || null,
     childPids,
+    goToTarget: surface.goToTarget,
+    goToKind: surface.goToKind,
+    windowTitle: surface.windowTitle,
     logs: buildProcessLogs(agent, processInfo, childPids, isRunning),
     command: agent.command,
     match: agent.match,
@@ -229,11 +233,10 @@ async function goToAgent(agent, processes) {
   const processInfo = agent.pid
     ? processes.find((item) => item.pid === agent.pid)
     : findMatchingProcess(agent, processes);
-  const command = processInfo?.command || agent.command || "";
-  const applicationName = inferApplicationName(command);
+  const surface = inferLocalSurface(agent, processInfo, processes);
 
-  if (applicationName) {
-    await run("osascript", ["-e", `tell application "${applicationName}" to activate`]);
+  if (surface.applicationName) {
+    await run("osascript", ["-e", `tell application "${surface.applicationName}" to activate`]);
     return;
   }
 
@@ -249,13 +252,65 @@ async function goToAgent(agent, processes) {
   ]);
 }
 
+export function inferLocalSurface(agent = {}, processInfo = null, processes = []) {
+  const commandChain = [
+    processInfo,
+    ...ancestorProcesses(processes, processInfo?.ppid)
+  ]
+    .map((item) => item?.command || "")
+    .filter(Boolean);
+  const commandText = [agent.command, ...commandChain].filter(Boolean).join("\n");
+  const applicationName = inferApplicationName(commandText);
+  const pid = processInfo?.pid || agent.pid || null;
+
+  if (applicationName) {
+    return {
+      goToKind: surfaceKindForApplication(applicationName),
+      goToTarget: pid ? `pid:${pid}` : "",
+      windowTitle: applicationName,
+      applicationName
+    };
+  }
+
+  return {
+    goToKind: pid ? "process" : "unknown",
+    goToTarget: pid ? `pid:${pid}` : "",
+    windowTitle: pid ? `Process ${pid}` : "Local process",
+    applicationName: ""
+  };
+}
+
+function ancestorProcesses(processes, parentPid) {
+  const byPid = new Map(processes.map((processInfo) => [processInfo.pid, processInfo]));
+  const ancestors = [];
+  const seen = new Set();
+  let pid = parentPid;
+
+  while (pid && byPid.has(pid) && !seen.has(pid)) {
+    seen.add(pid);
+    const processInfo = byPid.get(pid);
+    ancestors.push(processInfo);
+    pid = processInfo.ppid;
+  }
+
+  return ancestors;
+}
+
 function inferApplicationName(command) {
   if (/Google Chrome/i.test(command)) return "Google Chrome";
   if (/Chromium/i.test(command)) return "Chromium";
   if (/Safari/i.test(command)) return "Safari";
   if (/Cursor/i.test(command)) return "Cursor";
   if (/Visual Studio Code|\/Code\.app/i.test(command)) return "Visual Studio Code";
+  if (/iTerm2|iTerm\.app/i.test(command)) return "iTerm2";
+  if (/Terminal\.app|\/Terminal\s|login\s+-fp|\/bin\/zsh|\/bin\/bash/i.test(command)) return "Terminal";
   return "";
+}
+
+function surfaceKindForApplication(applicationName) {
+  if (["Google Chrome", "Chromium", "Safari"].includes(applicationName)) return "browser";
+  if (["Terminal", "iTerm2"].includes(applicationName)) return "terminal";
+  return "process";
 }
 
 function buildProcessLogs(agent, processInfo, childPids, isRunning) {

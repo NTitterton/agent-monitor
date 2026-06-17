@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider.js";
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
 import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
-import { signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
+import { inferLocalSurface, signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
 import { applySampledTokenRates, buildProviderErrorSnapshot, normalizeProviderAgent } from "../server/providerRegistry.js";
 import { agentActions } from "../src/core.js";
 
@@ -726,6 +726,7 @@ try {
 
   await assertAccountProviderCapabilities();
   await assertRemoteProviderNormalization();
+  assertLocalSurfaceInference();
   assertProcessResourceAggregation();
   assertProcessTreeSignalOrder();
 
@@ -855,6 +856,50 @@ function assertProcessTreeSignalOrder() {
     { pid: 14, ppid: 99 }
   ]);
   assert(pids.join(",") === "12,13,11,10", "local lifecycle signals should target descendants before root");
+}
+
+function assertLocalSurfaceInference() {
+  const chromeSurface = inferLocalSurface(
+    { command: "codex" },
+    { pid: 10, ppid: 9, command: "codex" },
+    [
+      { pid: 9, ppid: 1, command: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" },
+      { pid: 10, ppid: 9, command: "codex" }
+    ]
+  );
+  assert(chromeSurface.goToKind === "browser", "Chrome-hosted agents should expose browser go-to");
+  assert(chromeSurface.windowTitle === "Google Chrome", "Chrome-hosted agents should identify Chrome");
+  assert(chromeSurface.goToTarget === "pid:10", "local surfaces should target the agent PID");
+
+  const terminalSurface = inferLocalSurface(
+    { command: "claude" },
+    { pid: 20, ppid: 19, command: "claude" },
+    [
+      { pid: 19, ppid: 1, command: "/System/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal" },
+      { pid: 20, ppid: 19, command: "claude" }
+    ]
+  );
+  assert(terminalSurface.goToKind === "terminal", "Terminal-hosted agents should expose terminal go-to");
+  assert(terminalSurface.windowTitle === "Terminal", "Terminal-hosted agents should identify Terminal");
+
+  const editorSurface = inferLocalSurface(
+    { command: "aider" },
+    { pid: 30, ppid: 29, command: "/bin/zsh -l" },
+    [
+      { pid: 29, ppid: 1, command: "/Applications/Cursor.app/Contents/MacOS/Cursor" },
+      { pid: 30, ppid: 29, command: "/bin/zsh -l" }
+    ]
+  );
+  assert(editorSurface.goToKind === "process", "Editor-hosted agents should expose process go-to");
+  assert(editorSurface.windowTitle === "Cursor", "Editor-hosted agents should identify the editor before the shell");
+
+  const unknownSurface = inferLocalSurface(
+    { command: "custom-agent", pid: 40 },
+    { pid: 40, ppid: 1, command: "custom-agent" },
+    [{ pid: 40, ppid: 1, command: "custom-agent" }]
+  );
+  assert(unknownSurface.goToKind === "process", "Unknown running local agents should still expose process go-to");
+  assert(unknownSurface.windowTitle === "Process 40", "Unknown running local agents should identify the PID");
 }
 
 function assertProcessResourceAggregation() {
