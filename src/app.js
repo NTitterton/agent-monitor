@@ -662,6 +662,11 @@ function renderDetailPanel(detail, providers = []) {
           <strong>${escapeText(agent.provider)}</strong>
           <p>${escapeText(labelize(agent.type || agent.providerId || "unknown"))} · ${escapeText(agent.providerId || agent.source || "unknown")}</p>
         </article>
+        <article>
+          <span>Provider Object</span>
+          <strong>${escapeText(providerObjectTitle(agent))}</strong>
+          <p>${escapeText(providerObjectLine(agent))}</p>
+        </article>
         <article class="${provider?.status === "error" ? "detail-warning" : ""}">
           <span>Provider Health</span>
           <strong>${escapeText(provider ? labelize(provider.status) : "Unknown")}</strong>
@@ -721,6 +726,25 @@ function renderAgentLogs(agent) {
       `
     )
     .join("");
+}
+
+function providerObjectTitle(agent) {
+  return agent.remoteId || agent.pid || agent.model || "No remote ID";
+}
+
+function providerObjectLine(agent) {
+  const parts = [];
+  if (agent.model) parts.push(`model ${agent.model}`);
+  if (agent.requestCounts && typeof agent.requestCounts === "object") {
+    const requestLine = Object.entries(agent.requestCounts)
+      .filter(([, value]) => Number(value || 0) > 0)
+      .map(([key, value]) => `${key} ${value}`)
+      .join(", ");
+    if (requestLine) parts.push(requestLine);
+  }
+  if (agent.windowTitle) parts.push(agent.windowTitle);
+  if (agent.goToKind && agent.goToKind !== "unknown") parts.push(`go-to ${agent.goToKind}`);
+  return parts.join(" · ") || "No provider object details";
 }
 
 function renderAgentTranscript(agent) {

@@ -332,6 +332,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Search visible tasks by task, current step, provider, source/type, owner, workspace, repository, branch, queue, priority, and local/window target context.
 - Show task progress percentage and current step when providers report them.
 - Show task and progress details in the selected-agent inspector.
+- Show provider object metadata such as remote IDs, models, Go To kind, and Anthropic request counts in the selected-agent inspector.
 - Refresh selected-agent details from each snapshot so lifecycle actions and polling keep the inspector current.
 - Show owner/workspace/repository/branch/queue/priority context for remote agents when providers report it.
 - Record action history with provider, source, type, and action-kind metadata.

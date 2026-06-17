@@ -236,6 +236,8 @@ Progress note: remote providers may report `currentStep` and `progressPercent`; 
 
 Context note: remote providers may report `owner`, `workspace`, `repository`, `branch`, `queue`, and `priority`; the HTTP adapter preserves them, the selected-agent inspector shows them in a context card, and embedded widgets show a compact context line on each agent card.
 
+Provider-object note: provider adapters may report provider-native object metadata such as `remoteId`, `model`, `requestCounts`, `goToKind`, and `windowTitle`; the selected-agent inspector summarizes those fields so account-backed and remote/cloud agents remain inspectable as provider objects, not only normalized tasks.
+
 Detail freshness note: the browser app rebuilds the selected-agent detail from each refreshed snapshot so action results and polling updates do not leave the inspector showing stale status, history, lineage, or metrics.
 
 Stale-detail note: `GET /api/agents/:id` returns `404` with refreshed agents, history, provider status, sanitized config, and scanner status when the requested agent no longer exists. The browser client applies that payload so manual detail refreshes reconcile against current provider state instead of retaining a stale selection.

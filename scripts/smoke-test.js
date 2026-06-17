@@ -102,6 +102,8 @@ try {
   assert(appSource.includes("childrenLabel"), "browser app detail panel should preserve unresolved child lineage IDs");
   assert(appSource.includes("parentLabel"), "browser app detail panel should preserve unresolved parent lineage IDs");
   assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
+  assert(appSource.includes("Provider Object"), "browser app detail panel should render provider object metadata");
+  assert(appSource.includes("providerObjectLine"), "browser app detail panel should summarize provider object metadata");
   assert(appSource.includes("Provider Issues"), "browser app summary should render provider issue count");
   assert(appSource.includes("<p>CPU</p>"), "browser app summary should render aggregate CPU");
   assert(appSource.includes("formatCpu(cpu)"), "browser app summary should format aggregate CPU");

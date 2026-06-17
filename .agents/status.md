@@ -62,6 +62,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - App and widget timestamp/runtime formatting guards for malformed provider timestamps.
 - Optional `currentStep` and `progressPercent` task-progress metadata in normalized snapshots, app, widgets, and remote provider docs.
 - Selected-agent task card with task, current step, and progress details.
+- Selected-agent provider object card for remote IDs, models, request counts, Go To kind, and window title.
 - Selected-agent inspector lifecycle controls that reuse task-table action validation and prompts.
 - Selected-agent detail refresh from each snapshot so action and polling updates stay current.
 - Selected-agent stale detail recovery from `404` responses with refreshed snapshot context.
