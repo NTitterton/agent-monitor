@@ -187,7 +187,12 @@ function validateConfigPatch(patch) {
   if (Object.hasOwn(patch, "anthropicMessageBatchesProviders")) {
     validateRows(patch.anthropicMessageBatchesProviders, "anthropicMessageBatchesProviders", ["id"], warnings);
     for (const provider of Array.isArray(patch.anthropicMessageBatchesProviders) ? patch.anthropicMessageBatchesProviders : []) {
-      validateAnthropicBatchRows(provider?.batches, `anthropicMessageBatchesProviders ${provider?.id || "unknown"} batches`, warnings);
+      validateAnthropicBatchRows(
+        provider?.batches,
+        `anthropicMessageBatchesProviders ${provider?.id || "unknown"} batches`,
+        warnings,
+        provider?.discoverRecent === true
+      );
     }
   }
 
@@ -248,11 +253,14 @@ function validateOpenAIResponseRows(rows, label, warnings) {
   });
 }
 
-function validateAnthropicBatchRows(rows, label, warnings) {
+function validateAnthropicBatchRows(rows, label, warnings, allowEmpty = false) {
   if (!Array.isArray(rows)) {
+    if (allowEmpty && rows === undefined) return;
     warnings.push(`${label} should be a list.`);
     return;
   }
+
+  if (allowEmpty && rows.length === 0) return;
 
   const seen = new Set();
   rows.forEach((row, index) => {
@@ -312,6 +320,9 @@ function publicAnthropicMessageBatchesProviders(providers) {
       apiKeyEnv: provider.apiKeyEnv || "ANTHROPIC_API_KEY",
       hasApiKey: Boolean(provider.apiKey),
       version: provider.version || "",
+      discoverRecent: provider.discoverRecent === true,
+      discoverLimit: provider.discoverLimit || 10,
+      dashboardUrl: provider.dashboardUrl || "",
       batches: normalizeAnthropicTrackedBatches(provider.batches)
     }));
 }
@@ -436,9 +447,21 @@ function normalizeAnthropicMessageBatchesProviders(value, fallback = []) {
         apiKeyEnv: String(provider.apiKeyEnv || existing.apiKeyEnv || "ANTHROPIC_API_KEY").trim(),
         ...(provider.apiKey ? { apiKey: String(provider.apiKey) } : {}),
         ...(provider.version ? { version: String(provider.version).trim() } : {}),
+        discoverRecent: Object.hasOwn(provider, "discoverRecent")
+          ? provider.discoverRecent === true
+          : existing.discoverRecent === true,
+        discoverLimit: normalizeDiscoverLimit(provider.discoverLimit ?? existing.discoverLimit),
+        ...(provider.dashboardUrl || existing.dashboardUrl
+          ? { dashboardUrl: String(provider.dashboardUrl || existing.dashboardUrl).trim() }
+          : {}),
         batches: normalizeAnthropicTrackedBatches(provider.batches)
       };
     });
+}
+
+function normalizeDiscoverLimit(value) {
+  const number = Number(value || 10);
+  return Number.isFinite(number) ? Math.min(Math.max(Math.round(number), 1), 100) : 10;
 }
 
 function normalizeTrackedItems(items, remoteIdKey) {

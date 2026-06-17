@@ -133,6 +133,9 @@ try {
   assert(appSource.includes("formatOpenAIResponseLines"), "app settings should format OpenAI launchable response rows");
   assert(appSource.includes("parseAnthropicBatchLines"), "app settings should parse Anthropic launchable batch rows");
   assert(appSource.includes("formatAnthropicBatchLines"), "app settings should format Anthropic launchable batch rows");
+  assert(appSource.includes('data-anthropic-field="discoverRecent"'), "app settings should expose Anthropic recent-batch discovery");
+  assert(appSource.includes('data-anthropic-field="discoverLimit"'), "app settings should expose Anthropic discovery limit");
+  assert(appSource.includes("provider.discoverRecent || provider.batches.length"), "app settings should save Anthropic discovery-only providers");
   assert(appSource.includes("<details class=\"settings-block\""), "app settings should render in a collapsible settings menu");
   assert(appSource.includes("summary-warning"), "browser app summary should highlight provider issues");
   assert(appSource.includes("detail-action-row"), "browser app detail panel should render lifecycle controls");
@@ -766,6 +769,9 @@ try {
           label: "Smoke Anthropic",
           apiKeyEnv: "SMOKE_ANTHROPIC_KEY",
           apiKey: "anthropic-secret",
+          discoverRecent: true,
+          discoverLimit: 2,
+          dashboardUrl: "https://console.anthropic.com/batches",
           batches: [
             {
               id: "smoke-batch",
@@ -781,12 +787,15 @@ try {
   assert(accountProviderConfig.status === 200, "account provider config update should succeed");
   assert(accountProviderConfig.body.config.openAIResponsesProviders[0]?.hasApiKey === true, "OpenAI public config should report API key presence");
   assert(accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]?.hasApiKey === true, "Anthropic public config should report API key presence");
+  assert(accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]?.discoverRecent === true, "Anthropic public config should expose discovery toggle");
+  assert(accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]?.discoverLimit === 2, "Anthropic public config should expose discovery limit");
   assert(!("apiKey" in accountProviderConfig.body.config.openAIResponsesProviders[0]), "OpenAI public config should not expose API key");
   assert(!("apiKey" in accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]), "Anthropic public config should not expose API key");
 
   const accountConfigFile = JSON.parse(await readFile(configPath, "utf8"));
   assert(accountConfigFile.openAIResponsesProviders[0]?.apiKey === "openai-secret", "OpenAI API key should be stored");
   assert(accountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be stored");
+  assert(accountConfigFile.anthropicMessageBatchesProviders[0]?.discoverRecent === true, "Anthropic discovery toggle should be stored");
 
   await request("/api/config", {
     method: "PUT",
@@ -812,6 +821,7 @@ try {
           id: "smoke-anthropic",
           label: "Smoke Anthropic Updated",
           apiKeyEnv: "SMOKE_ANTHROPIC_KEY",
+          discoverRecent: true,
           batches: [
             {
               id: "smoke-batch",
@@ -827,6 +837,7 @@ try {
   const preservedAccountConfigFile = JSON.parse(await readFile(configPath, "utf8"));
   assert(preservedAccountConfigFile.openAIResponsesProviders[0]?.apiKey === "openai-secret", "OpenAI API key should be preserved when omitted");
   assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be preserved when omitted");
+  assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.discoverLimit === 2, "Anthropic discovery limit should be preserved when omitted");
 
   await assertAccountProviderCapabilities();
   await assertRemoteProviderNormalization();
@@ -1181,6 +1192,43 @@ async function assertAccountProviderCapabilities() {
       });
     }
 
+    if (String(url).includes("/messages/batches?limit=2")) {
+      return jsonResponse({
+        data: [
+          {
+            id: "msgbatch_auto",
+            processing_status: "in_progress",
+            created_at: new Date().toISOString(),
+            request_counts: { processing: 2, succeeded: 0, errored: 0, canceled: 0, expired: 0 }
+          },
+          {
+            id: "msgbatch_smoke",
+            processing_status: "in_progress",
+            created_at: new Date().toISOString(),
+            request_counts: { processing: 1, succeeded: 0, errored: 0, canceled: 0, expired: 0 }
+          }
+        ]
+      });
+    }
+
+    if (String(url).includes("/messages/batches/msgbatch_auto/cancel")) {
+      return jsonResponse({
+        id: "msgbatch_auto",
+        processing_status: "canceling",
+        created_at: new Date().toISOString(),
+        request_counts: { processing: 2, succeeded: 0, errored: 0, canceled: 0, expired: 0 }
+      });
+    }
+
+    if (String(url).includes("/messages/batches/msgbatch_auto")) {
+      return jsonResponse({
+        id: "msgbatch_auto",
+        processing_status: "ended",
+        created_at: new Date().toISOString(),
+        request_counts: { processing: 0, succeeded: 0, errored: 0, canceled: 2, expired: 0 }
+      });
+    }
+
     if (String(url).endsWith("/messages/batches") && options.method === "POST") {
       const body = JSON.parse(options.body || "{}");
       const request = body.requests?.[0];
@@ -1305,6 +1353,26 @@ async function assertAccountProviderCapabilities() {
       fetchCalls.every((call) => !call.url.includes("/cancel")),
       "go-to and unsupported start should not call cancel endpoints"
     );
+
+    const discoveringAnthropicProvider = createAnthropicMessageBatchesProvider({
+      id: "mock-anthropic-discovery",
+      apiKey: "test",
+      discoverRecent: true,
+      discoverLimit: 2,
+      dashboardUrl: "https://console.anthropic.com/batches",
+      batches: [{ id: "mock-batch", batchId: "msgbatch_smoke" }]
+    });
+    const discoveredAgents = await discoveringAnthropicProvider.listAgents();
+    const discoveredBatch = discoveredAgents.find((agent) => agent.remoteId === "msgbatch_auto");
+    assert(discoveredAgents.length === 2, "Anthropic discovery should merge configured and recent batches");
+    assert(discoveredBatch?.id === "mock-anthropic-discovery-discovered-batch-msgbatch_auto", "discovered Anthropic batch should receive a stable agent ID");
+    assert(discoveredBatch.capabilities.includes("force-end"), "discovered Anthropic batch should expose cancel-style actions");
+    assert(discoveredBatch.capabilities.includes("go-to"), "discovered Anthropic batch should expose dashboard go-to");
+    const cancelCallsBeforeDiscoveryAction = fetchCalls.filter((call) => call.url.includes("/messages/batches/msgbatch_auto/cancel")).length;
+    const cancelledDiscoveredBatch = await discoveringAnthropicProvider.performAction(discoveredBatch.id, "force-end");
+    const cancelCallsAfterDiscoveryAction = fetchCalls.filter((call) => call.url.includes("/messages/batches/msgbatch_auto/cancel")).length;
+    assert(cancelledDiscoveredBatch.id === discoveredBatch.id, "discovered Anthropic batch action should return the target agent");
+    assert(cancelCallsAfterDiscoveryAction === cancelCallsBeforeDiscoveryAction + 1, "discovered Anthropic batch action should call cancel endpoint");
   } finally {
     globalThis.fetch = originalFetch;
   }

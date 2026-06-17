@@ -34,6 +34,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Remote HTTP provider contract and health reporting.
 - OpenAI Responses provider for configured response IDs and launchable model/input rows.
 - Anthropic Message Batches provider for configured batch IDs and launchable model/input rows.
+- Optional Anthropic recent Message Batch discovery with stable discovered-agent IDs and cancel-style actions.
 - Standalone embeddable widget.
 - Hosted personal-site embed guide for static sites serving the widget while calling the local Agent Monitor API.
 - Desktop app bundle verification through `npm run desktop:build`.

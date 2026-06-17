@@ -47,6 +47,9 @@
       "id": "anthropic-batches",
       "label": "Anthropic Message Batches",
       "apiKeyEnv": "ANTHROPIC_API_KEY",
+      "discoverRecent": true,
+      "discoverLimit": 10,
+      "dashboardUrl": "https://console.anthropic.com/batches",
       "batches": [
         {
           "id": "anthropic-batch-example",

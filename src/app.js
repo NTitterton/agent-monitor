@@ -578,8 +578,14 @@ function renderAnthropicProviderRow(provider, index, mode) {
       <input data-anthropic-field="apiKeyEnv" value="${escapeAttribute(provider.apiKeyEnv || "ANTHROPIC_API_KEY")}" ${disabled} aria-label="Anthropic API key env ${index + 1}" />
       <input data-anthropic-field="apiKey" type="password" value="" ${disabled} aria-label="Anthropic API key ${index + 1}" />
       <input data-anthropic-field="version" value="${escapeAttribute(provider.version || "")}" ${disabled} aria-label="Anthropic version ${index + 1}" />
+      <label class="toggle-row">
+        <input data-anthropic-field="discoverRecent" type="checkbox" ${provider.discoverRecent ? "checked" : ""} ${disabled} />
+        <span>Discover recent</span>
+      </label>
+      <input data-anthropic-field="discoverLimit" type="number" min="1" max="100" value="${escapeAttribute(provider.discoverLimit || 10)}" ${disabled} aria-label="Anthropic discovery limit ${index + 1}" />
+      <input data-anthropic-field="dashboardUrl" value="${escapeAttribute(provider.dashboardUrl || "")}" ${disabled} aria-label="Anthropic dashboard URL ${index + 1}" />
       <textarea data-anthropic-field="batches" rows="3" ${disabled} aria-label="Anthropic batch list ${index + 1}">${escapeText(formatAnthropicBatchLines(provider.batches || []))}</textarea>
-      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · tracked: id | name | batchId | task | goToUrl · launch: id | name | model | input | goToUrl</span>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · tracked: id | name | batchId | task | goToUrl · launch: id | name | model | input | goToUrl · discovery lists recent batches</span>
     </fieldset>
   `;
 }
@@ -1119,17 +1125,20 @@ function parseAnthropicProviders(form) {
         apiKeyEnv: fields.apiKeyEnv || "ANTHROPIC_API_KEY",
         ...(fields.apiKey ? { apiKey: fields.apiKey } : {}),
         ...(fields.version ? { version: fields.version } : {}),
+        discoverRecent: fields.discoverRecent === true,
+        discoverLimit: Number(fields.discoverLimit || 10),
+        ...(fields.dashboardUrl ? { dashboardUrl: fields.dashboardUrl } : {}),
         batches: parseAnthropicBatchLines(fields.batches)
       };
     })
-    .filter((provider) => provider.id && provider.batches.length);
+    .filter((provider) => provider.id && (provider.discoverRecent || provider.batches.length));
 }
 
 function rowFields(row, prefix) {
   return Object.fromEntries(
     [...row.querySelectorAll(`[data-${prefix}-field]`)].map((input) => [
       input.getAttribute(`data-${prefix}-field`),
-      input.value.trim()
+      input.type === "checkbox" ? input.checked : input.value.trim()
     ])
   );
 }

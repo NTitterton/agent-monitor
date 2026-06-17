@@ -307,6 +307,8 @@ Agent Monitor can also observe configured Anthropic Message Batch IDs:
       "id": "anthropic-batches",
       "label": "Anthropic Message Batches",
       "apiKeyEnv": "ANTHROPIC_API_KEY",
+      "discoverRecent": true,
+      "discoverLimit": 10,
       "batches": [
         {
           "id": "anthropic-batch-example",
@@ -320,9 +322,9 @@ Agent Monitor can also observe configured Anthropic Message Batch IDs:
 }
 ```
 
-The adapter uses Anthropic's Message Batch create, retrieve, and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view. Already-created Message Batches do not expose a provider-backed `start` action.
+The adapter uses Anthropic's Message Batch create, list, retrieve, and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view. Already-created Message Batches do not expose a provider-backed `start` action.
 
-Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked batch rows accept `id | name | batchId | task | goToUrl`; the URL is optional. Launchable batch rows accept `id | name | model | input | goToUrl`; before launch they appear as waiting agents with only `Start` plus optional `Go To`, and `Start` creates a single-request Message Batch, stores the returned batch ID in config, and then tracks it like any other configured batch.
+Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked batch rows accept `id | name | batchId | task | goToUrl`; the URL is optional. Launchable batch rows accept `id | name | model | input | goToUrl`; before launch they appear as waiting agents with only `Start` plus optional `Go To`, and `Start` creates a single-request Message Batch, stores the returned batch ID in config, and then tracks it like any other configured batch. Enable `discoverRecent` with `discoverLimit` to list recent account Message Batches in addition to configured rows; discovered batches receive stable Agent Monitor IDs and support cancel-style lifecycle controls.
 
 ## Current capability
 
@@ -363,9 +365,9 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.
 - Start launchable configured OpenAI Responses from model/input rows and persist the created response ID.
-- Observe configured Anthropic Message Batches by batch ID.
+- Observe configured Anthropic Message Batches by batch ID and optionally discover recent account Message Batches.
 - Start launchable configured Anthropic Message Batches from model/input rows and persist the created batch ID.
 
 ## Next backend milestones
 
-1. Add broader provider-specific start/resume creation flows where APIs expose them.
+1. Add broader provider-specific start/resume/listing flows where APIs expose them, with OpenAI Responses still limited to configured rows unless a list endpoint becomes available.

@@ -14,7 +14,7 @@ export function createAnthropicMessageBatchesProvider(config) {
     capabilities: ["list", ...cancelActions],
     async listAgents() {
       const batchConfigs = config.batches || [];
-      return Promise.all(
+      const configuredAgents = await Promise.all(
         batchConfigs.map(async (batchConfig) => {
           if (!batchConfig.batchId) return normalizeLaunchableBatch(config, batchConfig);
           const batch = await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}`, {
@@ -23,9 +23,22 @@ export function createAnthropicMessageBatchesProvider(config) {
           return normalizeBatch(batch, config, batchConfig);
         })
       );
+
+      if (!config.discoverRecent) return configuredAgents;
+
+      const discovered = await listRecentBatches(config);
+      const configuredBatchIds = new Set(batchConfigs.map((item) => item.batchId).filter(Boolean));
+      return [
+        ...configuredAgents,
+        ...discovered
+          .filter((batch) => batch?.id && !configuredBatchIds.has(batch.id))
+          .map((batch) => normalizeBatch(batch, config, discoveredBatchConfig(config, batch)))
+      ];
     },
     async performAction(agentId, actionId, prompt = "") {
-      const batchConfig = (config.batches || []).find((item) => item.id === agentId);
+      const batchConfig =
+        (config.batches || []).find((item) => item.id === agentId) ||
+        discoveredBatchConfigFromAgentId(config, agentId);
       if (!batchConfig) return null;
 
       if (actionId === "go-to") {
@@ -61,6 +74,14 @@ export function createAnthropicMessageBatchesProvider(config) {
       return normalizeBatch(batch, config, batchConfig);
     }
   };
+}
+
+async function listRecentBatches(config) {
+  const limit = Math.min(Math.max(Math.round(Number(config.discoverLimit || 10)), 1), 100);
+  const payload = await request(config, `/messages/batches?limit=${limit}`, {
+    method: "GET"
+  });
+  return Array.isArray(payload.data) ? payload.data : [];
 }
 
 export async function readAnthropicMessageBatchesProviders() {
@@ -155,6 +176,38 @@ function normalizeBatch(batch, providerConfig, batchConfig) {
     requestCounts: counts,
     capabilities: normalizeCapabilities(goToTarget)
   };
+}
+
+function discoveredBatchConfig(providerConfig, batch) {
+  return {
+    id: discoveredAgentId(providerConfig, batch.id),
+    name: `Anthropic Batch ${batch.id}`,
+    batchId: batch.id,
+    task: "Discovered Anthropic message batch",
+    ...(providerConfig.dashboardUrl ? { goToTarget: providerConfig.dashboardUrl } : {})
+  };
+}
+
+function discoveredBatchConfigFromAgentId(providerConfig, agentId) {
+  const prefix = discoveredAgentPrefix(providerConfig);
+  if (!String(agentId || "").startsWith(prefix)) return null;
+  const batchId = String(agentId).slice(prefix.length);
+  if (!batchId) return null;
+  return {
+    id: agentId,
+    name: `Anthropic Batch ${batchId}`,
+    batchId,
+    task: "Discovered Anthropic message batch",
+    ...(providerConfig.dashboardUrl ? { goToTarget: providerConfig.dashboardUrl } : {})
+  };
+}
+
+function discoveredAgentId(providerConfig, batchId) {
+  return `${discoveredAgentPrefix(providerConfig)}${batchId}`;
+}
+
+function discoveredAgentPrefix(providerConfig) {
+  return `${providerConfig.id}-discovered-batch-`;
 }
 
 function normalizeLaunchableBatch(providerConfig, batchConfig) {

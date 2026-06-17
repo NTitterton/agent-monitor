@@ -238,11 +238,11 @@ This is an observer/control/launch adapter for configured rows, not a full accou
 
 ## 10. Anthropic Message Batches Provider
 
-The Anthropic Message Batches provider observes configured message batch IDs from a user's Anthropic account. It retrieves each batch, maps processing status and request counts into the normalized agent shape, and routes terminating lifecycle actions to Anthropic's cancel batch endpoint.
+The Anthropic Message Batches provider observes configured message batch IDs from a user's Anthropic account. When `discoverRecent` is enabled, it also lists recent account Message Batches and normalizes unconfigured batches into stable discovered agents. It retrieves each configured batch, maps processing status and request counts into the normalized agent shape, and routes terminating lifecycle actions to Anthropic's cancel batch endpoint for both configured and discovered batches.
 
 Rows with `model` and `input` but no `batchId` are launchable placeholders. They render as waiting Anthropic agents with `start`; starting one creates a single-request Message Batch, persists the returned batch ID in config, and then tracks the created batch through the normal retrieval path.
 
-This is also an observer/control/launch adapter for configured rows, not automatic account-wide discovery. Already-created Message Batches expose cancel-style capabilities but not `start`.
+This is an observer/control/launch adapter for configured rows plus optional recent-batch account discovery. Already-created Message Batches expose cancel-style capabilities but not `start`.
 
 ## 11. Embed Security
 
@@ -271,7 +271,7 @@ Verification is currently handled by:
 ## 13. Known Gaps
 
 - OpenAI integration currently observes configured Responses API IDs; it does not discover all account activity automatically.
-- Anthropic integration currently observes configured Message Batch IDs; it does not discover all account activity automatically.
+- Anthropic integration can discover recent Message Batches when enabled, but does not yet provide a full account activity archive beyond the API's batch listing window.
 - Desktop packaging is a local macOS app bundle and zip, not a signed installer.
 - Local process control is signal-based and should grow safer start/stop policies and deeper terminal-tab/window targeting.
-- Account integrations observe configured OpenAI Response IDs and Anthropic Message Batch IDs; broader provider discovery depends on what those APIs expose.
+- Account integrations observe configured OpenAI Response IDs and configured or recently discovered Anthropic Message Batch IDs; broader provider discovery depends on what those APIs expose.
