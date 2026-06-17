@@ -300,6 +300,9 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       });
       if (!response.ok) {
         const payload = await readJsonResponse(response);
+        this.agents = payload?.agents || this.agents;
+        this.history = payload?.history || this.history;
+        this.providers = payload?.providers || this.providers;
         this.actionMessage = {
           tone: response.status >= 500 ? "error" : "warn",
           text: payload?.error || `Action failed (${response.status})`

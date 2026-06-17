@@ -236,6 +236,9 @@ try {
     body: JSON.stringify({ action: "start" })
   });
   assert(localStart.status === 200, "configured local agent start should succeed");
+  assert(Array.isArray(localStart.body.providers), "local start should return provider status");
+  assert(localStart.body.config?.hasApiToken === true, "local start should return sanitized config");
+  assert(localStart.body.scanner?.enabled === true, "local start should return scanner status");
   const startedLocalAgent = localStart.body.agents.find((agent) => agent.id === "smoke-local");
   assert(startedLocalAgent?.status === "running", "configured local agent should report running after start");
   assert(typeof startedLocalAgent?.pid === "number", "configured local agent should report pid after start");
@@ -350,6 +353,7 @@ try {
   });
   assert(unsupportedAction.status === 409, "unsupported agent action should return conflict");
   assert(unsupportedAction.body.error === "Action not supported", "unsupported agent action should return a clear error");
+  assert(Array.isArray(unsupportedAction.body.providers), "unsupported action should return provider status");
 
   const invalidAction = await request("/api/agents/local-codex-1/actions", {
     method: "POST",
@@ -358,6 +362,7 @@ try {
   });
   assert(invalidAction.status === 400, "invalid agent action should return bad request");
   assert(invalidAction.body.error === "Invalid action", "invalid agent action should return a clear error");
+  assert(Array.isArray(invalidAction.body.providers), "invalid action should return provider status");
 
   const detail = await request("/api/agents/local-codex-1");
   assert(detail.status === 200, "agent detail should succeed");

@@ -101,8 +101,9 @@ const server = createServer(async (request, response) => {
       );
 
       if (!result) return sendJson(request, response, { error: "Agent not found" }, 404);
-      if (result.error) return sendJson(request, response, result, result.status || 400);
-      return sendJson(request, response, result);
+      const payload = await withSnapshotContext(result);
+      if (result.error) return sendJson(request, response, payload, result.status || 400);
+      return sendJson(request, response, payload);
     }
 
     if (url.pathname.startsWith("/api/")) {
@@ -127,6 +128,15 @@ process.on("SIGTERM", () => {
   scanner.stop();
   server.close(() => process.exit(0));
 });
+
+async function withSnapshotContext(payload) {
+  return {
+    ...payload,
+    providers: await registry.providers(),
+    config: await readPublicConfig(),
+    scanner: scanner.status()
+  };
+}
 
 async function serveStatic(pathname, response) {
   const relativePath = pathname === "/" ? "index.html" : pathname.slice(1);

@@ -121,7 +121,7 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
-- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Unknown action IDs return `400`; valid actions outside the target agent's `capabilities` return `409`.
+- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status. Unknown action IDs return `400`; valid actions outside the target agent's `capabilities` return `409`.
 
 Provider snapshots are reused for a short window so app refreshes and paired legacy calls to `/api/agents` plus `/api/providers` do not rescan every adapter twice. The default cache window is 1000 ms and can be changed with `AGENT_MONITOR_SCAN_CACHE_MS`.
 

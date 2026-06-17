@@ -179,12 +179,26 @@ export function createAgentClient() {
               tone: response.status >= 500 ? "error" : "warn",
               text: errorPayload?.error || `Action failed (${response.status})`
             };
-            emit(errorPayload?.agents || agents, errorPayload?.history || history, providers, config, message);
+            emit(
+              errorPayload?.agents || agents,
+              errorPayload?.history || history,
+              errorPayload?.providers || providers,
+              errorPayload?.config || config,
+              message,
+              errorPayload?.scanner || scanner
+            );
             return message;
           }
           const payload = await response.json();
           const message = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
-          emit(payload.agents, payload.history || history, providers, config, message);
+          emit(
+            payload.agents,
+            payload.history || history,
+            payload.providers || providers,
+            payload.config || config,
+            message,
+            payload.scanner || scanner
+          );
           return message;
         } catch {
           mode = "local";
