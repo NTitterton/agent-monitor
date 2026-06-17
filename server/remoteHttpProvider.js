@@ -16,6 +16,11 @@ export function createRemoteHttpProvider(config) {
       return normalizeAgents(payload.agents || [], config);
     },
     async performAction(agentId, actionId, prompt = "") {
+      if (actionId === "go-to") {
+        const payload = await request(config, "/agents", { method: "GET" });
+        return normalizeAgents(payload.agents || [], config).find((agent) => agent.id === agentId) || null;
+      }
+
       const payload = await request(config, `/agents/${encodeURIComponent(agentId)}/actions`, {
         method: "POST",
         body: JSON.stringify({ action: actionId, prompt })

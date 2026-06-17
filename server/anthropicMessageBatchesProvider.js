@@ -27,6 +27,13 @@ export function createAnthropicMessageBatchesProvider(config) {
       const batchConfig = (config.batches || []).find((item) => item.id === agentId);
       if (!batchConfig) return null;
 
+      if (actionId === "go-to") {
+        const batch = await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}`, {
+          method: "GET"
+        });
+        return normalizeBatch(batch, config, batchConfig);
+      }
+
       if (!cancelActions.includes(actionId)) return null;
 
       await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}/cancel`, {

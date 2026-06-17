@@ -89,6 +89,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Standalone widget avoids local fallback mutation when a reachable API rejects an action.
 - `Go To` action for macOS local process agents that activates likely Terminal/iTerm, browser, or editor surfaces.
 - URL-backed `Go To` targets for remote/account agents through `goToTarget` and `goToKind`.
+- Direct API `Go To` calls for URL-backed remote/account agents return current agent snapshots without mutation/cancel calls.
 - Explanatory disabled-action titles for unavailable lifecycle, unadvertised provider capability, and `Go To` controls across app and widgets.
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
 - Unified API `snapshotAt` timestamps surfaced in the browser topbar and embedded widget source summaries.

@@ -662,7 +662,10 @@ try {
 
 async function assertRemoteProviderNormalization() {
   const originalFetch = globalThis.fetch;
+  const fetchCalls = [];
   globalThis.fetch = async (url, options = {}) => {
+    fetchCalls.push({ url: String(url), method: options.method || "GET" });
+
     if (String(url).endsWith("/agents")) {
       return jsonResponse({
         agents: [
@@ -759,6 +762,11 @@ async function assertRemoteProviderNormalization() {
 
     const changedAgent = await provider.performAction("remote-normalized", "stop", "pause");
     assert(changedAgent.status === "waiting", "remote action response should normalize returned agent");
+    const mutationCallsBeforeGoTo = fetchCalls.filter((call) => call.url.endsWith("/agents/remote-normalized/actions")).length;
+    const goToAgent = await provider.performAction("remote-normalized", "go-to");
+    const mutationCallsAfterGoTo = fetchCalls.filter((call) => call.url.endsWith("/agents/remote-normalized/actions")).length;
+    assert(goToAgent.id === "remote-normalized", "remote go-to should return the current agent");
+    assert(mutationCallsAfterGoTo === mutationCallsBeforeGoTo, "remote go-to should not call the action endpoint");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -886,6 +894,8 @@ async function assertAccountProviderCapabilities() {
     assert(!openAIAgent.capabilities.includes("start"), "OpenAI response should not expose unsupported start action");
     const unsupportedOpenAIStart = await openAIProvider.performAction("mock-response", "start");
     assert(unsupportedOpenAIStart === null, "OpenAI response start should be unsupported");
+    const openAIGoTo = await openAIProvider.performAction("mock-response", "go-to");
+    assert(openAIGoTo.id === "mock-response", "OpenAI go-to should return the tracked response without cancellation");
 
     const anthropicProvider = createAnthropicMessageBatchesProvider({
       id: "mock-anthropic",
@@ -898,9 +908,15 @@ async function assertAccountProviderCapabilities() {
     assert(!anthropicAgent.capabilities.includes("start"), "Anthropic batch should not expose unsupported start action");
     const unsupportedAnthropicStart = await anthropicProvider.performAction("mock-batch", "start");
     assert(unsupportedAnthropicStart === null, "Anthropic batch start should be unsupported");
+    const anthropicGoTo = await anthropicProvider.performAction("mock-batch", "go-to");
+    assert(anthropicGoTo.id === "mock-batch", "Anthropic go-to should return the tracked batch without cancellation");
     assert(
       fetchCalls.every((call) => !call.url.includes("/cancel") || call.method === "POST"),
       "cancel endpoints should only be called through explicit cancel-style actions"
+    );
+    assert(
+      fetchCalls.every((call) => !call.url.includes("/cancel")),
+      "go-to and unsupported start should not call cancel endpoints"
     );
   } finally {
     globalThis.fetch = originalFetch;

@@ -28,6 +28,13 @@ export function createOpenAIResponsesProvider(config) {
       const responseConfig = (config.responses || []).find((item) => item.id === agentId);
       if (!responseConfig) return null;
 
+      if (actionId === "go-to") {
+        const response = await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}`, {
+          method: "GET"
+        });
+        return normalizeResponse(response, config, responseConfig);
+      }
+
       if (!cancelActions.includes(actionId)) return null;
 
       await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}/cancel`, {

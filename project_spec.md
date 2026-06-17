@@ -202,6 +202,8 @@ Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthro
 
 Reliability note: provider-backed actions that do not return an updated agent, or return an updated agent with a different ID than the action target, are treated as provider errors and are not recorded as successful lifecycle history.
 
+Surface-action note: URL-backed `go-to` is treated as a navigation surface action. Direct API `go-to` calls for remote HTTP, OpenAI Responses, and Anthropic Message Batches return the current tracked agent without calling provider mutation or cancel endpoints.
+
 API reliability note: malformed JSON request bodies return `400` with `Invalid JSON`, so clients and widgets can distinguish bad operator/client input from server failures.
 
 Provider failure note: provider action exceptions return `502` with refreshed agents, history, provider status, sanitized config, and scanner status. Local configured-agent `start` waits for the child-process spawn result; missing executables or other immediate spawn failures return a provider error and are not recorded as successful lifecycle history.
