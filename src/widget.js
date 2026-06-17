@@ -121,6 +121,7 @@ function renderWidgetAgent(agent, agents) {
           <strong>${escapeText(agent.name)}</strong>
           <p>${escapeText(agent.provider)} · ${formatRuntime(agent)}</p>
           <p>${escapeText(lineageSummary(agent, agents))}</p>
+          ${renderAgentContext(agent)}
         </div>
         <span class="${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
       </div>
@@ -144,6 +145,24 @@ function lineageSummary(agent, agents = []) {
       ? `${childCount} child${childCount === 1 ? "" : "ren"}: ${childNames.join(", ")}${childCount > childNames.length ? "..." : ""}`
       : "No children";
   return `${parent} · ${childSummary}`;
+}
+
+function renderAgentContext(agent) {
+  const context = agentContextLine(agent);
+  return context ? `<p>${escapeText(context)}</p>` : "";
+}
+
+function agentContextLine(agent) {
+  const repo = agent.repository && agent.branch ? `${agent.repository}@${agent.branch}` : agent.repository || agent.branch || "";
+  return [
+    agent.workspace,
+    repo,
+    agent.owner ? `owner ${agent.owner}` : "",
+    agent.queue ? `queue ${agent.queue}` : "",
+    agent.priority ? `priority ${agent.priority}` : ""
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function renderResourceLine(agent) {

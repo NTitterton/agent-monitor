@@ -396,6 +396,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
             <strong>${escapeHtml(agent.name)}</strong>
             <p>${escapeHtml(agent.provider)} · ${formatRuntime(agent)}</p>
             <p>${escapeHtml(lineageSummary(agent, this.agents))}</p>
+            ${renderAgentContext(agent)}
           </div>
           <span class="status ${tone(agent.status)}">${escapeHtml(agent.status)}</span>
         </div>
@@ -555,6 +556,24 @@ function formatResourceLine(agent) {
     parts.push(`${agent.tokenCountConfidence} tokens`);
   }
   return parts.join(" · ");
+}
+
+function renderAgentContext(agent) {
+  const context = agentContextLine(agent);
+  return context ? `<p>${escapeHtml(context)}</p>` : "";
+}
+
+function agentContextLine(agent) {
+  const repo = agent.repository && agent.branch ? `${agent.repository}@${agent.branch}` : agent.repository || agent.branch || "";
+  return [
+    agent.workspace,
+    repo,
+    agent.owner ? `owner ${agent.owner}` : "",
+    agent.queue ? `queue ${agent.queue}` : "",
+    agent.priority ? `priority ${agent.priority}` : ""
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 function renderLatestLog(agent) {
