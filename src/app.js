@@ -662,17 +662,18 @@ function renderDetailPanel(detail, providers = []) {
   return `
     <details class="detail-panel">
       <summary class="detail-heading">
-        <div>
+        <div class="detail-title">
           <p class="eyebrow">Selected Agent</p>
           <h2>${escapeText(agent.name)}</h2>
+          <p>${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))}</p>
         </div>
         <div class="detail-controls">
           <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
-          <div class="action-row detail-action-row">
-            ${agentActions.map((action) => renderAction(agent, action)).join("")}
-          </div>
         </div>
       </summary>
+      <div class="action-row detail-action-row">
+        ${agentActions.map((action) => renderAction(agent, action)).join("")}
+      </div>
       <div class="detail-grid">
         <article>
           <span>Task</span>

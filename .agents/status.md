@@ -48,6 +48,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Standalone widget supports custom token or bearer authorization headers.
 - Local settings API and app panel for trusted origins, the write-only embed API token, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches.
 - Compact one-screen browser layout with collapsible Settings, scrollable Sources, one-row desktop controls, denser rows/actions, dominant scrollable agent task list, and expandable selected-agent inspector.
+- Desktop browser layout now enforces a table-first main panel: the agent list keeps at least 60% of the task panel even when the selected-agent inspector is expanded, with denser filter/header controls and bounded detail content.
 - Smoke test harness.
 - Lineage view and selected-agent detail panel.
 - Named parent/child lineage summaries in embedded widgets.

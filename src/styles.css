@@ -49,15 +49,15 @@ button.danger {
   min-height: 0;
   height: 100vh;
   margin: 0 auto;
-  padding: 10px 0;
+  padding: 8px 0;
   display: flex;
   flex-direction: column;
 }
 
 .topbar {
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(220px, 340px) minmax(0, 1fr);
+  gap: 10px;
   align-items: center;
 }
 
@@ -78,7 +78,7 @@ p {
 
 h1 {
   margin-bottom: 0;
-  font-size: clamp(1.9rem, 2.5vw, 2.8rem);
+  font-size: clamp(1.7rem, 2.1vw, 2.35rem);
   line-height: 1;
 }
 
@@ -90,7 +90,7 @@ h2 {
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(8, minmax(92px, 1fr));
-  gap: 6px;
+  gap: 5px;
 }
 
 .summary-grid article,
@@ -101,8 +101,8 @@ h2 {
 }
 
 .summary-grid article {
-  min-height: 54px;
-  padding: 8px 10px;
+  min-height: 48px;
+  padding: 6px 9px;
 }
 
 .summary-grid span {
@@ -150,7 +150,7 @@ h2 {
   display: grid;
   grid-template-columns: 290px minmax(0, 1fr);
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 8px;
   min-height: 0;
   flex: 1;
 }
@@ -176,7 +176,7 @@ h2 {
 
 .sources-panel h2,
 .panel-heading {
-  padding: 10px 14px;
+  padding: 8px 14px;
 }
 
 .panel-heading {
@@ -187,14 +187,14 @@ h2 {
 
 .filter-bar {
   display: grid;
-  grid-template-columns: minmax(240px, 2fr) repeat(5, minmax(110px, 0.75fr));
+  grid-template-columns: minmax(220px, 1.4fr) repeat(5, minmax(96px, 0.72fr));
   gap: 6px;
-  padding: 0 14px 8px;
+  padding: 0 14px 7px;
 }
 
 .filter-bar label {
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .filter-bar span {
@@ -207,7 +207,7 @@ h2 {
 .filter-bar input,
 .filter-bar select {
   width: 100%;
-  min-height: 30px;
+  min-height: 28px;
   border: 1px solid #cbd2dd;
   border-radius: 6px;
   background: #ffffff;
@@ -508,16 +508,17 @@ h2 {
   display: grid;
   overflow: auto;
   min-height: 0;
-  flex: 1 1 78%;
+  flex: 1 1 auto;
+  min-height: 60%;
   border-top: 1px solid #e6e9ef;
 }
 
 .table-row {
   display: grid;
-  grid-template-columns: minmax(250px, 1.55fr) 104px minmax(210px, 1fr) 132px minmax(300px, 1.05fr);
-  gap: 12px;
-  min-width: 1000px;
-  padding: 8px 14px;
+  grid-template-columns: minmax(250px, 1.65fr) 96px minmax(210px, 1fr) 118px minmax(286px, 1fr);
+  gap: 10px;
+  min-width: 980px;
+  padding: 7px 14px;
   border-top: 1px solid #e6e9ef;
   align-items: center;
 }
@@ -531,9 +532,9 @@ h2 {
   top: 0;
   z-index: 1;
   background: #ffffff;
-  min-height: 34px;
-  padding-top: 7px;
-  padding-bottom: 7px;
+  min-height: 30px;
+  padding-top: 6px;
+  padding-bottom: 6px;
   color: #667085;
   font-size: 0.76rem;
   font-weight: 800;
@@ -613,31 +614,31 @@ h2 {
 .action-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .action-row button {
-  min-height: 30px;
-  padding: 5px 8px;
+  min-height: 28px;
+  padding: 4px 8px;
 }
 
 .detail-panel {
   border-top: 1px solid #e6e9ef;
   flex: 0 0 auto;
-  padding: 8px 14px;
-  max-height: 42%;
+  padding: 7px 14px;
+  max-height: 32%;
   overflow-y: auto;
 }
 
 .detail-panel[open] {
-  flex-basis: clamp(148px, 22%, 240px);
+  flex: 0 1 clamp(120px, 24%, 210px);
 }
 
 .detail-heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
   cursor: pointer;
   list-style: none;
 }
@@ -647,27 +648,41 @@ h2 {
 }
 
 .detail-heading .eyebrow {
-  margin-bottom: 3px;
+  margin-bottom: 2px;
+}
+
+.detail-title {
+  min-width: 0;
+}
+
+.detail-title h2,
+.detail-title p {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail-title p:not(.eyebrow) {
+  margin: 3px 0 0;
+  color: #667085;
+  font-size: 0.8rem;
 }
 
 .detail-controls {
   display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
-  max-width: none;
 }
 
 .detail-action-row {
+  margin-top: 7px;
   justify-content: flex-end;
 }
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(8, minmax(150px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 7px;
   margin-top: 8px;
 }
 
@@ -676,7 +691,7 @@ h2 {
   border: 1px solid #e6e9ef;
   border-radius: 6px;
   background: #fbfcfe;
-  padding: 9px;
+  padding: 8px;
 }
 
 .detail-grid span {
@@ -702,9 +717,9 @@ h2 {
 
 .detail-columns {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-top: 10px;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 7px;
+  margin-top: 7px;
 }
 
 .detail-columns h3 {

@@ -48,8 +48,10 @@ The browser app should behave like a one-screen operations console.
 - The agent list should be the primary scroll area when many agents exist, so Sources, filters, and selected-agent detail remain reachable.
 - On desktop, the agent list should dominate the main panel, roughly like Activity Monitor: target around 75-80% of main-panel vertical space for the process/task list, with detail and controls kept compact. Rich selected-agent detail should be available through a compact expandable inspector rather than taking persistent table space.
 - Search and filter controls should stay compact and avoid large empty horizontal gaps.
+- The Agent Tasks heading, refresh affordance, filter row, and sort control should not create mostly empty horizontal bands. They should be dense operational controls above the list.
+- The selected-agent inspector must not collapse the process/task list into a small strip. In the default desktop layout, the agent list should keep at least 60% of the main panel even when the inspector is expanded; inspector actions should wrap cleanly without stray whitespace or isolated buttons.
 
-Status: implemented as a compact viewport-height app shell with a denser one-row desktop summary, collapsible Settings disclosure in the Sources rail, scrollable Sources rail, one-row desktop filters, scrollable dominant agent table weighted at roughly 78% of the main panel, sticky task-table header, denser table rows/actions, and a collapsed-by-default selected-agent inspector that expands for detail cards/logs/transcript. Further visual refinement can continue, but the default desktop layout no longer requires the long settings form, full detail inspector, or agent list to push the entire page vertically.
+Status: implemented as a compact viewport-height app shell with a denser one-row desktop summary, collapsible Settings disclosure in the Sources rail, scrollable Sources rail, compact desktop filters, scrollable dominant agent table with a hard desktop minimum of 60% of the main panel, sticky task-table header, denser table rows/actions, and a collapsed-by-default selected-agent inspector that expands into a bounded detail area. Further visual refinement can continue, but the default desktop layout no longer requires the long settings form, full detail inspector, or agent list to push the entire page vertically.
 
 ### Agent Type
 

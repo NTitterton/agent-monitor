@@ -180,12 +180,13 @@ try {
   const stylesSource = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   assert(stylesSource.includes("height: 100vh"), "browser app shell should use one-screen viewport height");
   assert(stylesSource.includes("repeat(8, minmax(92px, 1fr))"), "browser app desktop summary should stay on one compact row");
-  assert(stylesSource.includes("repeat(5, minmax(110px, 0.75fr))"), "browser app desktop filters should keep sort on the primary filter row");
+  assert(stylesSource.includes("repeat(5, minmax(96px, 0.72fr))"), "browser app desktop filters should keep sort on a compact primary filter row");
   assert(stylesSource.includes(".settings-block:not([open])"), "collapsed settings should avoid occupying the Sources rail");
   assert(stylesSource.includes(".agent-table") && stylesSource.includes("overflow: auto"), "agent table should be the scrollable task list");
-  assert(stylesSource.includes("flex: 1 1 78%"), "agent table should dominate the main panel");
+  assert(stylesSource.includes("min-height: 60%"), "agent table should retain most of the main panel");
   assert(stylesSource.includes(".detail-panel[open]"), "selected-agent detail should expand only when opened");
-  assert(stylesSource.includes("min-height: 34px"), "task table header should stay compact");
+  assert(stylesSource.includes("max-height: 32%"), "selected-agent detail should stay bounded below the task list");
+  assert(stylesSource.includes("min-height: 30px"), "task table header should stay compact");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
