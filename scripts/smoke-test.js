@@ -67,6 +67,8 @@ try {
   assert(appSource.includes("actionDisabledReason"), "browser app should explain disabled action controls");
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
+  assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
+  assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
   assert(appSource.includes("this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history)"), "browser app selected detail should refresh from snapshots");
   const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
   assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");

@@ -112,9 +112,9 @@ class AgentMonitorApp extends HTMLElement {
             ${renderFilters(filters, sources, types, statuses)}
             ${renderActionMessage(this.actionMessage)}
             <div class="agent-table" role="table" aria-label="Agent task table">
-              ${renderAgentTable(filteredAgents, agents, this.selectedAgentId)}
+              ${renderAgentTable(filteredAgents, agents, this.providers || [], this.selectedAgentId)}
             </div>
-            ${renderDetailPanel(selectedDetail)}
+            ${renderDetailPanel(selectedDetail, this.providers || [])}
           </section>
         </section>
       </main>
@@ -523,7 +523,7 @@ function renderAnthropicProviderRow(provider, index, mode) {
   `;
 }
 
-function renderAgentTable(agents, allAgents, selectedAgentId) {
+function renderAgentTable(agents, allAgents, providers, selectedAgentId) {
   if (!agents.length) {
     return `
       <div class="table-row table-head" role="row">
@@ -545,21 +545,23 @@ function renderAgentTable(agents, allAgents, selectedAgentId) {
       <span>Lineage</span>
       <span>Actions</span>
     </div>
-    ${agents.map((agent) => renderAgentRow(agent, allAgents, selectedAgentId)).join("")}
+    ${agents.map((agent) => renderAgentRow(agent, allAgents, providers, selectedAgentId)).join("")}
   `;
 }
 
-function renderAgentRow(agent, agents, selectedAgentId) {
+function renderAgentRow(agent, agents, providers, selectedAgentId) {
   const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId)?.name || agent.parentId : "Root";
   const childCount = agent.children.length;
   const childNames = agent.children
     .map((childId) => agents.find((item) => item.id === childId)?.name || childId)
     .join(", ");
+  const provider = providerForAgent(agent, providers);
   return `
     <article class="table-row ${agent.id === selectedAgentId ? "selected" : ""}" role="row">
       <div class="agent-name">
         <button class="agent-link" type="button" data-select-agent="${escapeAttribute(agent.id)}">${escapeText(agent.name)}</button>
         <p>${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))} · ${escapeText(agent.task)}</p>
+        ${renderAgentHealthLine(agent, provider)}
         ${renderTaskProgress(agent)}
       </div>
       <div>
@@ -581,10 +583,11 @@ function renderAgentRow(agent, agents, selectedAgentId) {
   `;
 }
 
-function renderDetailPanel(detail) {
+function renderDetailPanel(detail, providers = []) {
   if (!detail?.agent) return "";
 
   const { agent, parent, children, history } = detail;
+  const provider = providerForAgent(agent, providers);
   return `
     <section class="detail-panel">
       <div class="detail-heading">
@@ -609,6 +612,11 @@ function renderDetailPanel(detail) {
           <span>Provider</span>
           <strong>${escapeText(agent.provider)}</strong>
           <p>${escapeText(labelize(agent.type || agent.providerId || "unknown"))} · ${escapeText(agent.providerId || agent.source || "unknown")}</p>
+        </article>
+        <article class="${provider?.status === "error" ? "detail-warning" : ""}">
+          <span>Provider Health</span>
+          <strong>${escapeText(provider ? labelize(provider.status) : "Unknown")}</strong>
+          <p>${escapeText(providerHealthLine(agent, provider))}</p>
         </article>
         <article>
           <span>Runtime</span>
@@ -681,6 +689,28 @@ function renderAgentTranscript(agent) {
       `
     )
     .join("");
+}
+
+function providerForAgent(agent, providers) {
+  return providers.find((provider) => provider.id === agent.providerId) || null;
+}
+
+function renderAgentHealthLine(agent, provider) {
+  const line = providerHealthLine(agent, provider);
+  if (!line) return "";
+  const status = provider?.status === "error" ? "warn" : "info";
+  return `<p class="health-line ${status}">${escapeText(line)}</p>`;
+}
+
+function providerHealthLine(agent, provider) {
+  const freshness = formatScanFreshness([{ scannedAt: agent.scannedAt || provider?.scannedAt }]);
+  if (provider?.status === "error") {
+    return `${provider.error || "Provider error"} · ${freshness}`;
+  }
+  if (provider) {
+    return `${labelize(provider.status)} · ${freshness}`;
+  }
+  return freshness;
 }
 
 function renderDetailHistory(record) {

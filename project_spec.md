@@ -139,6 +139,8 @@ Initial proposal:
 
 Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, source-list scan freshness display, a unified snapshot endpoint used by the app and standalone widget, a server-side background scanner that follows `snapshotRefresh`, and provider snapshot caching to avoid duplicate scans during refresh.
 
+Task-level health note: the browser task table and selected-agent inspector show provider health and scan freshness for each agent, so provider failures are visible directly beside affected work rather than only in the Sources panel.
+
 Acceptance criteria:
 
 - Settings expose snapshot refresh cadence.

@@ -83,6 +83,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - URL-backed `Go To` targets for remote/account agents through `goToTarget` and `goToKind`.
 - Explanatory disabled-action titles for unavailable lifecycle and `Go To` controls across app and widgets.
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
+- Per-agent provider health and scan freshness in the browser task table and selected-agent inspector.
 - Optional server-side background scanner driven by the snapshot refresh cadence, with status exposed in the app and `/api/scanner`.
 - Unified `/api/snapshot` refresh path for agents, history, provider status, and sanitized config in the app and standalone widget.
 - Short provider snapshot cache so paired app refresh requests do not rescan adapters twice.
