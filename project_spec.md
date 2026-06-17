@@ -229,6 +229,8 @@ Lineage normalization note: `parentId` and `children` are normalized as string I
 
 Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
 
+Standalone-widget normalization note: the standalone embed normalizes incoming API/fallback snapshots for numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering, preserving stable behavior when embedded on static personal sites.
+
 Spend note: module and standalone widgets include nonzero `costUsd` in the compact resource line so embedded views retain token/cost task-manager context.
 
 Cost note: normalized snapshots coerce `costUsd` to a number on persisted-state reads, API/client cloning, and UI summary totals so spend sorting and totals are stable even when providers report numeric strings.

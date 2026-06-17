@@ -234,7 +234,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
-    this.agents = fallbackAgents;
+    this.agents = normalizeWidgetAgents(fallbackAgents);
     this.providers = [];
     this.history = [];
     this.actionMessage = null;
@@ -256,7 +256,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
 
     try {
       const payload = await this.fetchSnapshot(apiBase);
-      this.agents = payload.agents || [];
+      this.agents = normalizeWidgetAgents(payload.agents || []);
       this.history = payload.history || [];
       this.providers = payload.providers || [];
       this.render();
@@ -301,7 +301,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       });
       if (!response.ok) {
         const payload = await readJsonResponse(response);
-        this.agents = payload?.agents || this.agents;
+        this.agents = payload?.agents ? normalizeWidgetAgents(payload.agents) : this.agents;
         this.history = payload?.history || this.history;
         this.providers = payload?.providers || this.providers;
         this.actionMessage = {
@@ -312,7 +312,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         return;
       }
       const payload = await response.json();
-      this.agents = payload.agents || this.agents;
+      this.agents = payload.agents ? normalizeWidgetAgents(payload.agents) : this.agents;
       this.history = payload.history || this.history;
       this.providers = payload.providers || this.providers;
       this.actionMessage = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
@@ -324,7 +324,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
 
   applyLocalAction(agentId, action, prompt) {
     const at = Date.now();
-    this.agents = this.agents.map((agent) => {
+    this.agents = normalizeWidgetAgents(this.agents.map((agent) => {
       if (agent.id !== agentId) return agent;
       return {
         ...agent,
@@ -342,7 +342,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           ...(Array.isArray(agent.logs) ? agent.logs : [])
         ].slice(0, 50)
       };
-    });
+    }));
     const agent = this.agents.find((item) => item.id === agentId);
     if (agent) {
       this.history = [
@@ -517,6 +517,114 @@ function statusRank(agent) {
 
 function priorityRank(agent) {
   return { urgent: 4, high: 3, medium: 2, normal: 1, low: 0 }[String(agent.priority || "").toLowerCase()] ?? -1;
+}
+
+function normalizeWidgetAgents(agents) {
+  if (!Array.isArray(agents)) return [];
+  return agents.map(normalizeWidgetAgent);
+}
+
+function normalizeWidgetAgent(agent) {
+  const tokens = finiteNumber(agent.tokens);
+  return {
+    ...agent,
+    type: agent.type || agent.providerId || agent.source || "unknown",
+    cpu: finiteNumber(agent.cpu),
+    memoryMb: finiteNumber(agent.memoryMb),
+    processCpu: finiteNumber(agent.processCpu),
+    processMemoryMb: finiteNumber(agent.processMemoryMb),
+    childCpu: finiteNumber(agent.childCpu),
+    childMemoryMb: finiteNumber(agent.childMemoryMb),
+    tokens,
+    tokensPerSecond: finiteNumber(agent.tokensPerSecond),
+    tokenRateWindowMs: finiteNumber(agent.tokenRateWindowMs),
+    tokenCountConfidence: normalizeTokenConfidence(agent.tokenCountConfidence, tokens ? "estimated" : "unknown"),
+    costUsd: finiteNumber(agent.costUsd),
+    startedAt: normalizeTimestamp(agent.startedAt),
+    endedAt: agent.endedAt ? normalizeTimestamp(agent.endedAt, null) : undefined,
+    progressPercent: normalizeProgress(agent.progressPercent),
+    parentId: normalizeOptionalString(agent.parentId),
+    children: normalizeStringList(agent.children),
+    pid: normalizeOptionalPid(agent.pid),
+    parentPid: normalizeOptionalPid(agent.parentPid),
+    childPids: normalizePidList(agent.childPids),
+    capabilities: normalizeCapabilities(agent.capabilities),
+    logs: normalizeLogs(agent.logs),
+    transcript: normalizeTranscript(agent.transcript)
+  };
+}
+
+function normalizeTokenConfidence(value, fallback = "unknown") {
+  return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function normalizeProgress(value) {
+  const progress = Number(value);
+  return Number.isFinite(progress) ? Math.min(Math.max(Math.round(progress), 0), 100) : null;
+}
+
+function normalizeOptionalString(value) {
+  const text = String(value ?? "").trim();
+  return text || null;
+}
+
+function normalizeStringList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function normalizeOptionalPid(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function normalizePidList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizeOptionalPid).filter((pid) => pid !== null);
+}
+
+function finiteNumber(value, fallback = 0) {
+  const number = Number(value ?? fallback);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function normalizeTimestamp(value, fallback = Date.now()) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) return numeric;
+  const parsed = Date.parse(String(value));
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function normalizeLogs(logs) {
+  if (!Array.isArray(logs)) return [];
+  return logs
+    .filter((log) => log && log.message)
+    .map((log) => ({
+      ...log,
+      at: normalizeTimestamp(log.at),
+      message: String(log.message)
+    }))
+    .slice(0, 50);
+}
+
+function normalizeTranscript(transcript) {
+  if (!Array.isArray(transcript)) return [];
+  return transcript
+    .filter((entry) => entry && (entry.content || entry.message || entry.text))
+    .map((entry) => ({
+      ...entry,
+      at: normalizeTimestamp(entry.at),
+      content: String(entry.content || entry.message || entry.text).trim()
+    }))
+    .slice(0, 100);
+}
+
+function normalizeCapabilities(capabilities) {
+  if (!Array.isArray(capabilities)) return [];
+  const knownActions = new Set(actions.map((action) => action.id));
+  return [...new Set(capabilities.map((capability) => String(capability).trim()).filter((capability) => knownActions.has(capability)))];
 }
 
 function historyAgentLine(record) {

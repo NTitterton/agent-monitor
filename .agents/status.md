@@ -79,6 +79,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Module widget action feedback for accepted and rejected lifecycle requests.
 - Module widget prompt cancellation for interrupt/end actions before dispatch.
 - Module widget escaping for provider-supplied text and action messages.
+- Standalone widget snapshot normalization for metrics, lineage, process IDs, capabilities, logs, and transcripts.
 - Standalone widget action feedback for accepted and rejected lifecycle requests.
 - Standalone widget prompt cancellation for interrupt/end actions before dispatch.
 - Standalone widget avoids local fallback mutation when a reachable API rejects an action.
