@@ -43,7 +43,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Desktop build verification now runs the compiled desktop binary in headless self-test mode and checks local `/api/health`.
 - Desktop app startup diagnostics with captured local server output.
 - Desktop app health probing and port fallback across local ports 5173-5183.
-- Desktop app zip packaging through `npm run desktop:package`.
+- Desktop app zip packaging through `npm run desktop:package`, with archive entry verification.
 - Trusted-origin CORS and optional API token.
 - Standalone widget supports custom token or bearer authorization headers.
 - Local settings API and app panel for trusted origins, the write-only embed API token, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches.

@@ -174,6 +174,9 @@ try {
     verifyDesktopSource.includes("AGENT_MONITOR_DESKTOP_PORT_RANGE"),
     "desktop verifier should isolate its local test port range"
   );
+  const packageDesktopSource = await readFile(new URL("./package-desktop.js", import.meta.url), "utf8");
+  assert(packageDesktopSource.includes("assertZipEntries"), "desktop package script should verify archive entries");
+  assert(packageDesktopSource.includes("Agent Monitor.app/Contents/MacOS/AgentMonitor"), "desktop package script should verify executable archive entry");
   const stylesSource = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   assert(stylesSource.includes("height: 100vh"), "browser app shell should use one-screen viewport height");
   assert(stylesSource.includes("repeat(8, minmax(92px, 1fr))"), "browser app desktop summary should stay on one compact row");

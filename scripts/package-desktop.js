@@ -30,11 +30,36 @@ if (!zipStat?.isFile() || zipStat.size === 0) {
   throw new Error(`Desktop package was not created: ${zipPath}`);
 }
 
+assertZipEntries(zipPath, [
+  "Agent Monitor.app/",
+  "Agent Monitor.app/Contents/Info.plist",
+  "Agent Monitor.app/Contents/MacOS/AgentMonitor",
+  "Agent Monitor.app/Contents/PkgInfo"
+]);
+
 console.log(`Packaged ${zipPath}`);
 
 async function assertDirectory(path) {
   const fileStat = await stat(path).catch(() => null);
   if (!fileStat?.isDirectory()) {
     throw new Error(`Missing desktop app bundle: ${path}. Run npm run desktop:build first.`);
+  }
+}
+
+function assertZipEntries(path, expectedEntries) {
+  const result = spawnSync("unzip", ["-Z1", path], {
+    encoding: "utf8",
+    stdio: "pipe"
+  });
+
+  if (result.status !== 0) {
+    throw new Error(result.stderr || result.stdout || `unzip exited with ${result.status}`);
+  }
+
+  const entries = new Set(result.stdout.split("\n").map((entry) => entry.trim()).filter(Boolean));
+  for (const expectedEntry of expectedEntries) {
+    if (!entries.has(expectedEntry)) {
+      throw new Error(`Desktop package missing ${expectedEntry}`);
+    }
   }
 }

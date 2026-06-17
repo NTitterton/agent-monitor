@@ -58,6 +58,7 @@ npm run desktop:package
 ```
 
 This writes `dist/Agent Monitor.zip`.
+The package step verifies that the zip contains the `.app` bundle, executable, plist, and PkgInfo entries.
 
 ## Embed on another site
 

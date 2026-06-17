@@ -268,7 +268,7 @@ Verification is currently handled by:
 - `npm run check`: JavaScript syntax checks across app, server, widgets, and scripts.
 - `npm run smoke`: starts an isolated local server with temporary config/state and verifies static routes, API auth, CORS, snapshot responses, lifecycle actions, action validation, local process start/force-end, provider normalization, per-agent detail, and persistence.
 - `npm run desktop:build`: compiles the macOS app wrapper, verifies bundle structure, and runs a compiled-binary local-server self-test.
-- `npm run desktop:package`: builds and zips the verified macOS app bundle.
+- `npm run desktop:package`: builds, zips, and verifies required entries in the macOS app archive.
 
 ## 13. Known Gaps
 
