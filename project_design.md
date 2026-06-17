@@ -232,7 +232,9 @@ Provider snapshots can either report token throughput directly or only report cu
 
 The OpenAI Responses provider observes configured response IDs from a user's OpenAI account. It retrieves each response, maps status/model/token usage/output transcript into the normalized agent shape, and routes terminating lifecycle actions to OpenAI's cancel response endpoint.
 
-This is an observer/control adapter for known response IDs, not a full account crawler. It avoids guessing at private account state that the API does not expose as an agent task list. Already-created Responses expose cancel-style capabilities but not `start`.
+Rows with `model` and `input` but no `responseId` are launchable placeholders. They render as waiting OpenAI agents with `start`; starting one creates a background Response, persists the returned response ID in config, and then tracks the created response through the normal retrieval path.
+
+This is an observer/control/launch adapter for configured rows, not a full account crawler. It avoids guessing at private account state that the API does not expose as an agent task list. Already-created Responses expose cancel-style capabilities but not `start`.
 
 ## 10. Anthropic Message Batches Provider
 

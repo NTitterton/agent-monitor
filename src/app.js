@@ -538,8 +538,8 @@ function renderOpenAIProviderRow(provider, index, mode) {
       <input data-openai-field="apiKey" type="password" value="" ${disabled} aria-label="OpenAI API key ${index + 1}" />
       <input data-openai-field="organization" value="${escapeAttribute(provider.organization || "")}" ${disabled} aria-label="OpenAI organization ${index + 1}" />
       <input data-openai-field="project" value="${escapeAttribute(provider.project || "")}" ${disabled} aria-label="OpenAI project ${index + 1}" />
-      <textarea data-openai-field="responses" rows="3" ${disabled} aria-label="OpenAI response list ${index + 1}">${escapeText(formatTrackedLines(provider.responses || [], "responseId"))}</textarea>
-      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · responses: id | name | responseId | task | goToUrl</span>
+      <textarea data-openai-field="responses" rows="3" ${disabled} aria-label="OpenAI response list ${index + 1}">${escapeText(formatOpenAIResponseLines(provider.responses || []))}</textarea>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · tracked: id | name | responseId | task | goToUrl · launch: id | name | model | input | goToUrl</span>
     </fieldset>
   `;
 }
@@ -1054,7 +1054,7 @@ function parseOpenAIProviders(form) {
         ...(fields.apiKey ? { apiKey: fields.apiKey } : {}),
         ...(fields.organization ? { organization: fields.organization } : {}),
         ...(fields.project ? { project: fields.project } : {}),
-        responses: parseTrackedLines(fields.responses, "responseId")
+        responses: parseOpenAIResponseLines(fields.responses)
       };
     })
     .filter((provider) => provider.id && provider.responses.length);
@@ -1100,6 +1100,32 @@ function parseTrackedLines(value, remoteIdKey) {
     .filter((item) => item.id && item[remoteIdKey]);
 }
 
+function parseOpenAIResponseLines(value) {
+  return parseLines(value)
+    .map((line) => {
+      const [id = "", name = "", third = "", fourth = "", goToTarget = ""] = line.split("|").map((part) => part.trim());
+      if (third.startsWith("resp_")) {
+        return {
+          id,
+          name,
+          responseId: third,
+          task: fourth,
+          ...(goToTarget ? { goToTarget, goToKind: "url" } : {})
+        };
+      }
+
+      return {
+        id,
+        name,
+        model: third,
+        input: fourth,
+        task: fourth || name || id,
+        ...(goToTarget ? { goToTarget, goToKind: "url" } : {})
+      };
+    })
+    .filter((item) => item.id && (item.responseId || (item.model && item.input)));
+}
+
 function formatTrackedLines(items, remoteIdKey) {
   return (Array.isArray(items) ? items : [])
     .map((item) => [
@@ -1107,6 +1133,18 @@ function formatTrackedLines(items, remoteIdKey) {
       item.name || "",
       item[remoteIdKey] || "",
       item.task || "",
+      item.goToTarget || ""
+    ].join(" | "))
+    .join("\n");
+}
+
+function formatOpenAIResponseLines(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => [
+      item.id || "",
+      item.name || "",
+      item.responseId || item.model || "",
+      item.responseId ? item.task || "" : item.input || item.task || "",
       item.goToTarget || ""
     ].join(" | "))
     .join("\n");

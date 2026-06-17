@@ -61,6 +61,35 @@ export async function updateConfig(patch) {
   return publicConfig(next, validateConfigPatch(patch));
 }
 
+export async function assignOpenAIResponseId(providerId, itemId, responseId) {
+  const config = await readConfig();
+  const providers = Array.isArray(config.openAIResponsesProviders) ? config.openAIResponsesProviders : [];
+  let updated = false;
+
+  const openAIResponsesProviders = providers.map((provider) => {
+    if (provider?.id !== providerId) return provider;
+
+    return {
+      ...provider,
+      responses: (Array.isArray(provider.responses) ? provider.responses : []).map((item) => {
+        if (item?.id !== itemId) return item;
+        updated = true;
+        return {
+          ...item,
+          responseId
+        };
+      })
+    };
+  });
+
+  if (!updated) return false;
+  await writeConfig({
+    ...config,
+    openAIResponsesProviders
+  });
+  return true;
+}
+
 async function writeConfig(config) {
   const target = configPath();
   await mkdir(dirname(target), { recursive: true });
@@ -122,7 +151,7 @@ function validateConfigPatch(patch) {
   if (Object.hasOwn(patch, "openAIResponsesProviders")) {
     validateRows(patch.openAIResponsesProviders, "openAIResponsesProviders", ["id"], warnings);
     for (const provider of Array.isArray(patch.openAIResponsesProviders) ? patch.openAIResponsesProviders : []) {
-      validateRows(provider?.responses, `openAIResponsesProviders ${provider?.id || "unknown"} responses`, ["id", "responseId"], warnings);
+      validateOpenAIResponseRows(provider?.responses, `openAIResponsesProviders ${provider?.id || "unknown"} responses`, warnings);
     }
   }
 
@@ -162,6 +191,34 @@ function validateRows(rows, label, requiredFields, warnings) {
   });
 }
 
+function validateOpenAIResponseRows(rows, label, warnings) {
+  if (!Array.isArray(rows)) {
+    warnings.push(`${label} should be a list.`);
+    return;
+  }
+
+  const seen = new Set();
+  rows.forEach((row, index) => {
+    if (!row || typeof row !== "object") {
+      warnings.push(`${label} row ${index + 1} should be an object.`);
+      return;
+    }
+
+    if (!String(row.id || "").trim()) {
+      warnings.push(`${label} row ${index + 1} missing id.`);
+    }
+
+    if (!String(row.responseId || "").trim() && !(String(row.model || "").trim() && String(row.input || "").trim())) {
+      warnings.push(`${label} row ${index + 1} missing responseId or model/input launch fields.`);
+    }
+
+    if (row.id) {
+      if (seen.has(row.id)) warnings.push(`${label} contains duplicate id ${row.id}.`);
+      seen.add(row.id);
+    }
+  });
+}
+
 function isHttpUrl(value) {
   try {
     const url = new URL(value);
@@ -183,7 +240,7 @@ function publicOpenAIResponsesProviders(providers) {
       hasApiKey: Boolean(provider.apiKey),
       organization: provider.organization || "",
       project: provider.project || "",
-      responses: normalizeTrackedItems(provider.responses, "responseId")
+      responses: normalizeOpenAITrackedResponses(provider.responses)
     }));
 }
 
@@ -302,7 +359,7 @@ function normalizeOpenAIResponsesProviders(value, fallback = []) {
         ...(provider.apiKey ? { apiKey: String(provider.apiKey) } : {}),
         ...(provider.organization ? { organization: String(provider.organization).trim() } : {}),
         ...(provider.project ? { project: String(provider.project).trim() } : {}),
-        responses: normalizeTrackedItems(provider.responses, "responseId")
+        responses: normalizeOpenAITrackedResponses(provider.responses)
       };
     });
 }
@@ -336,6 +393,34 @@ function normalizeTrackedItems(items, remoteIdKey) {
       id: String(item.id).trim(),
       name: String(item.name || item.id).trim(),
       [remoteIdKey]: String(item[remoteIdKey]).trim(),
+      task: String(item.task || item.name || item.id).trim(),
+      ...(item.parentId ? { parentId: String(item.parentId).trim() } : {}),
+      ...(item.goToTarget || item.dashboardUrl
+        ? { goToTarget: String(item.goToTarget || item.dashboardUrl).trim() }
+        : {}),
+      ...(item.goToKind ? { goToKind: String(item.goToKind).trim() } : {}),
+      ...(item.windowTitle ? { windowTitle: String(item.windowTitle).trim() } : {}),
+      ...(Array.isArray(item.children) ? { children: normalizeStringList(item.children) } : {})
+    }));
+}
+
+function normalizeOpenAITrackedResponses(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .filter((item) => {
+      if (!item || !item.id) return false;
+      const responseId = String(item.responseId || "").trim();
+      const model = String(item.model || "").trim();
+      const input = String(item.input || "").trim();
+      return responseId || (model && input);
+    })
+    .map((item) => ({
+      id: String(item.id).trim(),
+      name: String(item.name || item.id).trim(),
+      ...(item.responseId ? { responseId: String(item.responseId).trim() } : {}),
+      ...(item.model ? { model: String(item.model).trim() } : {}),
+      ...(item.input ? { input: String(item.input).trim() } : {}),
       task: String(item.task || item.name || item.id).trim(),
       ...(item.parentId ? { parentId: String(item.parentId).trim() } : {}),
       ...(item.goToTarget || item.dashboardUrl

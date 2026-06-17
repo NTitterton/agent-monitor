@@ -107,6 +107,8 @@ try {
   assert(appSource.includes("formatTokenTotal(tokens)"), "browser app summary should format aggregate tokens");
   assert(appSource.includes("<p>Tok/sec</p>"), "browser app summary should render aggregate token throughput");
   assert(appSource.includes("formatTokenRate({ tokensPerSecond: tokenRate })"), "browser app summary should format aggregate token throughput");
+  assert(appSource.includes("parseOpenAIResponseLines"), "app settings should parse OpenAI launchable response rows");
+  assert(appSource.includes("formatOpenAIResponseLines"), "app settings should format OpenAI launchable response rows");
   assert(appSource.includes("summary-warning"), "browser app summary should highlight provider issues");
   assert(appSource.includes("detail-action-row"), "browser app detail panel should render lifecycle controls");
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
@@ -460,7 +462,7 @@ try {
     "invalid remote URL should produce a warning"
   );
   assert(
-    invalidConfig.body.config.validationWarnings.some((warning) => warning.includes("responseId")),
+    invalidConfig.body.config.validationWarnings.some((warning) => warning.includes("responseId or model/input")),
     "invalid response row should produce a warning"
   );
 
@@ -1036,6 +1038,32 @@ async function assertAccountProviderCapabilities() {
       });
     }
 
+    if (String(url).endsWith("/responses") && options.method === "POST") {
+      const body = JSON.parse(options.body || "{}");
+      assert(body.model === "gpt-smoke", "OpenAI start should create a response with the configured model");
+      assert(body.input === "launch prompt", "OpenAI start should send the operator prompt as response input");
+      assert(body.background === true, "OpenAI start should request background execution by default");
+      return jsonResponse({
+        id: "resp_created",
+        status: "queued",
+        model: body.model,
+        created_at: Math.floor(Date.now() / 1000),
+        usage: { input_tokens: 0, output_tokens: 0 },
+        output: []
+      });
+    }
+
+    if (String(url).includes("/responses/resp_created")) {
+      return jsonResponse({
+        id: "resp_created",
+        status: "queued",
+        model: "gpt-smoke",
+        created_at: Math.floor(Date.now() / 1000),
+        usage: { input_tokens: 0, output_tokens: 0 },
+        output: []
+      });
+    }
+
     if (String(url).includes("/messages/batches/msgbatch_smoke")) {
       return jsonResponse({
         id: "msgbatch_smoke",
@@ -1062,6 +1090,19 @@ async function assertAccountProviderCapabilities() {
     assert(unsupportedOpenAIStart === null, "OpenAI response start should be unsupported");
     const openAIGoTo = await openAIProvider.performAction("mock-response", "go-to");
     assert(openAIGoTo.id === "mock-response", "OpenAI go-to should return the tracked response without cancellation");
+
+    const launchableOpenAIProvider = createOpenAIResponsesProvider({
+      id: "mock-openai-launch",
+      apiKey: "test",
+      responses: [{ id: "mock-launch", name: "Mock Launch", model: "gpt-smoke", input: "configured input" }]
+    });
+    const [launchableAgent] = await launchableOpenAIProvider.listAgents();
+    assert(launchableAgent.status === "waiting", "OpenAI launchable response should render as waiting before start");
+    assert(launchableAgent.capabilities.includes("start"), "OpenAI launchable response should expose start");
+    assert(!launchableAgent.capabilities.includes("stop"), "OpenAI launchable response should not expose cancel before creation");
+    const startedOpenAI = await launchableOpenAIProvider.performAction("mock-launch", "start", "launch prompt");
+    assert(startedOpenAI.id === "mock-launch", "OpenAI start should return the configured launchable agent");
+    assert(startedOpenAI.remoteId === "resp_created", "OpenAI start should track the created response id");
 
     const anthropicProvider = createAnthropicMessageBatchesProvider({
       id: "mock-anthropic",

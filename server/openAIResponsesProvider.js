@@ -1,4 +1,4 @@
-import { readConfig } from "./config.js";
+import { assignOpenAIResponseId, readConfig } from "./config.js";
 
 const baseUrl = "https://api.openai.com/v1";
 const cancelActions = ["stop", "interrupt", "end", "force-end"];
@@ -15,6 +15,7 @@ export function createOpenAIResponsesProvider(config) {
       const responseConfigs = config.responses || [];
       const responses = await Promise.all(
         responseConfigs.map(async (responseConfig) => {
+          if (!responseConfig.responseId) return normalizeLaunchableResponse(config, responseConfig);
           const response = await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}`, {
             method: "GET"
           });
@@ -29,13 +30,27 @@ export function createOpenAIResponsesProvider(config) {
       if (!responseConfig) return null;
 
       if (actionId === "go-to") {
+        if (!responseConfig.responseId) return normalizeLaunchableResponse(config, responseConfig);
         const response = await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}`, {
           method: "GET"
         });
         return normalizeResponse(response, config, responseConfig);
       }
 
+      if (actionId === "start" && !responseConfig.responseId) {
+        const response = await request(config, "/responses", {
+          method: "POST",
+          body: JSON.stringify(buildCreateResponseBody(responseConfig, prompt))
+        });
+        await assignOpenAIResponseId(config.id, responseConfig.id, response.id);
+        return normalizeResponse(response, config, {
+          ...responseConfig,
+          responseId: response.id
+        });
+      }
+
       if (!cancelActions.includes(actionId)) return null;
+      if (!responseConfig.responseId) return null;
 
       await request(config, `/responses/${encodeURIComponent(responseConfig.responseId)}/cancel`, {
         method: "POST"
@@ -145,6 +160,53 @@ function normalizeResponse(response, providerConfig, responseConfig) {
   };
 }
 
+function normalizeLaunchableResponse(providerConfig, responseConfig) {
+  const at = Date.now();
+  const goToTarget = responseConfig.goToTarget || responseConfig.dashboardUrl || "";
+  return {
+    id: responseConfig.id,
+    name: responseConfig.name || responseConfig.id,
+    provider: providerConfig.label || "OpenAI Responses",
+    providerId: providerConfig.id,
+    type: "openai",
+    source: "user-account",
+    status: "waiting",
+    parentId: responseConfig.parentId || null,
+    task: responseConfig.task || responseConfig.input || "OpenAI response",
+    cpu: 0,
+    memoryMb: 0,
+    tokens: 0,
+    tokensPerSecond: 0,
+    tokenRateWindowMs: 0,
+    tokenCountConfidence: "unknown",
+    costUsd: 0,
+    startedAt: at,
+    children: responseConfig.children || [],
+    transcript: [],
+    logs: [
+      {
+        at,
+        level: "info",
+        source: "openai",
+        message: `Ready to start a new OpenAI response${responseConfig.model ? ` on ${responseConfig.model}` : ""}.`
+      }
+    ],
+    goToTarget,
+    goToKind: goToTarget ? "url" : "unknown",
+    windowTitle: responseConfig.windowTitle || "",
+    model: responseConfig.model || "",
+    capabilities: normalizeCapabilities(goToTarget, { launchable: true })
+  };
+}
+
+function buildCreateResponseBody(responseConfig, prompt = "") {
+  return {
+    model: responseConfig.model,
+    input: prompt.trim() || responseConfig.input,
+    background: responseConfig.background !== false
+  };
+}
+
 function normalizeResponseTranscript(response, fallbackAt) {
   const output = Array.isArray(response.output) ? response.output : [];
   return output
@@ -165,8 +227,8 @@ function extractTextParts(item) {
     .filter(Boolean);
 }
 
-function normalizeCapabilities(goToTarget) {
-  const values = [...cancelActions];
+function normalizeCapabilities(goToTarget, options = {}) {
+  const values = options.launchable ? ["start"] : [...cancelActions];
   return goToTarget ? [...values, "go-to"] : values;
 }
 

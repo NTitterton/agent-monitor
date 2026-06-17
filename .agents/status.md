@@ -32,7 +32,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Active local agent process discovery for known agent CLIs.
 - Local process PPID/child PID metadata and monitored-agent lineage linking.
 - Remote HTTP provider contract and health reporting.
-- OpenAI Responses provider for configured response IDs.
+- OpenAI Responses provider for configured response IDs and launchable model/input rows.
 - Anthropic Message Batches provider for configured batch IDs.
 - Standalone embeddable widget.
 - Desktop app bundle verification through `npm run desktop:build`.
@@ -118,6 +118,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Provider connection test endpoint and Sources-panel test buttons.
 - Provider connection test responses with refreshed snapshot context applied by the browser client.
 - Provider-specific action capabilities so OpenAI/Anthropic tracked objects do not expose unsupported `start` actions.
+- Launchable OpenAI Response rows expose `Start`, create a background Response, and persist the returned response ID for subsequent tracking.
 - Remote HTTP agents without advertised lifecycle capabilities are view-only except for URL-backed `Go To`.
 - Capability normalization to known unique action IDs across provider, registry, state, and client snapshots.
 - Non-blocking setup validation warnings from `/api/config` and Settings panel display.

@@ -286,9 +286,9 @@ Agent Monitor can observe configured OpenAI Responses by ID:
 }
 ```
 
-The adapter uses OpenAI's Responses API retrieve and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response. Already-created Responses do not expose a provider-backed `start` action.
+The adapter uses OpenAI's Responses API create, retrieve, and cancel endpoints. It maps response status, model, token usage, and creation time into Agent Monitor's task-manager view. Lifecycle actions that terminate work call the cancel endpoint for the configured response. Already-created Responses do not expose a provider-backed `start` action.
 
-OpenAI Responses setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked response rows accept `id | name | responseId | task | goToUrl`; the URL is optional.
+OpenAI Responses setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked response rows accept `id | name | responseId | task | goToUrl`; the URL is optional. Launchable response rows accept `id | name | model | input | goToUrl`; before launch they appear as waiting agents with only `Start` plus optional `Go To`, and `Start` creates a background Response, stores the returned response ID in config, and then tracks it like any other configured Response.
 
 ## Track Anthropic Message Batches
 
@@ -353,8 +353,9 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Optionally monitor configured local processes with PID, PPID, descendant child PIDs, aggregate/own/child CPU and memory, and process-tree signals.
 - Actively discover known local agent CLI processes.
 - Observe configured OpenAI Responses by response ID.
+- Start launchable configured OpenAI Responses from model/input rows and persist the created response ID.
 - Observe configured Anthropic Message Batches by batch ID.
 
 ## Next backend milestones
 
-1. Add real provider-specific start/resume creation flows where APIs expose them.
+1. Add broader provider-specific start/resume creation flows where APIs expose them.
