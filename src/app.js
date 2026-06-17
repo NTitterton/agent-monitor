@@ -615,7 +615,7 @@ function renderAgentRow(agent, agents, providers, selectedAgentId) {
 function renderDetailPanel(detail, providers = []) {
   if (!detail?.agent) return "";
 
-  const { agent, parent, children, history } = detail;
+  const { agent, history, lineage } = detail;
   const provider = providerForAgent(agent, providers);
   return `
     <section class="detail-panel">
@@ -671,8 +671,8 @@ function renderDetailPanel(detail, providers = []) {
       <div class="detail-columns">
         <article>
           <h3>Lineage</h3>
-          <p><strong>Parent:</strong> ${escapeText(parent?.name || "Root")}</p>
-          <p><strong>Children:</strong> ${children.length ? escapeText(children.map((child) => child.name).join(", ")) : "None"}</p>
+          <p><strong>Parent:</strong> ${escapeText(lineage.parentLabel)}</p>
+          <p><strong>Children:</strong> ${escapeText(lineage.childrenLabel)}</p>
         </article>
         <article>
           <h3>Recent Actions</h3>
@@ -760,12 +760,20 @@ function buildDetail(agentId, agents, history) {
   const agent = agents.find((item) => item.id === agentId);
   if (!agent) return null;
 
+  const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId) || null : null;
+  const children = agent.children
+    .map((childId) => agents.find((item) => item.id === childId))
+    .filter(Boolean);
+  const childLabels = agent.children.map((childId) => agents.find((item) => item.id === childId)?.name || childId);
+
   return {
     agent,
-    parent: agent.parentId ? agents.find((item) => item.id === agent.parentId) || null : null,
-    children: agent.children
-      .map((childId) => agents.find((item) => item.id === childId))
-      .filter(Boolean),
+    parent,
+    children,
+    lineage: {
+      parentLabel: parent?.name || agent.parentId || "Root",
+      childrenLabel: childLabels.length ? childLabels.join(", ") : "None"
+    },
     history: history.filter((record) => record.agentId === agentId)
   };
 }

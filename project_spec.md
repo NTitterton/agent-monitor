@@ -237,7 +237,7 @@ Detail freshness note: the browser app rebuilds the selected-agent detail from e
 
 Stale-detail note: `GET /api/agents/:id` returns `404` with refreshed agents, history, provider status, sanitized config, and scanner status when the requested agent no longer exists. The browser client applies that payload so manual detail refreshes reconcile against current provider state instead of retaining a stale selection.
 
-Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
+Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs when the related agent is absent. The selected-agent inspector preserves unresolved parent and child IDs instead of dropping those relationships.
 
 Lineage normalization note: `parentId` and `children` are normalized as string IDs at provider, registry, persisted-state, and client snapshot boundaries so cross-provider lineage joins are stable even when a provider reports numeric IDs.
 

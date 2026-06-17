@@ -335,6 +335,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Show owner/workspace/repository/branch/queue/priority context for remote agents when providers report it.
 - Record action history with provider, source, type, and action-kind metadata.
 - Show named parent/child lineage in the browser app and embedded widgets.
+- Preserve unresolved parent/child lineage IDs in the selected-agent inspector when related agents are absent from the current snapshot.
 - Show compact provider/source health in embedded widgets.
 - Order embedded widget cards by task pressure so active/high-priority/high-CPU agents surface first.
 - Derive status filters from provider snapshots so provider-specific states remain filterable.

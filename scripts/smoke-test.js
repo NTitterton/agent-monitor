@@ -97,6 +97,8 @@ try {
   assert(appSource.includes("did not advertise"), "browser app should explain unadvertised provider capabilities");
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
+  assert(appSource.includes("childrenLabel"), "browser app detail panel should preserve unresolved child lineage IDs");
+  assert(appSource.includes("parentLabel"), "browser app detail panel should preserve unresolved parent lineage IDs");
   assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
   assert(appSource.includes("Provider Issues"), "browser app summary should render provider issue count");
   assert(appSource.includes("summary-warning"), "browser app summary should highlight provider issues");
