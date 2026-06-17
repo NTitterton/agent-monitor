@@ -572,6 +572,11 @@ function renderDetailPanel(detail) {
       </div>
       <div class="detail-grid">
         <article>
+          <span>Task</span>
+          <strong>${escapeText(agent.task || "Untitled task")}</strong>
+          <p>${escapeText(taskProgressLine(agent) || "No progress reported")}</p>
+        </article>
+        <article>
           <span>Provider</span>
           <strong>${escapeText(agent.provider)}</strong>
           <p>${escapeText(labelize(agent.type || agent.providerId || "unknown"))} · ${escapeText(agent.providerId || agent.source || "unknown")}</p>

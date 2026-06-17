@@ -204,7 +204,7 @@ Status: implemented for the local process provider and rendered in the app, modu
 
 Remote provider note: the HTTP adapter preserves provider-reported process-resource breakdown fields so remote/cloud agents can use the same UI model when those metrics are available.
 
-Progress note: remote providers may report `currentStep` and `progressPercent`; normalized snapshots preserve them and app/widget resource lines display them.
+Progress note: remote providers may report `currentStep` and `progressPercent`; normalized snapshots preserve them, app/widget resource lines display them, and the selected-agent inspector has a task card for task/progress details.
 
 Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
 
