@@ -326,6 +326,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Show per-agent provider health and scan freshness in the task table and selected-agent inspector.
 - Keep last-known provider agents visible during transient provider scan failures while surfacing provider errors.
 - Sort visible tasks by newest, CPU, memory, spend, tokens, runtime, priority, and status.
+- Search visible tasks by task, current step, provider, source/type, owner, workspace, repository, branch, queue, priority, and local/window target context.
 - Show task progress percentage and current step when providers report them.
 - Show task and progress details in the selected-agent inspector.
 - Refresh selected-agent details from each snapshot so lifecycle actions and polling keep the inspector current.

@@ -224,7 +224,7 @@ function renderFilters(filters, sources, types, statuses) {
     <form class="filter-bar" aria-label="Agent filters">
       <label>
         <span>Search</span>
-        <input data-filter="query" type="search" value="${escapeAttribute(filters.query)}" placeholder="Name, task, provider" />
+        <input data-filter="query" type="search" value="${escapeAttribute(filters.query)}" placeholder="Name, task, provider, repo, queue" />
       </label>
       <label>
         <span>Status</span>
@@ -861,14 +861,33 @@ function filterAgents(agents, filters) {
   return agents.filter((agent) => {
     const matchesQuery =
       !query ||
-      [agent.name, agent.provider, agent.task, agent.id, agent.providerId, agent.source, agent.type]
-        .filter(Boolean)
-        .some((value) => String(value).toLowerCase().includes(query));
+      searchableAgentFields(agent).some((value) => String(value).toLowerCase().includes(query));
     const matchesStatus = filters.status === "all" || agent.status === filters.status;
     const matchesSource = filters.source === "all" || agent.source === filters.source;
     const matchesType = filters.type === "all" || (agent.type || agent.providerId || agent.source) === filters.type;
     return matchesQuery && matchesStatus && matchesSource && matchesType;
   }).sort((a, b) => compareAgents(a, b, filters.sort || "started-desc"));
+}
+
+function searchableAgentFields(agent) {
+  return [
+    agent.name,
+    agent.provider,
+    agent.task,
+    agent.currentStep,
+    agent.owner,
+    agent.workspace,
+    agent.repository,
+    agent.branch,
+    agent.queue,
+    agent.priority,
+    agent.id,
+    agent.providerId,
+    agent.source,
+    agent.type,
+    agent.windowTitle,
+    agent.goToTarget
+  ].filter(Boolean);
 }
 
 function compareAgents(a, b, sort) {

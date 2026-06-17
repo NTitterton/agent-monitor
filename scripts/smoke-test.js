@@ -73,6 +73,9 @@ try {
   assert(appSource.includes("actionKindLabel"), "browser app should label lifecycle versus surface history");
   assert(appSource.includes("return \"Unknown\""), "browser app should guard invalid timestamps");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
+  assert(appSource.includes("searchableAgentFields"), "browser app should search task-manager context fields");
+  assert(appSource.includes("agent.repository"), "browser app search should include remote repository context");
+  assert(appSource.includes("agent.queue"), "browser app search should include queue context");
   assert(appSource.includes("compareAgents"), "browser app should support task-table sorting");
   assert(appSource.includes("priority-desc"), "browser app should sort by task priority");
   assert(appSource.includes("Status Pressure"), "browser app should present operational status sorting");
