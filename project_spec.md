@@ -215,7 +215,7 @@ Context note: remote providers may report `owner`, `workspace`, `repository`, `b
 
 Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
 
-Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app.
+Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
 
 Spend note: module and standalone widgets include nonzero `costUsd` in the compact resource line so embedded views retain token/cost task-manager context.
 

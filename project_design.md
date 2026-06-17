@@ -251,6 +251,8 @@ Same-origin local app requests continue working without embedding secrets in `in
 
 The standalone widget prefers `/api/snapshot`, falls back to the legacy `/api/agents` shape for older local servers, and uses local in-memory fallback only when no API base is configured or the network request fails. If a reachable API rejects an action, the widget leaves its state unchanged.
 
+Both widget implementations preserve the full snapshot for lineage lookups while rendering cards in task-pressure order: active status, provider-reported priority, CPU usage, newest start time, then name.
+
 ## 12. Verification
 
 Verification is currently handled by:

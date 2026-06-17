@@ -37,6 +37,7 @@ class AgentMonitorWidget extends HTMLElement {
 
   render() {
     const agents = this.agents || [];
+    const visibleAgents = sortWidgetAgents(agents);
     const running = agents.filter((agent) => agent.status === "running").length;
 
     this.shadowRoot.innerHTML = `
@@ -51,7 +52,7 @@ class AgentMonitorWidget extends HTMLElement {
         </header>
         ${renderProviderSummary(this.providers || [], agents)}
         <div class="list">
-          ${agents.map((agent) => renderWidgetAgent(agent, agents)).join("")}
+          ${visibleAgents.map((agent) => renderWidgetAgent(agent, agents)).join("")}
         </div>
         ${renderActionMessage(this.actionMessage)}
         ${renderWidgetHistory(this.history || [])}
@@ -111,6 +112,28 @@ function renderProviderSummary(providers, agents) {
       ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeText(issueText)}
     </p>
   `;
+}
+
+function sortWidgetAgents(agents) {
+  return [...agents].sort(compareWidgetAgents);
+}
+
+function compareWidgetAgents(a, b) {
+  return (
+    statusRank(b) - statusRank(a) ||
+    priorityRank(b) - priorityRank(a) ||
+    Number(b.cpu || 0) - Number(a.cpu || 0) ||
+    Number(b.startedAt || 0) - Number(a.startedAt || 0) ||
+    String(a.name || "").localeCompare(String(b.name || ""))
+  );
+}
+
+function statusRank(agent) {
+  return { running: 4, waiting: 3, paused: 2, ended: 1 }[String(agent.status || "").toLowerCase()] || 0;
+}
+
+function priorityRank(agent) {
+  return { urgent: 4, high: 3, medium: 2, normal: 1, low: 0 }[String(agent.priority || "").toLowerCase()] ?? -1;
 }
 
 function renderWidgetAgent(agent, agents) {

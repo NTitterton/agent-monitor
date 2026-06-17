@@ -42,6 +42,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Lineage view and selected-agent detail panel.
 - Named parent/child lineage summaries in embedded widgets.
 - Compact provider/source health summaries in embedded widgets.
+- Embedded widget task-pressure ordering by status, priority, CPU, start time, and name.
 - Search/status/source filters for the agent table.
 - Agent table sorting by newest, CPU, memory, spend, tokens, runtime, priority, and status.
 - Snapshot-derived status filter options for provider-specific states.

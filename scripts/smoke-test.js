@@ -73,11 +73,13 @@ try {
   assert(moduleWidgetSource.includes("renderProviderSummary"), "module widget should render provider/source health");
   assert(moduleWidgetSource.includes("agentContextLine"), "module widget should render remote agent context");
   assert(moduleWidgetSource.includes("formatSpend(agent.costUsd)"), "module widget should render agent spend");
+  assert(moduleWidgetSource.includes("sortWidgetAgents"), "module widget should order agents by task pressure");
   assert(standaloneWidgetSource.includes("actionDisabledReason"), "standalone widget should explain disabled action controls");
   assert(standaloneWidgetSource.includes("lineageSummary(agent, this.agents)"), "standalone widget should resolve lineage names from the snapshot");
   assert(standaloneWidgetSource.includes("renderProviderSummary"), "standalone widget should render provider/source health");
   assert(standaloneWidgetSource.includes("agentContextLine"), "standalone widget should render remote agent context");
   assert(standaloneWidgetSource.includes("formatSpend(agent.costUsd)"), "standalone widget should render agent spend");
+  assert(standaloneWidgetSource.includes("sortWidgetAgents"), "standalone widget should order agents by task pressure");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");
