@@ -54,6 +54,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Numeric `costUsd` normalization for persisted state, client snapshots, UI totals, and smoke coverage.
 - Optional `currentStep` and `progressPercent` task-progress metadata in normalized snapshots, app, widgets, and remote provider docs.
 - Selected-agent task card with task, current step, and progress details.
+- Selected-agent detail refresh from each snapshot so action and polling updates stay current.
 - Optional owner/workspace/repository/branch/queue/priority remote-agent context in normalized snapshots, selected-agent details, and embedded widgets.
 - Local process aggregate resource accounting across matched processes and descendant child processes.
 - Remote HTTP provider preserves reported own/child process-resource breakdown fields.

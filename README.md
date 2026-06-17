@@ -313,6 +313,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Sort visible tasks by newest, CPU, memory, spend, tokens, runtime, priority, and status.
 - Show task progress percentage and current step when providers report them.
 - Show task and progress details in the selected-agent inspector.
+- Refresh selected-agent details from each snapshot so lifecycle actions and polling keep the inspector current.
 - Show owner/workspace/repository/branch/queue/priority context for remote agents when providers report it.
 - Record lifecycle history with provider, source, and type metadata.
 - Show named parent/child lineage in the browser app and embedded widgets.

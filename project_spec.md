@@ -215,6 +215,8 @@ Progress note: remote providers may report `currentStep` and `progressPercent`; 
 
 Context note: remote providers may report `owner`, `workspace`, `repository`, `branch`, `queue`, and `priority`; the HTTP adapter preserves them, the selected-agent inspector shows them in a context card, and embedded widgets show a compact context line on each agent card.
 
+Detail freshness note: the browser app rebuilds the selected-agent detail from each refreshed snapshot so action results and polling updates do not leave the inspector showing stale status, history, lineage, or metrics.
+
 Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
 
 Lineage normalization note: `parentId` and `children` are normalized as string IDs at provider, registry, persisted-state, and client snapshot boundaries so cross-provider lineage joins are stable even when a provider reports numeric IDs.

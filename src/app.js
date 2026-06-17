@@ -19,7 +19,10 @@ class AgentMonitorApp extends HTMLElement {
       this.scanner = snapshot.scanner;
       this.actionMessage = snapshot.actionMessage;
       this.mode = snapshot.mode;
-      this.selectedAgentId = this.selectedAgentId || snapshot.agents[0]?.id || null;
+      this.selectedAgentId = snapshot.agents.some((agent) => agent.id === this.selectedAgentId)
+        ? this.selectedAgentId
+        : snapshot.agents[0]?.id || null;
+      this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history);
       this.configurePolling(snapshot.config, snapshot.mode);
       this.render();
     });
