@@ -63,6 +63,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Server-side capability enforcement for unsupported direct action requests.
 - Server-side validation for unknown action IDs.
 - Server-side rejection for provider actions that do not return an updated agent.
+- Server-side rejection for provider actions that confirm a different agent ID.
 - Unified lifecycle action responses with refreshed agents, history, provider status, sanitized config, and scanner status.
 - Browser app action feedback for accepted and rejected lifecycle requests.
 - Browser app prompt cancellation for interrupt/end actions before dispatch.

@@ -186,7 +186,7 @@ Agent-level capabilities should describe actions the active provider can truly p
 - Capability arrays should only contain known Agent Monitor action IDs and should not contain duplicates.
 - The API should reject unknown action IDs before dispatching to providers.
 - The API should reject direct action requests that are not listed in an agent's advertised `capabilities`.
-- The API should reject provider action responses that do not confirm the updated agent.
+- The API should reject provider action responses that do not confirm the updated target agent.
 - The browser app should surface accepted and rejected action results to the operator.
 - Widgets should surface action results and should not apply local fallback mutations when a reachable API rejects an action.
 - Prompt-based lifecycle actions should not dispatch if the operator cancels the prompt dialog.
@@ -194,7 +194,7 @@ Agent-level capabilities should describe actions the active provider can truly p
 
 Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status so app/widget provider-health context stays current. The browser app, module widget, and standalone widget render action feedback messages and explanatory disabled-action titles; prompt cancellation prevents prompt-based actions from dispatching. Snapshot boundaries filter capabilities to known unique action IDs.
 
-Reliability note: provider-backed actions that do not return an updated agent are treated as provider errors and are not recorded as successful lifecycle history.
+Reliability note: provider-backed actions that do not return an updated agent, or return an updated agent with a different ID than the action target, are treated as provider errors and are not recorded as successful lifecycle history.
 
 History status: lifecycle history records include provider, provider ID, source, and type metadata. Existing persisted history without those fields is normalized with empty metadata fields on read.
 

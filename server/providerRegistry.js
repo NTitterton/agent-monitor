@@ -126,6 +126,14 @@ export function createProviderRegistry() {
             history: await stateStore.listHistory()
           };
         }
+        if (changedAgent.id !== agentId) {
+          return {
+            error: "Provider returned a different agent",
+            status: 502,
+            agents: await listAgents(),
+            history: await stateStore.listHistory()
+          };
+        }
 
         if (!provider.recordsHistory && changedAgent) {
           await stateStore.recordAction(changedAgent, actionId, prompt);

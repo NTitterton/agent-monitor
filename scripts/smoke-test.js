@@ -49,6 +49,7 @@ try {
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
   const registrySource = await readFile(new URL("../server/providerRegistry.js", import.meta.url), "utf8");
   assert(registrySource.includes("Provider did not return updated agent"), "registry should reject unconfirmed provider actions");
+  assert(registrySource.includes("Provider returned a different agent"), "registry should reject mismatched provider action confirmations");
   assertSampledTokenRates();
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");

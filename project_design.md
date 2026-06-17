@@ -185,7 +185,7 @@ Adapters should return normalized agent objects with:
 - `logs`
 - `transcript`
 
-Capabilities are part of the action contract. Snapshot boundaries normalize capability arrays to known unique action IDs. Unknown action IDs are rejected with `400`. Valid actions outside the target agent's advertised capabilities are rejected with `409`.
+Capabilities are part of the action contract. Snapshot boundaries normalize capability arrays to known unique action IDs. Unknown action IDs are rejected with `400`. Valid actions outside the target agent's advertised capabilities are rejected with `409`. Provider action responses must confirm the same target agent ID before Agent Monitor records lifecycle history.
 
 ## 6. Lifecycle Actions
 
