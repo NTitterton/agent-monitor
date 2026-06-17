@@ -235,6 +235,8 @@ Cost note: normalized snapshots coerce `costUsd` to a number on persisted-state 
 
 Resource note: normalized snapshots coerce CPU and memory resource fields to finite numbers on persisted-state reads, remote HTTP adapter responses, and client clones so meters, summaries, and sorting do not receive `NaN` or string values.
 
+Timestamp note: the remote HTTP adapter accepts numeric millisecond timestamps and parseable date strings for agent `startedAt`/`endedAt`, log `at`, and transcript `at` fields, normalizing them to milliseconds before rendering runtime, sorting, or timelines.
+
 ### Local Process Tree Controls
 
 Local lifecycle controls should target the process tree that represents the agent.

@@ -608,6 +608,8 @@ async function assertRemoteProviderNormalization() {
             id: "remote-normalized",
             name: "Remote Normalized",
             status: "running",
+            startedAt: "2026-01-02T03:04:05.000Z",
+            endedAt: "2026-01-02T04:04:05.000Z",
             owner: "platform-team",
             workspace: "agent-monitor",
             repository: "NTitterton/agent-monitor",
@@ -628,7 +630,9 @@ async function assertRemoteProviderNormalization() {
             parentPid: 100,
             childPids: [201, 202],
             capabilities: ["stop", "bogus", "stop"],
-            goToTarget: "https://remote.example/agents/remote-normalized"
+            goToTarget: "https://remote.example/agents/remote-normalized",
+            logs: [{ at: "2026-01-02T03:05:05.000Z", message: "remote log" }],
+            transcript: [{ at: "2026-01-02T03:06:05.000Z", role: "assistant", content: "remote transcript" }]
           }
         ]
       });
@@ -666,6 +670,8 @@ async function assertRemoteProviderNormalization() {
     assert(agent.priority === "high", "remote provider should preserve priority");
     assert(agent.currentStep === "Running tests", "remote provider should preserve current step");
     assert(agent.progressPercent === 42, "remote provider should normalize progress percent");
+    assert(agent.startedAt === Date.parse("2026-01-02T03:04:05.000Z"), "remote provider should normalize ISO startedAt");
+    assert(agent.endedAt === Date.parse("2026-01-02T04:04:05.000Z"), "remote provider should normalize ISO endedAt");
     assert(agent.cpu === 7.5, "remote provider should normalize CPU");
     assert(agent.memoryMb === 256, "remote provider should normalize memory");
     assert(agent.processCpu === 2.5, "remote provider should preserve own CPU");
@@ -675,6 +681,11 @@ async function assertRemoteProviderNormalization() {
     assert(agent.parentPid === 100, "remote provider should preserve parent pid");
     assert(agent.childPids.length === 2, "remote provider should preserve child pids");
     assert(agent.capabilities.join(",") === "stop,go-to", "remote provider should normalize known unique capabilities");
+    assert(agent.logs[0]?.at === Date.parse("2026-01-02T03:05:05.000Z"), "remote provider should normalize log timestamps");
+    assert(
+      agent.transcript[0]?.at === Date.parse("2026-01-02T03:06:05.000Z"),
+      "remote provider should normalize transcript timestamps"
+    );
 
     const changedAgent = await provider.performAction("remote-normalized", "stop", "pause");
     assert(changedAgent.status === "waiting", "remote action response should normalize returned agent");

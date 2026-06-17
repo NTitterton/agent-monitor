@@ -74,7 +74,7 @@ function normalizeAgents(agents, config) {
 }
 
 function normalizeAgent(agent, config) {
-  const startedAt = agent.startedAt || Date.now();
+  const startedAt = normalizeTimestamp(agent.startedAt);
   const tokens = Number(agent.tokens || 0);
   const tokensPerSecond = Number(agent.tokensPerSecond || 0);
   const tokenRateWindowMs = Number(agent.tokenRateWindowMs || 0);
@@ -110,7 +110,7 @@ function normalizeAgent(agent, config) {
     tokenCountConfidence: normalizeTokenConfidence(agent.tokenCountConfidence, tokens > 0 ? "reported" : "unknown"),
     costUsd: Number.isFinite(costUsd) ? costUsd : 0,
     startedAt,
-    endedAt: agent.endedAt,
+    endedAt: agent.endedAt ? normalizeTimestamp(agent.endedAt, null) : undefined,
     children: normalizeStringList(agent.children),
     pid: agent.pid || null,
     parentPid: agent.parentPid || null,
@@ -158,13 +158,21 @@ function normalizeProgress(value) {
   return Number.isFinite(progress) ? Math.min(Math.max(Math.round(progress), 0), 100) : null;
 }
 
+function normalizeTimestamp(value, fallback = Date.now()) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) return numeric;
+  const parsed = Date.parse(String(value));
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
 function normalizeLogs(logs) {
   if (!Array.isArray(logs)) return [];
 
   return logs
     .filter((log) => log && log.message)
     .map((log) => ({
-      at: Number(log.at || Date.now()),
+      at: normalizeTimestamp(log.at),
       level: log.level || "info",
       source: log.source || "remote",
       message: String(log.message)
@@ -178,7 +186,7 @@ function normalizeTranscript(transcript) {
   return transcript
     .filter((entry) => entry && (entry.content || entry.message || entry.text))
     .map((entry) => ({
-      at: Number(entry.at || Date.now()),
+      at: normalizeTimestamp(entry.at),
       role: ["system", "user", "assistant", "tool"].includes(entry.role) ? entry.role : "assistant",
       source: entry.source || "remote",
       content: String(entry.content || entry.message || entry.text).trim()
