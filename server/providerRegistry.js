@@ -1,4 +1,4 @@
-import { lifecycleActions } from "../src/core.js";
+import { agentActions, lifecycleActions } from "../src/core.js";
 import { readAnthropicMessageBatchesProviders } from "./anthropicMessageBatchesProvider.js";
 import { createLocalProcessProvider, hasLocalProcessConfig } from "./localProcessProvider.js";
 import { readOpenAIResponsesProviders } from "./openAIResponsesProvider.js";
@@ -69,6 +69,15 @@ export function createProviderRegistry() {
   }
 
   async function performAction(agentId, actionId, prompt = "") {
+    if (!agentActions.some((action) => action.id === actionId)) {
+      return {
+        error: "Invalid action",
+        status: 400,
+        agents: await listAgents(),
+        history: await stateStore.listHistory()
+      };
+    }
+
     for (const provider of await listActiveProviders()) {
       let agents = [];
       try {

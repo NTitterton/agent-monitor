@@ -116,7 +116,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
-- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`.
+- `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Unknown action IDs return `400`; valid actions outside the target agent's `capabilities` return `409`.
 
 Provider snapshots are reused for a short window so app refreshes and paired legacy calls to `/api/agents` plus `/api/providers` do not rescan every adapter twice. The default cache window is 1000 ms and can be changed with `AGENT_MONITOR_SCAN_CACHE_MS`.
 
@@ -133,7 +133,7 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 }
 ```
 
-Agent-level `capabilities` should only include actions the provider can actually perform. The app disables unsupported controls, and the local API returns `409` for direct action requests that are not in an agent's advertised capabilities. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
+Agent-level `capabilities` should only include actions the provider can actually perform. The app disables unsupported controls, and the local API validates action IDs before enforcing capabilities. Unknown action IDs return `400`; direct action requests that are not in an agent's advertised capabilities return `409`. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
 
 ## Monitor local processes
 

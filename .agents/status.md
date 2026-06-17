@@ -47,6 +47,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Local process lifecycle controls signal descendant process trees before root PIDs.
 - Smoke coverage for starting and force-ending a configured local process agent.
 - Server-side capability enforcement for unsupported direct action requests.
+- Server-side validation for unknown action IDs.
 - Standalone widget avoids local fallback mutation when a reachable API rejects an action.
 - `Go To` action for macOS local process agents that activates likely Terminal/iTerm, browser, or editor surfaces.
 - URL-backed `Go To` targets for remote/account agents through `goToTarget` and `goToKind`.
