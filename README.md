@@ -40,7 +40,7 @@ gh auth login -h github.com
 npm run github:push
 ```
 
-`npm run github:push` expects a clean tracked worktree, creates or attaches `origin`, and pushes `main`. Defaults are `GITHUB_REPO=agent-monitor` and `GITHUB_VISIBILITY=private`.
+`npm run github:push` expects a clean tracked worktree, creates or attaches `origin`, and pushes `main`. Defaults are `GITHUB_REPO=agent-monitor` and `GITHUB_VISIBILITY=public`.
 
 ## Run as a standalone macOS app
 

@@ -142,6 +142,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Non-blocking setup validation warnings from `/api/config` and Settings panel display.
 - Client preserves config validation warnings across post-save refreshes.
 - GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.
+- GitHub repo verified public, and the push helper defaults new repo creation to public visibility unless `GITHUB_VISIBILITY` overrides it.
 
 ## Blockers
 

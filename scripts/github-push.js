@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 
 const repoName = process.env.GITHUB_REPO || "agent-monitor";
-const visibility = process.env.GITHUB_VISIBILITY || "private";
+const visibility = process.env.GITHUB_VISIBILITY || "public";
 const branch = process.env.GITHUB_BRANCH || "main";
 
 await main();
