@@ -1,22 +1,10 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { agentActions, applyLifecycleAction, createActionRecord, initialAgents, lifecycleActions } from "../src/core.js";
+import { agentActions, applyLifecycleAction, createActionRecord, lifecycleActions } from "../src/core.js";
 
 const defaultStatePath = resolve(new URL("../data/agent-state.json", import.meta.url).pathname);
 
-const agentProviderIds = {
-  "local-codex-1": "local",
-  "openai-research-2": "openai",
-  "anthropic-review-1": "anthropic",
-  "remote-build-7": "remote"
-};
-
-const agentTypes = {
-  "local-codex-1": "local",
-  "openai-research-2": "openai",
-  "anthropic-review-1": "anthropic",
-  "remote-build-7": "remote"
-};
+const deprecatedSeedAgentIds = new Set(["local-codex-1", "openai-research-2", "anthropic-review-1", "remote-build-7"]);
 
 export function createStateStore() {
   let loaded = false;
@@ -89,45 +77,32 @@ export function createStateStore() {
 function createDefaultState() {
   return {
     version: 1,
-    agents: initialAgents.map((agent) => ({
-      ...agent,
-      providerId: agentProviderIds[agent.id] || "local",
-      type: agent.type || agentTypes[agent.id] || agent.providerId || "local",
-      ...normalizeLineage(agent),
-      ...normalizeResourceMetrics(agent),
-      ...normalizeTokenMetrics(agent),
-      ...normalizeCostMetrics(agent),
-      transcript: normalizeTranscript(agent.transcript),
-      logs: normalizeLogs(agent.logs)
-    })),
+    agents: [],
     history: []
   };
 }
 
 function normalizeState(nextState) {
-  const fallback = createDefaultState();
-  const agents = Array.isArray(nextState.agents) ? nextState.agents : fallback.agents;
+  const agents = Array.isArray(nextState.agents) ? nextState.agents : [];
   const history = Array.isArray(nextState.history) ? nextState.history.map(normalizeHistoryRecord) : [];
-  const fallbackAgents = new Map(fallback.agents.map((agent) => [agent.id, agent]));
 
   return {
     version: 1,
-    agents: agents.map((agent) => {
-      const fallbackAgent = fallbackAgents.get(agent.id);
+    agents: agents.filter((agent) => !deprecatedSeedAgentIds.has(String(agent.id || "").trim())).map((agent) => {
       const logs = normalizeLogs(agent.logs);
       const transcript = normalizeTranscript(agent.transcript);
       return {
         ...agent,
-        providerId: agent.providerId || agentProviderIds[agent.id] || "local",
-        type: agent.type || agentTypes[agent.id] || agent.providerId || agentProviderIds[agent.id] || "remote",
-        ...normalizeLineage(agent, fallbackAgent),
-        ...normalizeResourceMetrics(agent, fallbackAgent),
-        ...normalizeTokenMetrics(agent, fallbackAgent),
-        ...normalizeCostMetrics(agent, fallbackAgent),
-        ...normalizeTaskProgress(agent, fallbackAgent),
-        ...normalizeGoTo(agent, fallbackAgent),
-        transcript: transcript.length ? transcript : normalizeTranscript(fallbackAgent?.transcript),
-        logs: logs.length ? logs : normalizeLogs(fallbackAgent?.logs)
+        providerId: agent.providerId || "local",
+        type: agent.type || agent.providerId || "remote",
+        ...normalizeLineage(agent),
+        ...normalizeResourceMetrics(agent),
+        ...normalizeTokenMetrics(agent),
+        ...normalizeCostMetrics(agent),
+        ...normalizeTaskProgress(agent),
+        ...normalizeGoTo(agent),
+        transcript,
+        logs
       };
     }),
     history

@@ -1,47 +1,4 @@
-const fallbackAgents = [
-  {
-    id: "local-codex-1",
-    name: "Codex implementation run",
-    provider: "Local Codex",
-    status: "running",
-    task: "Scaffold browser task manager",
-    cpu: 38,
-    memoryMb: 812,
-    tokens: 18420,
-    tokensPerSecond: 7.3,
-    tokenRateWindowMs: 300000,
-    tokenCountConfidence: "estimated",
-    startedAt: Date.now() - 1000 * 60 * 42,
-    children: ["openai-research-2"],
-    logs: [{
-      at: Date.now() - 1000 * 60 * 41,
-      level: "info",
-      source: "local",
-      message: "Started browser task-manager scaffold."
-    }]
-  },
-  {
-    id: "openai-research-2",
-    name: "OpenAI docs researcher",
-    provider: "OpenAI",
-    status: "paused",
-    task: "Map integration options",
-    cpu: 4,
-    memoryMb: 128,
-    tokens: 9150,
-    tokensPerSecond: 4.6,
-    tokenRateWindowMs: 300000,
-    tokenCountConfidence: "reported",
-    startedAt: Date.now() - 1000 * 60 * 33,
-    children: [],
-    logs: [{
-      at: Date.now() - 1000 * 60 * 31,
-      level: "info",
-      source: "openai",
-      message: "Mapped provider integration options."
-    }]
-  }
-];
+const fallbackAgents = [];
 
 const actions = [
   { id: "start", label: "Start", prompt: false },

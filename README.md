@@ -69,7 +69,7 @@ For personal sites, use the standalone widget script:
 <script src="/agent-monitor-widget.js"></script>
 ```
 
-Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/snapshot` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget stays interactive with local fallback data. The standalone widget also falls back to the older `/api/agents` snapshot shape for compatibility with older local servers. The widget reacts when `api-base`, `api-token`, `auth-header`, or `refresh-ms` attributes change after mount, and clamps `refresh-ms` between 5000 and 300000 ms.
+Host `embed/agent-monitor-widget.js` wherever the site serves static assets. The `api-base` attribute should point at the Agent Monitor server that exposes `/api/snapshot` and `/api/agents/:id/actions`. If `api-base` is omitted or unreachable, the widget renders an empty fallback state instead of fake agents. The standalone widget also falls back to the older `/api/agents` snapshot shape for compatibility with older local servers. The widget reacts when `api-base`, `api-token`, `auth-header`, or `refresh-ms` attributes change after mount, and clamps `refresh-ms` between 5000 and 300000 ms.
 
 For cross-site embeds, add the site origins that may call the local API:
 
@@ -113,9 +113,9 @@ Repo-module widget demo:
 <script type="module" src="/path/to/agent-monitor/src/widget.js"></script>
 ```
 
-The module widget uses the same client as the browser app, so it reads from the local API when Agent Monitor is running and falls back to local demo state when it is embedded without the API.
+The module widget uses the same client as the browser app, so it reads from the local API when Agent Monitor is running and otherwise renders the current empty local state.
 
-When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive. The app and widgets escape provider-supplied text/attributes and show lifecycle action feedback; accepted action feedback includes refreshed status/provider context when the API returns it. If the API is reachable but rejects an action, the standalone widget leaves its current state unchanged instead of applying a local fallback action and shows the rejection message in the widget. Standalone widget snapshots normalize numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering. Local fallback actions update runtime/resource fields and record action history with agent, provider, source, type, and action metadata.
+When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to empty local in-memory state so the component still renders without fake agents. The app and widgets escape provider-supplied text/attributes and show lifecycle action feedback; accepted action feedback includes refreshed status/provider context when the API returns it. If the API is reachable but rejects an action, the standalone widget leaves its current state unchanged instead of applying a local fallback action and shows the rejection message in the widget. Standalone widget snapshots normalize numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering. Local fallback actions update runtime/resource fields and record action history with agent, provider, source, type, and action metadata when local fallback agents exist.
 
 Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, snapshot freshness, provider issue count when an adapter is failing, and compact active-discovery scanner status when available. Agent cards are ordered by task pressure, with active/high-priority/high-CPU agents first. They also show compact remote context when providers report owner, workspace, repository, branch, queue, or priority fields, show provider-object details such as remote IDs, models, request counts, and Go To kind, and include nonzero per-agent spend in the resource line.
 
@@ -139,7 +139,7 @@ Malformed JSON request bodies return `400` with `Invalid JSON` instead of being 
 
 Provider snapshots are reused for a short window so app refreshes and paired legacy calls to `/api/agents` plus `/api/providers` do not rescan every adapter twice. The default cache window is 1000 ms and can be changed with `AGENT_MONITOR_SCAN_CACHE_MS`.
 
-Provider adapters live in `server/providerRegistry.js`. The current adapters are in-memory implementations for local, OpenAI, Anthropic, and remote cloud namespaces. Real integrations should implement the same shape:
+Provider adapters live in `server/providerRegistry.js`. The current adapters include persisted state namespaces, local process discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. New integrations should implement the same shape:
 
 ```js
 {
@@ -359,7 +359,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Cancel prompt-based lifecycle actions before dispatch by closing the prompt.
 - Run as a full browser app or embedded widget.
-- Use a local API when available, with static fallback for hosted embeds.
+- Use a local API when available, with empty static fallback for hosted embeds.
 - Configure trusted embed origins, configured local agents, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.
 - Surface setup validation warnings without exposing saved secrets.
 - Configure optional browser-app auto refresh cadence from the app; embeddable widgets can set `refresh-ms`.

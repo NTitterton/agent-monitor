@@ -97,13 +97,13 @@ New normalized fields:
 
 Notes:
 
-- Some current token counts are mock values from seed data.
+- Runtime token counts should come from discovered/configured providers or persisted real agent state, not built-in seed agents.
 - OpenAI Responses can report usage once available, but live per-second throughput may require sampling successive snapshots.
 - Anthropic Message Batches currently report request counts through the existing adapter, not true token counts.
 - Remote providers should be allowed to report their own token totals and rates.
 - Remote providers may also report `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `pid`, `parentPid`, and `childPids` when they can observe process-level execution.
 
-Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract. Provider snapshots normalize agent `provider`, `providerId`, `source`, and `type` at the registry boundary so local, OpenAI, Anthropic, and third-party cloud agents keep stable task-manager classifications across app and widget surfaces. When a provider reports cumulative tokens but no positive token rate, fresh provider snapshots derive `tokensPerSecond` from successive token deltas and expose the measured `tokenRateWindowMs`. OpenAI Responses can estimate `costUsd` from reported input/output usage when operator-configured USD-per-1K token rates are available; rates are configurable rather than hardcoded.
+Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract. Provider snapshots normalize agent `provider`, `providerId`, `source`, and `type` at the registry boundary so local, OpenAI, Anthropic, and third-party cloud agents keep stable task-manager classifications across app and widget surfaces. When a provider reports cumulative tokens but no positive token rate, fresh provider snapshots derive `tokensPerSecond` from successive token deltas and expose the measured `tokenRateWindowMs`. OpenAI Responses can estimate `costUsd` from reported input/output usage when operator-configured USD-per-1K token rates are available; rates are configurable rather than hardcoded. Built-in seed agents have been removed from runtime state, and old seed rows are filtered during state normalization.
 
 Acceptance criteria:
 

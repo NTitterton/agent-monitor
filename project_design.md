@@ -23,7 +23,7 @@ graph TD
     end
 
     subgraph "Provider Adapters"
-        SeedProviders["Seed Providers<br/>local/openai/anthropic/remote"]
+        StateProviders["Persisted State Providers<br/>local/openai/anthropic/remote"]
         LocalProcess["Local Process Provider<br/>ps + process signals"]
         RemoteHTTP["Remote HTTP Provider<br/>configured baseUrl"]
         OpenAIResponses["OpenAI Responses Provider<br/>tracked + launchable rows"]
@@ -47,7 +47,7 @@ graph TD
     Scanner --> Registry
     Registry --> StateStore
     Registry --> Config
-    Registry --> SeedProviders
+    Registry --> StateProviders
     Registry --> LocalProcess
     Registry --> RemoteHTTP
     Registry --> OpenAIResponses
@@ -65,7 +65,7 @@ graph TD
     class Desktop,Browser,ModuleWidget,StandaloneWidget surface;
     class StaticServer,API,Scanner,Registry runtime;
     class StateStore,Config store;
-    class SeedProviders,LocalProcess,RemoteHTTP,OpenAIResponses,AnthropicBatches provider;
+    class StateProviders,LocalProcess,RemoteHTTP,OpenAIResponses,AnthropicBatches provider;
     class LocalAgents,OpenAI,Anthropic,CloudAgents external;
 ```
 
@@ -100,7 +100,7 @@ The system has four major layers:
 - **Local API:** static file server, API router, CORS/auth handling, and JSON response helpers.
 - **Provider registry:** discovers configured providers, normalizes agent snapshots, caches scans, records lifecycle history, validates lifecycle actions, and routes supported actions.
 - **Background scanner:** optionally refreshes provider snapshots on the configured cadence so task-manager state stays warm even when the UI is idle.
-- **Provider adapters:** seed adapters, local process adapter, remote HTTP adapter, configured OpenAI Responses observer, and configured Anthropic Message Batches observer.
+- **Provider adapters:** persisted state adapters, local process adapter, remote HTTP adapter, configured OpenAI Responses observer, and configured Anthropic Message Batches observer.
 
 ## 4. Core Data Flow
 

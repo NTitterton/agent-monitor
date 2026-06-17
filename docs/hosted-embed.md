@@ -75,7 +75,7 @@ The public config API only reports whether a token exists; it does not return th
 ## Runtime Behavior
 
 - If `api-base` is reachable, the widget reads `/api/snapshot` and sends lifecycle actions to `/api/agents/:id/actions`.
-- If the API is unreachable, the widget renders local fallback data so the hosted page still loads cleanly.
+- If the API is unreachable, the widget renders an empty fallback state so the hosted page still loads cleanly without showing fake agents.
 - If the API is reachable but rejects an action, the widget shows the rejection and does not mutate local fallback state.
 - `refresh-ms` is clamped between 5000 and 300000 ms.
 - The widget reacts to changes in `api-base`, `api-token`, `auth-header`, and `refresh-ms` without remounting.
@@ -89,7 +89,7 @@ Practical options:
 - Use the hosted widget from a browser that allows localhost/private-network requests for the site.
 - Keep `apiToken` configured when allowing any cross-origin site to call the local API.
 - Avoid `allowedOrigins: ["*"]` except for short local experiments.
-- For public screenshots or portfolio pages, omit `api-base` so the widget uses static fallback data.
+- For public screenshots or portfolio pages, point `api-base` at a real Agent Monitor instance or omit it to show the empty fallback state.
 
 ## Quick Checks
 

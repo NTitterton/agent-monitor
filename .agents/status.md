@@ -143,6 +143,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Client preserves config validation warnings across post-save refreshes.
 - GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.
 - GitHub repo verified public, and the push helper defaults new repo creation to public visibility unless `GITHUB_VISIBILITY` overrides it.
+- Built-in seed agents removed from runtime state and standalone widget fallback; Agent Monitor now shows discovered/configured/persisted real agents only, while old seed IDs are filtered from persisted state on read.
 
 ## Blockers
 

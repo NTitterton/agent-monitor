@@ -14,6 +14,7 @@ const apiBase = `http://127.0.0.1:${port}`;
 const allowedOrigin = "https://zo.computer";
 const addedOrigin = "https://personal.example";
 const apiToken = "smoke-token";
+const smokeStartedAt = Date.parse("2026-01-02T02:00:00.000Z");
 
 const tempDir = await mkdtemp(join(tmpdir(), "agent-monitor-smoke-"));
 const configPath = join(tempDir, "agent-monitor.config.json");
@@ -32,6 +33,7 @@ await writeFile(
     2
   )}\n`
 );
+await writeFile(statePath, `${JSON.stringify(createSmokeState(), null, 2)}\n`);
 
 let server = await startServer();
 
@@ -77,7 +79,7 @@ try {
   assert(hostedEmbedGuide.includes("https://zo.computer"), "hosted embed guide should cover the zo.computer use case");
   assert(hostedEmbedGuide.includes('api-base="http://127.0.0.1:5173"'), "hosted embed guide should show local API base");
   assert(hostedEmbedGuide.includes('auth-header="authorization"'), "hosted embed guide should document bearer token mode");
-  assert(hostedEmbedGuide.includes("local fallback data"), "hosted embed guide should explain offline fallback behavior");
+  assert(hostedEmbedGuide.includes("empty fallback state"), "hosted embed guide should explain offline empty fallback behavior");
   assert(hostedEmbedGuide.includes("localhost/private-network"), "hosted embed guide should note browser localhost restrictions");
   assertSampledTokenRates();
   assertProviderErrorSnapshots();
@@ -188,6 +190,8 @@ try {
   assert(stylesSource.includes("max-height: 32%"), "selected-agent detail should stay bounded below the task list");
   assert(stylesSource.includes("min-height: 30px"), "task table header should stay compact");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
+  assert(stateStoreSource.includes("agents: []"), "state store should default to no hardcoded agents");
+  assert(stateStoreSource.includes("deprecatedSeedAgentIds"), "state store should migrate old seeded agent rows out of persisted state");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(record.at)"), "state store should normalize history timestamps");
@@ -262,11 +266,11 @@ try {
   );
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.scannedAt === "number"), "every agent should include scan timestamp");
   assert(
-    sameOriginAgents.body.agents.find((agent) => agent.id === "remote-build-7")?.capabilities?.includes("go-to"),
+    sameOriginAgents.body.agents.find((agent) => agent.id === "smoke-state-remote")?.capabilities?.includes("go-to"),
     "remote sample should expose URL go-to"
   );
   assert(
-    sameOriginAgents.body.agents.find((agent) => agent.id === "remote-build-7")?.goToKind === "url",
+    sameOriginAgents.body.agents.find((agent) => agent.id === "smoke-state-remote")?.goToKind === "url",
     "remote sample should identify URL go-to"
   );
 
@@ -617,27 +621,27 @@ try {
   });
   assert(rotatedOriginRequest.status === 200, "rotated API token should authorize trusted origins");
 
-  const action = await request("/api/agents/local-codex-1/actions", {
+  const action = await request("/api/agents/smoke-state-local/actions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "interrupt", prompt: "smoke test" })
   });
   assert(action.status === 200, "lifecycle action should succeed");
   assert(
-    action.body.agents.find((agent) => agent.id === "local-codex-1")?.status === "waiting",
-    "interrupt should move local-codex-1 to waiting"
+    action.body.agents.find((agent) => agent.id === "smoke-state-local")?.status === "waiting",
+    "interrupt should move smoke-state-local to waiting"
   );
   assert(action.body.history[0]?.prompt === "smoke test", "action prompt should be recorded");
-  assert(action.body.history[0]?.provider === "Local Codex", "action history should include provider");
+  assert(action.body.history[0]?.provider === "Smoke Local", "action history should include provider");
   assert(action.body.history[0]?.source === "local", "action history should include source");
   assert(action.body.history[0]?.type === "local", "action history should include type");
   assert(action.body.history[0]?.actionKind === "lifecycle", "lifecycle action history should be classified");
   assert(
-    action.body.agents.find((agent) => agent.id === "local-codex-1")?.logs?.[0]?.message.includes("smoke test"),
+    action.body.agents.find((agent) => agent.id === "smoke-state-local")?.logs?.[0]?.message.includes("smoke test"),
     "lifecycle action should append an agent log"
   );
 
-  const unsupportedAction = await request("/api/agents/openai-research-2/actions", {
+  const unsupportedAction = await request("/api/agents/smoke-state-openai/actions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "start" })
@@ -646,7 +650,7 @@ try {
   assert(unsupportedAction.body.error === "Action not supported", "unsupported agent action should return a clear error");
   assert(Array.isArray(unsupportedAction.body.providers), "unsupported action should return provider status");
 
-  const terminalAction = await request("/api/agents/remote-build-7/actions", {
+  const terminalAction = await request("/api/agents/smoke-state-remote/actions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "stop" })
@@ -654,7 +658,7 @@ try {
   assert(terminalAction.status === 409, "terminal agent lifecycle action should return conflict");
   assert(terminalAction.body.error === "Action not supported", "terminal agent lifecycle action should return a clear error");
 
-  const invalidAction = await request("/api/agents/local-codex-1/actions", {
+  const invalidAction = await request("/api/agents/smoke-state-local/actions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "launch-sideways" })
@@ -663,7 +667,7 @@ try {
   assert(invalidAction.body.error === "Invalid action", "invalid agent action should return a clear error");
   assert(Array.isArray(invalidAction.body.providers), "invalid action should return provider status");
 
-  const malformedAction = await request("/api/agents/local-codex-1/actions", {
+  const malformedAction = await request("/api/agents/smoke-state-local/actions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: "{"
@@ -684,10 +688,10 @@ try {
   assert(missingAgentAction.body.config?.hasApiToken === true, "missing agent action should return sanitized config");
   assert(missingAgentAction.body.scanner, "missing agent action should return scanner status");
 
-  const detail = await request("/api/agents/local-codex-1");
+  const detail = await request("/api/agents/smoke-state-local");
   assert(detail.status === 200, "agent detail should succeed");
-  assert(detail.body.agent.id === "local-codex-1", "agent detail should return requested agent");
-  assert(detail.body.children[0]?.id === "openai-research-2", "agent detail should include children");
+  assert(detail.body.agent.id === "smoke-state-local", "agent detail should return requested agent");
+  assert(detail.body.children[0]?.id === "smoke-state-openai", "agent detail should include children");
   assert(detail.body.history[0]?.prompt === "smoke test", "agent detail should include agent history");
   assert(detail.body.agent.logs[0]?.source === "operator", "agent detail should include logs");
   assert(detail.body.agent.transcript?.length > 0, "agent detail should include transcript");
@@ -719,16 +723,16 @@ try {
 
   const persisted = await request("/api/agents");
   assert(
-    persisted.body.agents.find((agent) => agent.id === "local-codex-1")?.status === "waiting",
+    persisted.body.agents.find((agent) => agent.id === "smoke-state-local")?.status === "waiting",
     "agent status should persist after restart"
   );
   assert(persisted.body.history[0]?.prompt === "smoke test", "history should persist after restart");
   assert(
-    persisted.body.agents.find((agent) => agent.id === "local-codex-1")?.logs?.[0]?.source === "operator",
+    persisted.body.agents.find((agent) => agent.id === "smoke-state-local")?.logs?.[0]?.source === "operator",
     "agent logs should persist after restart"
   );
   assert(
-    persisted.body.agents.find((agent) => agent.id === "local-codex-1")?.transcript?.length > 0,
+    persisted.body.agents.find((agent) => agent.id === "smoke-state-local")?.transcript?.length > 0,
     "agent transcript should persist after restart"
   );
 
@@ -747,10 +751,10 @@ try {
 
   const stateFile = JSON.parse(await readFile(statePath, "utf8"));
   assert(stateFile.history.length > 0, "state file should contain history");
-  assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.logs?.length > 0, "state file should contain logs");
-  assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.transcript?.length > 0, "state file should contain transcript");
+  assert(stateFile.agents.find((agent) => agent.id === "smoke-state-local")?.logs?.length > 0, "state file should contain logs");
+  assert(stateFile.agents.find((agent) => agent.id === "smoke-state-local")?.transcript?.length > 0, "state file should contain transcript");
 
-  const surfaceAction = await request("/api/agents/remote-build-7/actions", {
+  const surfaceAction = await request("/api/agents/smoke-state-remote/actions", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "go-to" })
@@ -1414,6 +1418,125 @@ function jsonResponse(body, status = 200) {
     status,
     headers: { "Content-Type": "application/json" }
   });
+}
+
+function createSmokeState() {
+  return {
+    version: 1,
+    agents: [
+      {
+        id: "smoke-state-local",
+        name: "Smoke local fixture",
+        provider: "Smoke Local",
+        providerId: "local",
+        type: "local",
+        source: "local",
+        status: "running",
+        parentId: null,
+        task: "Exercise state-backed lifecycle controls",
+        cpu: 38,
+        memoryMb: 812,
+        tokens: 18420,
+        tokensPerSecond: 7.3,
+        tokenRateWindowMs: 300000,
+        tokenCountConfidence: "estimated",
+        costUsd: 0.42,
+        startedAt: smokeStartedAt,
+        children: ["smoke-state-openai"],
+        capabilities: ["start", "stop", "interrupt", "end", "force-end"],
+        transcript: [
+          {
+            at: smokeStartedAt + 60000,
+            role: "user",
+            source: "operator",
+            content: "Exercise persisted state behavior."
+          }
+        ],
+        logs: [
+          {
+            at: smokeStartedAt + 120000,
+            level: "info",
+            source: "local",
+            message: "Smoke fixture initialized."
+          }
+        ]
+      },
+      {
+        id: "smoke-state-openai",
+        name: "Smoke OpenAI fixture",
+        provider: "OpenAI",
+        providerId: "openai",
+        type: "openai",
+        source: "cloud",
+        status: "paused",
+        parentId: "smoke-state-local",
+        task: "Exercise unsupported start handling",
+        cpu: 4,
+        memoryMb: 128,
+        tokens: 9150,
+        tokensPerSecond: 4.6,
+        tokenRateWindowMs: 300000,
+        tokenCountConfidence: "reported",
+        costUsd: 0.18,
+        startedAt: smokeStartedAt + 180000,
+        children: [],
+        capabilities: ["stop", "interrupt", "end", "force-end"],
+        transcript: [],
+        logs: []
+      },
+      {
+        id: "smoke-state-anthropic",
+        name: "Smoke Anthropic fixture",
+        provider: "Anthropic",
+        providerId: "anthropic",
+        type: "anthropic",
+        source: "user-account",
+        status: "waiting",
+        parentId: null,
+        task: "Exercise account-backed state",
+        cpu: 0,
+        memoryMb: 96,
+        tokens: 4620,
+        tokensPerSecond: 0,
+        tokenRateWindowMs: 0,
+        tokenCountConfidence: "estimated",
+        costUsd: 0.13,
+        startedAt: smokeStartedAt + 240000,
+        children: [],
+        capabilities: ["stop", "interrupt", "end", "force-end"],
+        transcript: [],
+        logs: []
+      },
+      {
+        id: "smoke-state-remote",
+        name: "Smoke remote fixture",
+        provider: "Remote Runner",
+        providerId: "remote",
+        type: "remote",
+        source: "cloud",
+        status: "ended",
+        parentId: null,
+        task: "Exercise URL-backed Go To",
+        cpu: 0,
+        memoryMb: 0,
+        tokens: 1280,
+        tokensPerSecond: 0,
+        tokenRateWindowMs: 0,
+        tokenCountConfidence: "reported",
+        costUsd: 0.04,
+        startedAt: smokeStartedAt + 300000,
+        endedAt: smokeStartedAt + 360000,
+        children: [],
+        goToTarget: "https://agents.example.com",
+        goToKind: "url",
+        windowTitle: "Remote Runner dashboard",
+        capabilities: ["start", "stop", "interrupt", "end", "force-end", "go-to"],
+        transcript: [],
+        logs: []
+      }
+    ],
+    history: []
+  };
 }
 
 async function startServer() {
