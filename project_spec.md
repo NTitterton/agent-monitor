@@ -157,6 +157,7 @@ Provider setup should be possible from the app for the adapters Agent Monitor al
 Current supported setup surfaces:
 
 - Trusted embed origins.
+- Standalone widget token delivery through `X-Agent-Monitor-Token` or optional bearer `Authorization`.
 - Configured local agents and their launch commands.
 - Local process discovery include/exclude patterns.
 - Remote HTTP providers.
@@ -177,6 +178,7 @@ Acceptance criteria:
 - `PUT /api/config` can update provider setup while preserving omitted secrets.
 - `PUT /api/config` returns non-blocking validation warnings for malformed setup rows.
 - Smoke tests prove token/API-key hiding and preservation for remote HTTP, OpenAI, and Anthropic setup.
+- Smoke tests prove cross-origin widget auth through custom token and bearer token headers.
 - Smoke tests prove local agent env hiding and preservation.
 
 Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons. Provider test responses include refreshed agents, history, provider status, sanitized config, and scanner status, and the client applies the returned source status immediately. Config saves also return validation warnings for malformed provider/local-agent setup, the client preserves those warnings across the post-save refresh, and the Settings panel displays them.

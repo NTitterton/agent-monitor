@@ -446,14 +446,22 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
   }
 
   apiToken() {
-    return this.getAttribute("api-token") || "";
+    return this.getAttribute("api-token")?.trim() || "";
+  }
+
+  authHeader() {
+    return this.getAttribute("auth-header")?.trim().toLowerCase() || "x-agent-monitor-token";
   }
 
   headers() {
+    const token = this.apiToken();
+    const tokenHeader = this.authHeader() === "authorization"
+      ? { Authorization: `Bearer ${token}` }
+      : { "X-Agent-Monitor-Token": token };
     return {
       Accept: "application/json",
       "Content-Type": "application/json",
-      ...(this.apiToken() ? { "X-Agent-Monitor-Token": this.apiToken() } : {})
+      ...(token ? tokenHeader : {})
     };
   }
 }

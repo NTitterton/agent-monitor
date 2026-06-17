@@ -39,6 +39,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Desktop app startup diagnostics with captured local server output.
 - Desktop app zip packaging through `npm run desktop:package`.
 - Trusted-origin CORS and optional API token.
+- Standalone widget supports custom token or bearer authorization headers.
 - Local settings API and app panel for trusted origins, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches.
 - Smoke test harness.
 - Lineage view and selected-agent detail panel.

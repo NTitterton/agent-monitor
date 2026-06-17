@@ -88,6 +88,8 @@ For cross-site embeds, add the site origins that may call the local API:
 ></agent-monitor-widget>
 ```
 
+The widget sends `api-token` as `X-Agent-Monitor-Token` by default. Set `auth-header="authorization"` to send it as `Authorization: Bearer <token>` instead.
+
 Same-origin local app requests continue to work without putting the token into `index.html`.
 
 The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, preserves non-blocking validation warnings across the save refresh, and does not expose configured API tokens or provider credentials.

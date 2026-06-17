@@ -47,6 +47,8 @@ try {
     "standalone widget should render rejected API actions without local fallback"
   );
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
+  assert(standaloneWidgetSource.includes("authHeader()"), "standalone widget should support configurable auth headers");
+  assert(standaloneWidgetSource.includes("Authorization: `Bearer ${token}`"), "standalone widget should support bearer auth");
   assert(standaloneWidgetSource.includes("normalizeWidgetAgents"), "standalone widget should normalize incoming snapshots");
   assert(standaloneWidgetSource.includes("this.snapshotAt = normalizeOptionalTimestamp(payload.snapshotAt)"), "standalone widget should preserve snapshot freshness");
   assert(standaloneWidgetSource.includes("Updated ${formatTimestamp(snapshotAt)}"), "standalone widget should render snapshot freshness");
@@ -255,6 +257,13 @@ try {
     }
   });
   assert(authorizedSnapshot.status === 200, "cross-origin snapshot with token should succeed");
+  const bearerAuthorized = await request("/api/snapshot", {
+    headers: {
+      Origin: allowedOrigin,
+      Authorization: `Bearer ${apiToken}`
+    }
+  });
+  assert(bearerAuthorized.status === 200, "cross-origin snapshot with bearer token should succeed");
 
   const config = await request("/api/config");
   assert(config.status === 200, "config request should succeed");
