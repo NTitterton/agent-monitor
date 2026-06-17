@@ -75,6 +75,7 @@ class AgentMonitorApp extends HTMLElement {
     const types = [...new Set(agents.map((agent) => agent.type || agent.providerId || agent.source))].sort();
     const providers = agentProviderOptions(agents);
     const previousSourcesScrollTop = this.querySelector(".sources-panel")?.scrollTop || 0;
+    const focusedFilter = captureFocusedFilter(this);
 
     this.innerHTML = `
       <main class="app-shell">
@@ -146,6 +147,7 @@ class AgentMonitorApp extends HTMLElement {
 
     const sourcesPanel = this.querySelector(".sources-panel");
     if (sourcesPanel) sourcesPanel.scrollTop = previousSourcesScrollTop;
+    restoreFocusedFilter(this, focusedFilter);
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
     this.querySelector(".settings-form")?.addEventListener("submit", async (event) => {
@@ -223,6 +225,31 @@ class AgentMonitorApp extends HTMLElement {
 function renderActionMessage(message) {
   if (!message) return "";
   return `<p class="action-message ${message.tone || "ok"}">${escapeText(message.text || "")}</p>`;
+}
+
+function captureFocusedFilter(root) {
+  const active = root.ownerDocument.activeElement;
+  if (!active || !root.contains(active) || !active.matches?.("[data-filter]")) return null;
+  return {
+    key: active.getAttribute("data-filter"),
+    selectionStart: active.selectionStart,
+    selectionEnd: active.selectionEnd
+  };
+}
+
+function restoreFocusedFilter(root, focusedFilter) {
+  if (!focusedFilter?.key) return;
+  const next = root.querySelector(`[data-filter="${cssEscape(focusedFilter.key)}"]`);
+  if (!next) return;
+  next.focus({ preventScroll: true });
+  if (typeof next.setSelectionRange === "function" && Number.isFinite(focusedFilter.selectionStart)) {
+    next.setSelectionRange(focusedFilter.selectionStart, focusedFilter.selectionEnd ?? focusedFilter.selectionStart);
+  }
+}
+
+function cssEscape(value) {
+  if (globalThis.CSS?.escape) return globalThis.CSS.escape(String(value));
+  return String(value).replaceAll("\\", "\\\\").replaceAll('"', '\\"');
 }
 
 function collectActionPrompt(action) {

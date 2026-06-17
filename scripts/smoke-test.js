@@ -89,6 +89,7 @@ try {
   assert(!appSource.includes("data-test-provider"), "Sources panel should not render provider test checkmark buttons");
   assert(appSource.includes("previousSourcesScrollTop"), "browser app should preserve Sources scroll across live refreshes");
   assert(appSource.includes("compact-source-row"), "Sources panel should consolidate provider/source rows");
+  assert(appSource.includes("captureFocusedFilter") && appSource.includes("restoreFocusedFilter"), "browser app should preserve filter focus across render");
   assert(appSource.includes("actionKindLabel"), "browser app should label lifecycle versus surface history");
   assert(appSource.includes("return \"Unknown\""), "browser app should guard invalid timestamps");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
