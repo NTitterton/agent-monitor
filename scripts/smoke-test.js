@@ -95,6 +95,8 @@ try {
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
   assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
+  assert(appSource.includes("Provider Issues"), "browser app summary should render provider issue count");
+  assert(appSource.includes("summary-warning"), "browser app summary should highlight provider issues");
   assert(appSource.includes("detail-action-row"), "browser app detail panel should render lifecycle controls");
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
   assert(appSource.includes("Updated ${formatTimestamp(this.snapshotAt)}"), "browser app should render unified snapshot freshness");

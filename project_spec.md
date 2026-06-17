@@ -142,7 +142,7 @@ Initial proposal:
 
 Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, source-list scan freshness display, a unified snapshot endpoint used by the app and standalone widget, a server-side background scanner that follows `snapshotRefresh`, and provider snapshot caching to avoid duplicate scans during refresh.
 
-Task-level health note: the browser task table and selected-agent inspector show provider health and scan freshness for each agent, so provider failures are visible directly beside affected work rather than only in the Sources panel.
+Task-level health note: the browser top summary shows provider issue count, while the task table and selected-agent inspector show provider health and scan freshness for each agent, so provider failures are visible directly beside affected work rather than only in the Sources panel.
 
 Provider failure freshness note: if a provider scan fails after a successful cached scan, Agent Monitor keeps the provider's last-known agents visible with their previous `scannedAt` values while the provider status records the new failed scan time and error. Operators retain task visibility without confusing stale agent freshness for current provider health.
 

@@ -84,7 +84,7 @@ h2 {
 
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -104,6 +104,15 @@ h2 {
   display: block;
   font-size: 1.35rem;
   font-weight: 800;
+}
+
+.summary-warning {
+  border-color: #f4c7c3;
+  background: #fff8f6;
+}
+
+.summary-warning span {
+  color: #a62626;
 }
 
 .summary-grid p,

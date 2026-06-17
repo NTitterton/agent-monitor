@@ -108,6 +108,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
 - Unified API `snapshotAt` timestamps surfaced in the browser topbar and embedded widget source summaries.
 - Per-agent provider health and scan freshness in the browser task table and selected-agent inspector.
+- Top-summary provider issue count for unhealthy adapters.
 - Last-known provider agents remain visible during transient provider scan failures while provider status shows the error.
 - Optional server-side background scanner driven by the snapshot refresh cadence, with status exposed in the app and `/api/scanner`.
 - Unified `/api/snapshot` refresh path for agents, history, provider status, and sanitized config in the app and standalone widget.

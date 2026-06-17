@@ -65,6 +65,7 @@ class AgentMonitorApp extends HTMLElement {
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
     const spend = agents.reduce((total, agent) => total + Number(agent.costUsd || 0), 0);
     const history = this.history || [];
+    const providerIssues = (this.providers || []).filter((provider) => provider.status === "error").length;
     const selectedDetail = this.detail || buildDetail(this.selectedAgentId, agents, history);
     const sources = [...new Set(agents.map((agent) => agent.source))].sort();
     const statuses = [...new Set(agents.map((agent) => agent.status))].filter(Boolean).sort();
@@ -93,6 +94,10 @@ class AgentMonitorApp extends HTMLElement {
             <article>
               <span>$${spend.toFixed(2)}</span>
               <p>Spend</p>
+            </article>
+            <article class="${providerIssues ? "summary-warning" : ""}">
+              <span>${providerIssues}</span>
+              <p>Provider Issues</p>
             </article>
           </div>
         </header>
