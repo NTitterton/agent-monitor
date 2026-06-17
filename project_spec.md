@@ -31,7 +31,7 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 
 Agent Monitor should run as a browser app, standalone desktop app, and embeddable widget.
 
-Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. The browser app and widgets escape provider-supplied text and attributes before rendering. `npm run desktop:build` compiles and verifies the generated `.app` bundle. `npm run desktop:package` creates a shareable zip from the verified app bundle.
+Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. The browser app and widgets escape provider-supplied text and attributes before rendering. `npm run desktop:build` compiles and verifies the generated `.app` bundle, including desktop startup diagnostics that show project root and captured server output when the local server cannot start. `npm run desktop:package` creates a shareable zip from the verified app bundle.
 
 ### Agent Type
 

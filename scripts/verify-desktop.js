@@ -7,6 +7,7 @@ const appDir = resolve(rootDir, "dist/Agent Monitor.app");
 const executablePath = resolve(appDir, "Contents/MacOS/AgentMonitor");
 const plistPath = resolve(appDir, "Contents/Info.plist");
 const pkgInfoPath = resolve(appDir, "Contents/PkgInfo");
+const swiftPath = resolve(rootDir, "desktop/macos/AgentMonitor.swift");
 
 await assertDirectory(appDir, "desktop app bundle");
 await assertExecutable(executablePath);
@@ -17,6 +18,12 @@ await assertFileContains(plistPath, [
   "<string>APPL</string>"
 ]);
 await assertFileContains(pkgInfoPath, ["APPL????"]);
+await assertFileContains(swiftPath, [
+  "captureServerOutput(stdout)",
+  "captureServerOutput(stderr)",
+  "startupDiagnostics()",
+  "No server output was captured"
+]);
 
 console.log(`Verified ${appDir}`);
 

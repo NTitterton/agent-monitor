@@ -46,7 +46,7 @@ npm run desktop:build
 open "dist/Agent Monitor.app"
 ```
 
-The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app. `npm run desktop:build` also verifies the generated `.app` bundle, executable, plist, and PkgInfo.
+The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app. If startup fails, the app shows the project root and captured server output to make local setup issues easier to diagnose. `npm run desktop:build` also verifies the generated `.app` bundle, executable, plist, PkgInfo, and startup diagnostics.
 
 To create a shareable zip of the verified app bundle:
 

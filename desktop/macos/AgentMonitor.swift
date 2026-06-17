@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
   private var window: NSWindow!
   private var webView: WKWebView!
   private var serverProcess: Process?
+  private var serverOutput = ""
   private let port = 5173
 
   func applicationDidFinishLaunching(_ notification: Notification) {
@@ -51,8 +52,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
       "PATH": "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
       "PORT": String(port)
     ]
-    process.standardOutput = Pipe()
-    process.standardError = Pipe()
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardOutput = stdout
+    process.standardError = stderr
+    captureServerOutput(stdout)
+    captureServerOutput(stderr)
 
     do {
       try process.run()
@@ -69,7 +74,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
     }
 
     if attemptsRemaining <= 0 {
-      showStartupError("Agent Monitor could not connect to its local server at \(appURL().absoluteString).")
+      showStartupError(
+        "Agent Monitor could not connect to its local server at \(appURL().absoluteString).\n\n\(startupDiagnostics())"
+      )
       return
     }
 
@@ -105,6 +112,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, WKNavigationDelegate {
 
   private func appURL() -> URL {
     URL(string: "http://127.0.0.1:\(port)/")!
+  }
+
+  private func captureServerOutput(_ pipe: Pipe) {
+    pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
+      let data = handle.availableData
+      guard !data.isEmpty, let text = String(data: data, encoding: .utf8) else { return }
+      DispatchQueue.main.async {
+        self?.appendServerOutput(text)
+      }
+    }
+  }
+
+  private func appendServerOutput(_ text: String) {
+    serverOutput += text
+    if serverOutput.count > 4000 {
+      serverOutput = String(serverOutput.suffix(4000))
+    }
+  }
+
+  private func startupDiagnostics() -> String {
+    let output = serverOutput.trimmingCharacters(in: .whitespacesAndNewlines)
+    let root = projectRoot().path
+    if output.isEmpty {
+      return "Project root: \(root)\nNo server output was captured. Confirm Node is installed and available on PATH."
+    }
+    return "Project root: \(root)\nServer output:\n\(output)"
   }
 
   private func showStartupError(_ message: String) {
