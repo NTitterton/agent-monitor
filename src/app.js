@@ -421,11 +421,11 @@ function renderSettings(config, mode = "local", message = "") {
   const openAIProviders = config?.openAIResponsesProviders || [];
   const anthropicProviders = config?.anthropicMessageBatchesProviders || [];
   return `
-    <section class="settings-block">
-      <div class="settings-heading">
+    <details class="settings-block" ${message ? "open" : ""}>
+      <summary class="settings-heading">
         <h2>Settings</h2>
-        ${message ? `<span>${escapeText(message)}</span>` : ""}
-      </div>
+        <span>${message ? escapeText(message) : "Configure"}</span>
+      </summary>
       ${renderValidationWarnings(config?.validationWarnings || [])}
       <form class="settings-form">
         <label>
@@ -480,7 +480,7 @@ function renderSettings(config, mode = "local", message = "") {
         </div>
         <button type="submit" ${mode === "api" ? "" : "disabled"}>Save Settings</button>
       </form>
-    </section>
+    </details>
   `;
 }
 

@@ -36,6 +36,18 @@ Agent Monitor should run as a browser app, standalone desktop app, and embeddabl
 
 Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. The browser app and widgets escape provider-supplied text and attributes before rendering. `npm run desktop:build` compiles and verifies the generated `.app` bundle, including desktop startup diagnostics that show project root and captured server output when the local server cannot start. The desktop wrapper identifies already-running Agent Monitor servers through `/api/health`, reuses ports `5173`-`5183` when available, and otherwise starts on the first open port in that range. `npm run desktop:package` creates a shareable zip from the verified app bundle.
 
+### Browser Layout
+
+The browser app should behave like a one-screen operations console.
+
+- The default desktop view should fit the header, source health, filters, agent list, and selected-agent detail within one viewport without requiring the whole page to scroll.
+- Summary metrics should not create dead header space; prefer a compact header and dense metrics over large marketing-style title/metric blocks.
+- The left Sources rail should remain operational and scannable. Long configuration forms should live behind a Settings disclosure/menu rather than permanently occupying the rail.
+- The agent list should be the primary scroll area when many agents exist, so Sources, filters, and selected-agent detail remain reachable.
+- Search and filter controls should stay compact and avoid large empty horizontal gaps.
+
+Status: implemented as a compact viewport-height app shell with a denser header, collapsible Settings disclosure in the Sources rail, scrollable Sources rail, scrollable agent table, sticky task-table header, and bounded selected-agent detail panel. Further visual refinement can continue, but the default desktop layout no longer requires the long settings form or agent list to push the entire page vertically.
+
 ### Agent Type
 
 Add an explicit `type` field to normalized agents.

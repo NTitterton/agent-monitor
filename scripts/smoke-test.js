@@ -124,6 +124,7 @@ try {
   assert(appSource.includes("formatOpenAIResponseLines"), "app settings should format OpenAI launchable response rows");
   assert(appSource.includes("parseAnthropicBatchLines"), "app settings should parse Anthropic launchable batch rows");
   assert(appSource.includes("formatAnthropicBatchLines"), "app settings should format Anthropic launchable batch rows");
+  assert(appSource.includes("<details class=\"settings-block\""), "app settings should render in a collapsible settings menu");
   assert(appSource.includes("summary-warning"), "browser app summary should highlight provider issues");
   assert(appSource.includes("detail-action-row"), "browser app detail panel should render lifecycle controls");
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
@@ -147,6 +148,10 @@ try {
   assert(clientSource.includes("snapshotAt"), "client should preserve unified snapshot timestamps");
   const coreSource = await readFile(new URL("../src/core.js", import.meta.url), "utf8");
   assert(coreSource.includes("Unknown runtime"), "core runtime formatting should guard invalid timestamps");
+  const stylesSource = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
+  assert(stylesSource.includes("height: 100vh"), "browser app shell should use one-screen viewport height");
+  assert(stylesSource.includes(".settings-block:not([open])"), "collapsed settings should avoid occupying the Sources rail");
+  assert(stylesSource.includes(".agent-table") && stylesSource.includes("overflow: auto"), "agent table should be the scrollable task list");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
