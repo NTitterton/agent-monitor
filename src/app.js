@@ -561,8 +561,8 @@ function renderAnthropicProviderRow(provider, index, mode) {
       <input data-anthropic-field="apiKeyEnv" value="${escapeAttribute(provider.apiKeyEnv || "ANTHROPIC_API_KEY")}" ${disabled} aria-label="Anthropic API key env ${index + 1}" />
       <input data-anthropic-field="apiKey" type="password" value="" ${disabled} aria-label="Anthropic API key ${index + 1}" />
       <input data-anthropic-field="version" value="${escapeAttribute(provider.version || "")}" ${disabled} aria-label="Anthropic version ${index + 1}" />
-      <textarea data-anthropic-field="batches" rows="3" ${disabled} aria-label="Anthropic batch list ${index + 1}">${escapeText(formatTrackedLines(provider.batches || [], "batchId"))}</textarea>
-      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · batches: id | name | batchId | task | goToUrl</span>
+      <textarea data-anthropic-field="batches" rows="3" ${disabled} aria-label="Anthropic batch list ${index + 1}">${escapeText(formatAnthropicBatchLines(provider.batches || []))}</textarea>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · tracked: id | name | batchId | task | goToUrl · launch: id | name | model | input | goToUrl</span>
     </fieldset>
   `;
 }
@@ -1070,7 +1070,7 @@ function parseAnthropicProviders(form) {
         apiKeyEnv: fields.apiKeyEnv || "ANTHROPIC_API_KEY",
         ...(fields.apiKey ? { apiKey: fields.apiKey } : {}),
         ...(fields.version ? { version: fields.version } : {}),
-        batches: parseTrackedLines(fields.batches, "batchId")
+        batches: parseAnthropicBatchLines(fields.batches)
       };
     })
     .filter((provider) => provider.id && provider.batches.length);
@@ -1126,6 +1126,32 @@ function parseOpenAIResponseLines(value) {
     .filter((item) => item.id && (item.responseId || (item.model && item.input)));
 }
 
+function parseAnthropicBatchLines(value) {
+  return parseLines(value)
+    .map((line) => {
+      const [id = "", name = "", third = "", fourth = "", goToTarget = ""] = line.split("|").map((part) => part.trim());
+      if (third.startsWith("msgbatch_")) {
+        return {
+          id,
+          name,
+          batchId: third,
+          task: fourth,
+          ...(goToTarget ? { goToTarget, goToKind: "url" } : {})
+        };
+      }
+
+      return {
+        id,
+        name,
+        model: third,
+        input: fourth,
+        task: fourth || name || id,
+        ...(goToTarget ? { goToTarget, goToKind: "url" } : {})
+      };
+    })
+    .filter((item) => item.id && (item.batchId || (item.model && item.input)));
+}
+
 function formatTrackedLines(items, remoteIdKey) {
   return (Array.isArray(items) ? items : [])
     .map((item) => [
@@ -1145,6 +1171,18 @@ function formatOpenAIResponseLines(items) {
       item.name || "",
       item.responseId || item.model || "",
       item.responseId ? item.task || "" : item.input || item.task || "",
+      item.goToTarget || ""
+    ].join(" | "))
+    .join("\n");
+}
+
+function formatAnthropicBatchLines(items) {
+  return (Array.isArray(items) ? items : [])
+    .map((item) => [
+      item.id || "",
+      item.name || "",
+      item.batchId || item.model || "",
+      item.batchId ? item.task || "" : item.input || item.task || "",
       item.goToTarget || ""
     ].join(" | "))
     .join("\n");

@@ -1,4 +1,4 @@
-import { readConfig } from "./config.js";
+import { assignAnthropicBatchId, readConfig } from "./config.js";
 
 const baseUrl = "https://api.anthropic.com/v1";
 const anthropicVersion = "2023-06-01";
@@ -16,6 +16,7 @@ export function createAnthropicMessageBatchesProvider(config) {
       const batchConfigs = config.batches || [];
       return Promise.all(
         batchConfigs.map(async (batchConfig) => {
+          if (!batchConfig.batchId) return normalizeLaunchableBatch(config, batchConfig);
           const batch = await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}`, {
             method: "GET"
           });
@@ -28,13 +29,27 @@ export function createAnthropicMessageBatchesProvider(config) {
       if (!batchConfig) return null;
 
       if (actionId === "go-to") {
+        if (!batchConfig.batchId) return normalizeLaunchableBatch(config, batchConfig);
         const batch = await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}`, {
           method: "GET"
         });
         return normalizeBatch(batch, config, batchConfig);
       }
 
+      if (actionId === "start" && !batchConfig.batchId) {
+        const batch = await request(config, "/messages/batches", {
+          method: "POST",
+          body: JSON.stringify(buildCreateBatchBody(batchConfig, prompt))
+        });
+        await assignAnthropicBatchId(config.id, batchConfig.id, batch.id);
+        return normalizeBatch(batch, config, {
+          ...batchConfig,
+          batchId: batch.id
+        });
+      }
+
       if (!cancelActions.includes(actionId)) return null;
+      if (!batchConfig.batchId) return null;
 
       await request(config, `/messages/batches/${encodeURIComponent(batchConfig.batchId)}/cancel`, {
         method: "POST"
@@ -142,8 +157,72 @@ function normalizeBatch(batch, providerConfig, batchConfig) {
   };
 }
 
-function normalizeCapabilities(goToTarget) {
-  const values = [...cancelActions];
+function normalizeLaunchableBatch(providerConfig, batchConfig) {
+  const at = Date.now();
+  const goToTarget = batchConfig.goToTarget || batchConfig.dashboardUrl || "";
+  return {
+    id: batchConfig.id,
+    name: batchConfig.name || batchConfig.id,
+    provider: providerConfig.label || "Anthropic Message Batches",
+    providerId: providerConfig.id,
+    type: "anthropic",
+    source: "user-account",
+    status: "waiting",
+    parentId: batchConfig.parentId || null,
+    task: batchConfig.task || batchConfig.input || "Anthropic message batch",
+    cpu: 0,
+    memoryMb: 0,
+    tokens: 0,
+    tokensPerSecond: 0,
+    tokenRateWindowMs: 0,
+    tokenCountConfidence: "unknown",
+    costUsd: 0,
+    startedAt: at,
+    children: batchConfig.children || [],
+    logs: [
+      {
+        at,
+        level: "info",
+        source: "anthropic",
+        message: `Ready to start a new Anthropic message batch${batchConfig.model ? ` on ${batchConfig.model}` : ""}.`
+      }
+    ],
+    goToTarget,
+    goToKind: goToTarget ? "url" : "unknown",
+    windowTitle: batchConfig.windowTitle || "",
+    model: batchConfig.model || "",
+    requestCounts: {},
+    capabilities: normalizeCapabilities(goToTarget, { launchable: true })
+  };
+}
+
+function buildCreateBatchBody(batchConfig, prompt = "") {
+  return {
+    requests: [
+      {
+        custom_id: batchConfig.id,
+        params: {
+          model: batchConfig.model,
+          max_tokens: normalizeMaxTokens(batchConfig.maxTokens),
+          messages: [
+            {
+              role: "user",
+              content: prompt.trim() || batchConfig.input
+            }
+          ]
+        }
+      }
+    ]
+  };
+}
+
+function normalizeMaxTokens(value) {
+  const number = Number(value || 1024);
+  return Number.isFinite(number) && number > 0 ? Math.round(number) : 1024;
+}
+
+function normalizeCapabilities(goToTarget, options = {}) {
+  const values = options.launchable ? ["start"] : [...cancelActions];
   return goToTarget ? [...values, "go-to"] : values;
 }
 

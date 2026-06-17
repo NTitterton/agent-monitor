@@ -145,7 +145,7 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 }
 ```
 
-Agent-level `capabilities` should only include actions the provider can actually perform. Agent Monitor filters capabilities to known unique action IDs before rendering controls or enforcing action requests. The app disables unsupported controls, and the local API validates action IDs before enforcing capabilities. Unknown action IDs return `400`; stale requests for missing agents return `404`; direct action requests that are not in an agent's advertised capabilities return `409`. Terminal statuses such as `ended`, `completed`, `succeeded`, `failed`, `cancelled`, and `expired` only allow `start` or surface actions such as `go-to`. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. Launchable OpenAI Response rows expose `start` until the Response is created; already-created OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start`.
+Agent-level `capabilities` should only include actions the provider can actually perform. Agent Monitor filters capabilities to known unique action IDs before rendering controls or enforcing action requests. The app disables unsupported controls, and the local API validates action IDs before enforcing capabilities. Unknown action IDs return `400`; stale requests for missing agents return `404`; direct action requests that are not in an agent's advertised capabilities return `409`. Terminal statuses such as `ended`, `completed`, `succeeded`, `failed`, `cancelled`, and `expired` only allow `start` or surface actions such as `go-to`. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. Launchable OpenAI Response and Anthropic Message Batch rows expose `start` until the provider object is created; already-created OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start`.
 
 Provider actions must return the updated target agent from the provider. If the provider accepts a command but does not return an updated agent, or returns a different agent ID, Agent Monitor treats that as a provider error instead of recording a successful lifecycle action.
 
@@ -314,9 +314,9 @@ Agent Monitor can also observe configured Anthropic Message Batch IDs:
 }
 ```
 
-The adapter uses Anthropic's Message Batch retrieve and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view. Already-created Message Batches do not expose a provider-backed `start` action.
+The adapter uses Anthropic's Message Batch create, retrieve, and cancel endpoints. It maps processing status and request counts into Agent Monitor's task-manager view. Already-created Message Batches do not expose a provider-backed `start` action.
 
-Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked batch rows accept `id | name | batchId | task | goToUrl`; the URL is optional.
+Anthropic Message Batch setup can be edited from the app Settings panel. Saved API keys are not returned by `GET /api/config`; leaving the API key field blank preserves the existing key for that provider ID. Tracked batch rows accept `id | name | batchId | task | goToUrl`; the URL is optional. Launchable batch rows accept `id | name | model | input | goToUrl`; before launch they appear as waiting agents with only `Start` plus optional `Go To`, and `Start` creates a single-request Message Batch, stores the returned batch ID in config, and then tracks it like any other configured batch.
 
 ## Current capability
 
@@ -355,6 +355,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Observe configured OpenAI Responses by response ID.
 - Start launchable configured OpenAI Responses from model/input rows and persist the created response ID.
 - Observe configured Anthropic Message Batches by batch ID.
+- Start launchable configured Anthropic Message Batches from model/input rows and persist the created batch ID.
 
 ## Next backend milestones
 

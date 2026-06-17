@@ -90,6 +90,35 @@ export async function assignOpenAIResponseId(providerId, itemId, responseId) {
   return true;
 }
 
+export async function assignAnthropicBatchId(providerId, itemId, batchId) {
+  const config = await readConfig();
+  const providers = Array.isArray(config.anthropicMessageBatchesProviders) ? config.anthropicMessageBatchesProviders : [];
+  let updated = false;
+
+  const anthropicMessageBatchesProviders = providers.map((provider) => {
+    if (provider?.id !== providerId) return provider;
+
+    return {
+      ...provider,
+      batches: (Array.isArray(provider.batches) ? provider.batches : []).map((item) => {
+        if (item?.id !== itemId) return item;
+        updated = true;
+        return {
+          ...item,
+          batchId
+        };
+      })
+    };
+  });
+
+  if (!updated) return false;
+  await writeConfig({
+    ...config,
+    anthropicMessageBatchesProviders
+  });
+  return true;
+}
+
 async function writeConfig(config) {
   const target = configPath();
   await mkdir(dirname(target), { recursive: true });
@@ -158,7 +187,7 @@ function validateConfigPatch(patch) {
   if (Object.hasOwn(patch, "anthropicMessageBatchesProviders")) {
     validateRows(patch.anthropicMessageBatchesProviders, "anthropicMessageBatchesProviders", ["id"], warnings);
     for (const provider of Array.isArray(patch.anthropicMessageBatchesProviders) ? patch.anthropicMessageBatchesProviders : []) {
-      validateRows(provider?.batches, `anthropicMessageBatchesProviders ${provider?.id || "unknown"} batches`, ["id", "batchId"], warnings);
+      validateAnthropicBatchRows(provider?.batches, `anthropicMessageBatchesProviders ${provider?.id || "unknown"} batches`, warnings);
     }
   }
 
@@ -219,6 +248,34 @@ function validateOpenAIResponseRows(rows, label, warnings) {
   });
 }
 
+function validateAnthropicBatchRows(rows, label, warnings) {
+  if (!Array.isArray(rows)) {
+    warnings.push(`${label} should be a list.`);
+    return;
+  }
+
+  const seen = new Set();
+  rows.forEach((row, index) => {
+    if (!row || typeof row !== "object") {
+      warnings.push(`${label} row ${index + 1} should be an object.`);
+      return;
+    }
+
+    if (!String(row.id || "").trim()) {
+      warnings.push(`${label} row ${index + 1} missing id.`);
+    }
+
+    if (!String(row.batchId || "").trim() && !(String(row.model || "").trim() && String(row.input || "").trim())) {
+      warnings.push(`${label} row ${index + 1} missing batchId or model/input launch fields.`);
+    }
+
+    if (row.id) {
+      if (seen.has(row.id)) warnings.push(`${label} contains duplicate id ${row.id}.`);
+      seen.add(row.id);
+    }
+  });
+}
+
 function isHttpUrl(value) {
   try {
     const url = new URL(value);
@@ -255,7 +312,7 @@ function publicAnthropicMessageBatchesProviders(providers) {
       apiKeyEnv: provider.apiKeyEnv || "ANTHROPIC_API_KEY",
       hasApiKey: Boolean(provider.apiKey),
       version: provider.version || "",
-      batches: normalizeTrackedItems(provider.batches, "batchId")
+      batches: normalizeAnthropicTrackedBatches(provider.batches)
     }));
 }
 
@@ -379,7 +436,7 @@ function normalizeAnthropicMessageBatchesProviders(value, fallback = []) {
         apiKeyEnv: String(provider.apiKeyEnv || existing.apiKeyEnv || "ANTHROPIC_API_KEY").trim(),
         ...(provider.apiKey ? { apiKey: String(provider.apiKey) } : {}),
         ...(provider.version ? { version: String(provider.version).trim() } : {}),
-        batches: normalizeTrackedItems(provider.batches, "batchId")
+        batches: normalizeAnthropicTrackedBatches(provider.batches)
       };
     });
 }
@@ -421,6 +478,35 @@ function normalizeOpenAITrackedResponses(items) {
       ...(item.responseId ? { responseId: String(item.responseId).trim() } : {}),
       ...(item.model ? { model: String(item.model).trim() } : {}),
       ...(item.input ? { input: String(item.input).trim() } : {}),
+      task: String(item.task || item.name || item.id).trim(),
+      ...(item.parentId ? { parentId: String(item.parentId).trim() } : {}),
+      ...(item.goToTarget || item.dashboardUrl
+        ? { goToTarget: String(item.goToTarget || item.dashboardUrl).trim() }
+        : {}),
+      ...(item.goToKind ? { goToKind: String(item.goToKind).trim() } : {}),
+      ...(item.windowTitle ? { windowTitle: String(item.windowTitle).trim() } : {}),
+      ...(Array.isArray(item.children) ? { children: normalizeStringList(item.children) } : {})
+    }));
+}
+
+function normalizeAnthropicTrackedBatches(items) {
+  if (!Array.isArray(items)) return [];
+
+  return items
+    .filter((item) => {
+      if (!item || !item.id) return false;
+      const batchId = String(item.batchId || "").trim();
+      const model = String(item.model || "").trim();
+      const input = String(item.input || "").trim();
+      return batchId || (model && input);
+    })
+    .map((item) => ({
+      id: String(item.id).trim(),
+      name: String(item.name || item.id).trim(),
+      ...(item.batchId ? { batchId: String(item.batchId).trim() } : {}),
+      ...(item.model ? { model: String(item.model).trim() } : {}),
+      ...(item.input ? { input: String(item.input).trim() } : {}),
+      ...(item.maxTokens ? { maxTokens: Number(item.maxTokens) } : {}),
       task: String(item.task || item.name || item.id).trim(),
       ...(item.parentId ? { parentId: String(item.parentId).trim() } : {}),
       ...(item.goToTarget || item.dashboardUrl

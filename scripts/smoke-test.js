@@ -111,6 +111,8 @@ try {
   assert(appSource.includes("formatTokenRate({ tokensPerSecond: tokenRate })"), "browser app summary should format aggregate token throughput");
   assert(appSource.includes("parseOpenAIResponseLines"), "app settings should parse OpenAI launchable response rows");
   assert(appSource.includes("formatOpenAIResponseLines"), "app settings should format OpenAI launchable response rows");
+  assert(appSource.includes("parseAnthropicBatchLines"), "app settings should parse Anthropic launchable batch rows");
+  assert(appSource.includes("formatAnthropicBatchLines"), "app settings should format Anthropic launchable batch rows");
   assert(appSource.includes("summary-warning"), "browser app summary should highlight provider issues");
   assert(appSource.includes("detail-action-row"), "browser app detail panel should render lifecycle controls");
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
@@ -454,6 +456,12 @@ try {
           id: "bad-openai",
           responses: [{ id: "missing-response-id" }]
         }
+      ],
+      anthropicMessageBatchesProviders: [
+        {
+          id: "bad-anthropic",
+          batches: [{ id: "missing-batch-id" }]
+        }
       ]
     })
   });
@@ -466,6 +474,10 @@ try {
   assert(
     invalidConfig.body.config.validationWarnings.some((warning) => warning.includes("responseId or model/input")),
     "invalid response row should produce a warning"
+  );
+  assert(
+    invalidConfig.body.config.validationWarnings.some((warning) => warning.includes("batchId or model/input")),
+    "invalid batch row should produce a warning"
   );
 
   const localEnvPreserved = await request("/api/config", {
@@ -1075,6 +1087,33 @@ async function assertAccountProviderCapabilities() {
       });
     }
 
+    if (String(url).endsWith("/messages/batches") && options.method === "POST") {
+      const body = JSON.parse(options.body || "{}");
+      const request = body.requests?.[0];
+      assert(request?.custom_id === "mock-batch-launch", "Anthropic start should create a batch request with the configured row ID");
+      assert(request?.params?.model === "claude-smoke", "Anthropic start should create a batch with the configured model");
+      assert(request?.params?.max_tokens === 1024, "Anthropic start should use the default max token limit");
+      assert(
+        request?.params?.messages?.[0]?.content === "batch launch prompt",
+        "Anthropic start should send the operator prompt as batch input"
+      );
+      return jsonResponse({
+        id: "msgbatch_created",
+        processing_status: "in_progress",
+        created_at: new Date().toISOString(),
+        request_counts: { processing: 1, succeeded: 0, errored: 0, canceled: 0, expired: 0 }
+      });
+    }
+
+    if (String(url).includes("/messages/batches/msgbatch_created")) {
+      return jsonResponse({
+        id: "msgbatch_created",
+        processing_status: "in_progress",
+        created_at: new Date().toISOString(),
+        request_counts: { processing: 1, succeeded: 0, errored: 0, canceled: 0, expired: 0 }
+      });
+    }
+
     return jsonResponse({ error: "unexpected smoke URL" }, 404);
   };
 
@@ -1134,6 +1173,36 @@ async function assertAccountProviderCapabilities() {
     assert(unsupportedAnthropicStart === null, "Anthropic batch start should be unsupported");
     const anthropicGoTo = await anthropicProvider.performAction("mock-batch", "go-to");
     assert(anthropicGoTo.id === "mock-batch", "Anthropic go-to should return the tracked batch without cancellation");
+
+    const configBeforeBatchLaunch = JSON.parse(await readFile(configPath, "utf8"));
+    configBeforeBatchLaunch.anthropicMessageBatchesProviders = [
+      {
+        id: "mock-anthropic-launch",
+        apiKey: "test",
+        batches: [
+          { id: "mock-batch-launch", name: "Mock Batch Launch", model: "claude-smoke", input: "configured batch input" }
+        ]
+      }
+    ];
+    await writeFile(configPath, `${JSON.stringify(configBeforeBatchLaunch, null, 2)}\n`);
+
+    const launchableAnthropicProvider = createAnthropicMessageBatchesProvider({
+      id: "mock-anthropic-launch",
+      apiKey: "test",
+      batches: [{ id: "mock-batch-launch", name: "Mock Batch Launch", model: "claude-smoke", input: "configured batch input" }]
+    });
+    const [launchableBatch] = await launchableAnthropicProvider.listAgents();
+    assert(launchableBatch.status === "waiting", "Anthropic launchable batch should render as waiting before start");
+    assert(launchableBatch.capabilities.includes("start"), "Anthropic launchable batch should expose start");
+    assert(!launchableBatch.capabilities.includes("stop"), "Anthropic launchable batch should not expose cancel before creation");
+    const startedBatch = await launchableAnthropicProvider.performAction("mock-batch-launch", "start", "batch launch prompt");
+    assert(startedBatch.id === "mock-batch-launch", "Anthropic start should return the configured launchable batch");
+    assert(startedBatch.remoteId === "msgbatch_created", "Anthropic start should track the created batch id");
+    const configAfterBatchLaunch = JSON.parse(await readFile(configPath, "utf8"));
+    assert(
+      configAfterBatchLaunch.anthropicMessageBatchesProviders[0]?.batches[0]?.batchId === "msgbatch_created",
+      "Anthropic start should persist the created batch id"
+    );
     assert(
       fetchCalls.every((call) => !call.url.includes("/cancel") || call.method === "POST"),
       "cancel endpoints should only be called through explicit cancel-style actions"
