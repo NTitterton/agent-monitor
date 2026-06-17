@@ -129,7 +129,7 @@ function normalizeCapabilities(capabilities, goToTarget) {
   const knownActions = new Set(agentActions.map((action) => action.id));
   const values = Array.isArray(capabilities)
     ? capabilities.map((capability) => String(capability).trim()).filter((capability) => knownActions.has(capability))
-    : lifecycleActions.map((action) => action.id);
+    : [];
   const nextValues = goToTarget ? [...values, "go-to"] : values;
   return [...new Set(nextValues)];
 }

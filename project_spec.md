@@ -187,6 +187,7 @@ Agent-level capabilities should describe actions the active provider can truly p
 
 - Configured local agents can expose `start` because Agent Monitor can spawn their configured command.
 - Remote HTTP agents can expose `start` or future resume-like controls when the remote API advertises those capabilities.
+- Remote HTTP agents that omit `capabilities` are treated as view-only except for inferred URL-backed `go-to`; Agent Monitor does not invent lifecycle controls for remote/cloud agents.
 - OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions for tracked objects, plus optional `go-to` links, but do not expose `start` for already-created work.
 - Capability arrays should only contain known Agent Monitor action IDs and should not contain duplicates.
 - The API should reject unknown action IDs before dispatching to providers.

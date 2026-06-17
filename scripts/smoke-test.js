@@ -692,6 +692,13 @@ async function assertRemoteProviderNormalization() {
             goToTarget: "https://remote.example/agents/remote-normalized",
             logs: [{ at: "2026-01-02T03:05:05.000Z", message: "remote log" }],
             transcript: [{ at: "2026-01-02T03:06:05.000Z", role: "assistant", content: "remote transcript" }]
+          },
+          {
+            id: "remote-view-only",
+            name: "Remote View Only",
+            status: "running",
+            startedAt: "2026-01-02T03:04:05.000Z",
+            goToTarget: "https://remote.example/agents/remote-view-only"
           }
         ]
       });
@@ -718,7 +725,7 @@ async function assertRemoteProviderNormalization() {
       label: "Mock Remote",
       baseUrl: "https://remote.example/api"
     });
-    const [agent] = await provider.listAgents();
+    const [agent, viewOnlyAgent] = await provider.listAgents();
     assert(agent.owner === "platform-team", "remote provider should preserve owner");
     assert(agent.workspace === "agent-monitor", "remote provider should preserve workspace");
     assert(agent.repository === "NTitterton/agent-monitor", "remote provider should preserve repository");
@@ -740,6 +747,7 @@ async function assertRemoteProviderNormalization() {
     assert(agent.parentPid === 100, "remote provider should normalize parent pid");
     assert(agent.childPids.join(",") === "201,202", "remote provider should normalize child pids");
     assert(agent.capabilities.join(",") === "stop,go-to", "remote provider should normalize known unique capabilities");
+    assert(viewOnlyAgent.capabilities.join(",") === "go-to", "remote provider should not invent lifecycle capabilities");
     assert(agent.logs[0]?.at === Date.parse("2026-01-02T03:05:05.000Z"), "remote provider should normalize log timestamps");
     assert(
       agent.transcript[0]?.at === Date.parse("2026-01-02T03:06:05.000Z"),
