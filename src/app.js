@@ -1019,7 +1019,9 @@ function renderAction(agent, action) {
 
 function actionDisabledReason(agent, action) {
   if (action.surface && !agent.capabilities?.includes(action.id)) return `${action.label} is unavailable for this agent`;
-  if (agent.capabilities && !agent.capabilities.includes(action.id)) return `${action.label} is not supported by ${agent.provider}`;
+  if (Array.isArray(agent.capabilities) && !agent.capabilities.includes(action.id)) {
+    return `${agent.provider} did not advertise ${action.label}`;
+  }
   if (agent.status === "ended" && action.id !== "start") return "Ended agents can only be started";
   if (agent.status === "running" && action.id === "start") return "Agent is already running";
   return "";

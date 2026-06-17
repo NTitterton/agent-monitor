@@ -75,6 +75,7 @@ try {
     "browser app should escape provider-supplied agent, provider, and history text"
   );
   assert(appSource.includes("actionDisabledReason"), "browser app should explain disabled action controls");
+  assert(appSource.includes("did not advertise"), "browser app should explain unadvertised provider capabilities");
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
   assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
@@ -98,6 +99,7 @@ try {
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
   assert(moduleWidgetSource.includes("escapeAttribute(agent.id)"), "module widget should escape provider-supplied attributes");
   assert(moduleWidgetSource.includes("actionDisabledReason"), "module widget should explain disabled action controls");
+  assert(moduleWidgetSource.includes("did not advertise"), "module widget should explain unadvertised provider capabilities");
   assert(moduleWidgetSource.includes("lineageSummary(agent, agents)"), "module widget should resolve lineage names from the snapshot");
   assert(moduleWidgetSource.includes("renderProviderSummary"), "module widget should render provider/source health");
   assert(moduleWidgetSource.includes("this.snapshotAt = snapshot.snapshotAt"), "module widget should preserve snapshot freshness");
@@ -107,6 +109,7 @@ try {
   assert(moduleWidgetSource.includes("sortWidgetAgents"), "module widget should order agents by task pressure");
   assert(moduleWidgetSource.includes("collectActionPrompt"), "module widget should cancel prompt actions when the prompt is canceled");
   assert(standaloneWidgetSource.includes("actionDisabledReason"), "standalone widget should explain disabled action controls");
+  assert(standaloneWidgetSource.includes("did not advertise"), "standalone widget should explain unadvertised provider capabilities");
   assert(standaloneWidgetSource.includes("lineageSummary(agent, this.agents)"), "standalone widget should resolve lineage names from the snapshot");
   assert(standaloneWidgetSource.includes("renderProviderSummary"), "standalone widget should render provider/source health");
   assert(standaloneWidgetSource.includes("agentContextLine"), "standalone widget should render remote agent context");

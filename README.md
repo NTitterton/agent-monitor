@@ -147,7 +147,7 @@ Agent-level `capabilities` should only include actions the provider can actually
 
 Provider actions must return the updated target agent from the provider. If the provider accepts a command but does not return an updated agent, or returns a different agent ID, Agent Monitor treats that as a provider error instead of recording a successful lifecycle action.
 
-Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets and lifecycle actions that do not apply to the agent's current status. Prompt-based actions such as `Interrupt` and `End` are not dispatched if the operator cancels the prompt.
+Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets, unadvertised provider capabilities, and lifecycle actions that do not apply to the agent's current status. Prompt-based actions such as `Interrupt` and `End` are not dispatched if the operator cancels the prompt.
 
 ## Monitor local processes
 
