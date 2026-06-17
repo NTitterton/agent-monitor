@@ -27,6 +27,7 @@ export function createProviderRegistry() {
   const stateStore = createStateStore();
   const providers = [];
   const snapshotCache = new Map();
+  const previousTokenSnapshots = new Map();
   const snapshotCacheTtlMs = Math.max(0, Number(process.env.AGENT_MONITOR_SCAN_CACHE_MS || 1000));
 
   const stateProviders = [
@@ -204,9 +205,10 @@ export function createProviderRegistry() {
     const resultCacheTtlMs = Math.max(0, Number(options.cacheTtlMs ?? snapshotCacheTtlMs));
     try {
       const agents = await provider.listAgents();
+      const normalizedAgents = agents.map((agent) => ({ scannedAt, ...agent, scannedAt: agent.scannedAt || scannedAt }));
       const result = {
         provider,
-        agents: agents.map((agent) => ({ scannedAt, ...agent, scannedAt: agent.scannedAt || scannedAt })),
+        agents: applySampledTokenRates(provider.id, normalizedAgents, scannedAt, previousTokenSnapshots),
         scannedAt,
         cacheTtlMs: resultCacheTtlMs,
         error: null
@@ -259,4 +261,30 @@ export function createProviderRegistry() {
     performAction,
     invalidateSnapshots
   };
+}
+
+export function applySampledTokenRates(providerId, agents, scannedAt = Date.now(), previousSnapshots = new Map()) {
+  return agents.map((agent) => {
+    const tokens = Number(agent.tokens || 0);
+    const reportedRate = Number(agent.tokensPerSecond || 0);
+    const key = `${providerId}:${agent.id}`;
+    const previous = previousSnapshots.get(key);
+    previousSnapshots.set(key, { tokens, scannedAt });
+
+    if (!Number.isFinite(tokens) || tokens <= 0 || reportedRate > 0 || !previous) {
+      return agent;
+    }
+
+    const elapsedMs = Math.max(0, scannedAt - Number(previous.scannedAt || 0));
+    const tokenDelta = tokens - Number(previous.tokens || 0);
+    if (elapsedMs <= 0 || tokenDelta <= 0) {
+      return agent;
+    }
+
+    return {
+      ...agent,
+      tokensPerSecond: Number((tokenDelta / (elapsedMs / 1000)).toFixed(2)),
+      tokenRateWindowMs: elapsedMs
+    };
+  });
 }

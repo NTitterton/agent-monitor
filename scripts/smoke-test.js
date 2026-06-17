@@ -6,6 +6,7 @@ import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
 import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
 import { signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
+import { applySampledTokenRates } from "../server/providerRegistry.js";
 
 const port = 5199;
 const apiBase = `http://127.0.0.1:${port}`;
@@ -47,6 +48,7 @@ try {
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
   const registrySource = await readFile(new URL("../server/providerRegistry.js", import.meta.url), "utf8");
   assert(registrySource.includes("Provider did not return updated agent"), "registry should reject unconfirmed provider actions");
+  assertSampledTokenRates();
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
@@ -610,6 +612,33 @@ function assertProcessResourceAggregation() {
   assert(resources.childCpu === 3.6, "local child CPU should be rounded");
   assert(resources.processMemoryMb === 100, "local process memory should be preserved");
   assert(resources.childMemoryMb === 35, "local child memory should be summed");
+}
+
+function assertSampledTokenRates() {
+  const previous = new Map();
+  const [first] = applySampledTokenRates(
+    "mock-provider",
+    [{ id: "agent-1", tokens: 100, tokensPerSecond: 0, tokenRateWindowMs: 0 }],
+    1000,
+    previous
+  );
+  const [second] = applySampledTokenRates(
+    "mock-provider",
+    [{ id: "agent-1", tokens: 160, tokensPerSecond: 0, tokenRateWindowMs: 0 }],
+    4000,
+    previous
+  );
+  const [reported] = applySampledTokenRates(
+    "mock-provider",
+    [{ id: "agent-1", tokens: 200, tokensPerSecond: 9, tokenRateWindowMs: 1000 }],
+    5000,
+    previous
+  );
+
+  assert(first.tokensPerSecond === 0, "first token sample should not invent a rate");
+  assert(second.tokensPerSecond === 20, "token sampling should derive throughput from cumulative deltas");
+  assert(second.tokenRateWindowMs === 3000, "token sampling should report the sample window");
+  assert(reported.tokensPerSecond === 9, "provider-reported token rates should take precedence");
 }
 
 async function assertAccountProviderCapabilities() {

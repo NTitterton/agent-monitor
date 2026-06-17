@@ -226,6 +226,8 @@ Provider failures are isolated: `/api/providers` reports health and errors, whil
 
 Remote agents can expose the same normalized resource, lineage, log, transcript, capability, and `go-to` fields as local agents. The adapter preserves provider-reported process breakdown fields and routes lifecycle actions through the remote action endpoint.
 
+Provider snapshots can either report token throughput directly or only report cumulative tokens. The registry preserves positive provider-reported rates and otherwise derives `tokensPerSecond` from successive fresh snapshots for the same provider/agent ID.
+
 ## 9. OpenAI Responses Provider
 
 The OpenAI Responses provider observes configured response IDs from a user's OpenAI account. It retrieves each response, maps status/model/token usage/output transcript into the normalized agent shape, and routes terminating lifecycle actions to OpenAI's cancel response endpoint.

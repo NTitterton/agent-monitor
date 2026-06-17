@@ -80,7 +80,7 @@ Notes:
 - Remote providers should be allowed to report their own token totals and rates.
 - Remote providers may also report `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `pid`, `parentPid`, and `childPids` when they can observe process-level execution.
 
-Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract.
+Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract. When a provider reports cumulative tokens but no positive token rate, fresh provider snapshots derive `tokensPerSecond` from successive token deltas and expose the measured `tokenRateWindowMs`.
 
 Acceptance criteria:
 
@@ -271,7 +271,7 @@ Status: implemented for state-backed agents, remote HTTP provider payloads, and 
 ## Near-Term Implementation Plan
 
 1. Add `type` to all provider normalizers and update filters.
-2. Add token confidence fields and compute `tokensPerSecond` where successive snapshots make that possible.
+2. Continue refining provider-specific token confidence as integrations expose richer live usage signals.
 3. Add `goTo` metadata and a disabled/available UI state.
 4. Add configurable polling cadence to app settings.
 5. Add provider setup validation and connection-test actions.
