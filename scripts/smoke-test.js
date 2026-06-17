@@ -159,6 +159,8 @@ try {
   assert(moduleWidgetSource.includes("renderProviderSummary"), "module widget should render provider/source health");
   assert(moduleWidgetSource.includes("this.snapshotAt = snapshot.snapshotAt"), "module widget should preserve snapshot freshness");
   assert(moduleWidgetSource.includes("Updated ${formatTimestamp(snapshotAt)}"), "module widget should render snapshot freshness");
+  assert(moduleWidgetSource.includes("this.scanner = snapshot.scanner"), "module widget should preserve scanner status");
+  assert(moduleWidgetSource.includes("renderScannerSummary"), "module widget should render scanner status");
   assert(moduleWidgetSource.includes("agentContextLine"), "module widget should render remote agent context");
   assert(moduleWidgetSource.includes("providerObjectLine"), "module widget should render provider object metadata");
   assert(moduleWidgetSource.includes("formatSpend(agent.costUsd)"), "module widget should render agent spend");
@@ -171,6 +173,8 @@ try {
   assert(standaloneWidgetSource.includes("did not advertise"), "standalone widget should explain unadvertised provider capabilities");
   assert(standaloneWidgetSource.includes("lineageSummary(agent, this.agents)"), "standalone widget should resolve lineage names from the snapshot");
   assert(standaloneWidgetSource.includes("renderProviderSummary"), "standalone widget should render provider/source health");
+  assert(standaloneWidgetSource.includes("normalizeScanner"), "standalone widget should normalize scanner status");
+  assert(standaloneWidgetSource.includes("renderScannerSummary"), "standalone widget should render scanner status");
   assert(standaloneWidgetSource.includes("agentContextLine"), "standalone widget should render remote agent context");
   assert(standaloneWidgetSource.includes("providerObjectLine"), "standalone widget should render provider object metadata");
   assert(standaloneWidgetSource.includes("formatSpend(agent.costUsd)"), "standalone widget should render agent spend");

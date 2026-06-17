@@ -240,6 +240,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.agents = normalizeWidgetAgents(fallbackAgents);
     this.providers = [];
+    this.scanner = null;
     this.history = [];
     this.snapshotAt = null;
     this.actionMessage = null;
@@ -275,6 +276,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       this.agents = normalizeWidgetAgents(payload.agents || []);
       this.history = payload.history || [];
       this.providers = payload.providers || [];
+      this.scanner = normalizeScanner(payload.scanner);
       this.snapshotAt = normalizeOptionalTimestamp(payload.snapshotAt);
       this.render();
     } catch {
@@ -321,6 +323,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         this.agents = payload?.agents ? normalizeWidgetAgents(payload.agents) : this.agents;
         this.history = payload?.history || this.history;
         this.providers = payload?.providers || this.providers;
+        this.scanner = payload?.scanner ? normalizeScanner(payload.scanner) : this.scanner;
         this.snapshotAt = normalizeOptionalTimestamp(payload?.snapshotAt) || this.snapshotAt;
         this.actionMessage = {
           tone: response.status >= 500 ? "error" : "warn",
@@ -333,6 +336,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       this.agents = payload.agents ? normalizeWidgetAgents(payload.agents) : this.agents;
       this.history = payload.history || this.history;
       this.providers = payload.providers || this.providers;
+      this.scanner = payload.scanner ? normalizeScanner(payload.scanner) : this.scanner;
       this.snapshotAt = normalizeOptionalTimestamp(payload.snapshotAt) || this.snapshotAt;
       this.actionMessage = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
       this.render();
@@ -388,6 +392,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         ...this.history
       ].slice(0, 8);
       this.snapshotAt = null;
+      this.scanner = null;
       this.actionMessage = { tone: "ok", text: `${action.label} applied locally to ${agent.name}` };
     }
     this.render();
@@ -407,6 +412,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           <span>${this.agents.length} total</span>
         </header>
         ${renderProviderSummary(this.providers, this.agents, this.snapshotAt)}
+        ${renderScannerSummary(this.scanner)}
         ${visibleAgents.map((agent) => this.renderAgent(agent)).join("")}
         ${this.renderActionMessage()}
         ${this.renderFooter()}
@@ -546,6 +552,15 @@ function renderProviderSummary(providers, agents, snapshotAt = null) {
   `;
 }
 
+function renderScannerSummary(scanner) {
+  if (!scanner) return "";
+  const state = scanner.enabled ? (scanner.running ? "Scanning now" : "Discovery on") : "Discovery off";
+  const detail = scanner.lastFinishedAt ? `finished ${formatTimestamp(scanner.lastFinishedAt)}` : `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  const counts = `${Number(scanner.agentCount || 0)} agents · ${Number(scanner.providerCount || 0)} providers`;
+  const error = scanner.lastError ? ` · ${scanner.lastError}` : "";
+  return `<p class="source-summary">${escapeHtml(state)} · ${escapeHtml(detail)} · ${escapeHtml(counts)}${escapeHtml(error)}</p>`;
+}
+
 function sortWidgetAgents(agents) {
   return [...agents].sort(compareWidgetAgents);
 }
@@ -622,6 +637,21 @@ function normalizeWidgetAgent(agent) {
     capabilities: normalizeCapabilities(agent.capabilities),
     logs: normalizeLogs(agent.logs),
     transcript: normalizeTranscript(agent.transcript)
+  };
+}
+
+function normalizeScanner(scanner) {
+  if (!scanner || typeof scanner !== "object") return null;
+  return {
+    enabled: scanner.enabled === true,
+    running: scanner.running === true,
+    intervalMs: finiteNumber(scanner.intervalMs, 15000),
+    lastScanAt: normalizeOptionalTimestamp(scanner.lastScanAt),
+    lastFinishedAt: normalizeOptionalTimestamp(scanner.lastFinishedAt),
+    lastError: normalizeOptionalString(scanner.lastError),
+    providerCount: finiteNumber(scanner.providerCount),
+    agentCount: finiteNumber(scanner.agentCount),
+    errors: finiteNumber(scanner.errors)
   };
 }
 

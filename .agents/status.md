@@ -46,7 +46,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Named parent/child lineage summaries in embedded widgets.
 - Selected-agent inspector preserves unresolved parent/child lineage IDs when related agents are absent from the snapshot.
 - String parent/child lineage ID normalization across provider, registry, state, and client snapshots.
-- Compact provider/source health summaries in embedded widgets.
+- Compact provider/source health and active-discovery scanner summaries in embedded widgets.
 - Embedded widget task-pressure ordering by status, priority, CPU, start time, and name.
 - Search/status/source/type/provider filters for the agent table.
 - Browser search includes remote context fields such as current step, owner, workspace, repository, branch, queue, priority, provider object IDs, provider models, and request counts.

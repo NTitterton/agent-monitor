@@ -111,7 +111,7 @@ The module widget uses the same client as the browser app, so it reads from the 
 
 When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive. The app and widgets escape provider-supplied text/attributes and show lifecycle action feedback; if the API is reachable but rejects an action, the standalone widget leaves its current state unchanged instead of applying a local fallback action and shows the rejection message in the widget. Standalone widget snapshots normalize numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering. Local fallback actions update runtime/resource fields and record action history with agent, provider, source, type, and action metadata.
 
-Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, snapshot freshness, and provider issue count when an adapter is failing. Agent cards are ordered by task pressure, with active/high-priority/high-CPU agents first. They also show compact remote context when providers report owner, workspace, repository, branch, queue, or priority fields, show provider-object details such as remote IDs, models, request counts, and Go To kind, and include nonzero per-agent spend in the resource line.
+Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, snapshot freshness, provider issue count when an adapter is failing, and compact active-discovery scanner status when available. Agent cards are ordered by task pressure, with active/high-priority/high-CPU agents first. They also show compact remote context when providers report owner, workspace, repository, branch, queue, or priority fields, show provider-object details such as remote IDs, models, request counts, and Go To kind, and include nonzero per-agent spend in the resource line.
 
 ## Local API
 
@@ -338,7 +338,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Record action history with provider, source, type, and action-kind metadata.
 - Show named parent/child lineage in the browser app and embedded widgets.
 - Preserve unresolved parent/child lineage IDs in the selected-agent inspector when related agents are absent from the current snapshot.
-- Show compact provider/source health in embedded widgets.
+- Show compact provider/source health and active-discovery scanner status in embedded widgets.
 - Show compact provider object metadata in embedded widgets.
 - Order embedded widget cards by task pressure so active/high-priority/high-CPU agents surface first.
 - Derive status filters from provider snapshots so provider-specific states remain filterable.

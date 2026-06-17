@@ -246,7 +246,7 @@ Lineage note: the browser app and widgets resolve known parent/child agent IDs i
 
 Lineage normalization note: `parentId` and `children` are normalized as string IDs at provider, registry, persisted-state, and client snapshot boundaries so cross-provider lineage joins are stable even when a provider reports numeric IDs.
 
-Embedded-widget note: module and standalone widgets render compact provider/source health and unified snapshot freshness from the unified snapshot so embeds show adapter issues and last update time without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
+Embedded-widget note: module and standalone widgets render compact provider/source health, active-discovery scanner status, and unified snapshot freshness from the unified snapshot so embeds show adapter issues, discovery state, and last update time without opening the full app. Widget cards are ordered by task pressure: status, priority, CPU, start time, then name.
 
 Standalone-widget normalization note: the standalone embed normalizes incoming API/fallback snapshots for numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering, preserving stable behavior when embedded on static personal sites. It observes `api-base`, `api-token`, `auth-header`, and `refresh-ms` changes after mount so host pages can reconfigure it without remounting.
 

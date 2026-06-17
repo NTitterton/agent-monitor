@@ -22,6 +22,7 @@ class AgentMonitorWidget extends HTMLElement {
       this.agents = snapshot.agents;
       this.history = snapshot.history;
       this.providers = snapshot.providers;
+      this.scanner = snapshot.scanner;
       this.snapshotAt = snapshot.snapshotAt;
       this.actionMessage = snapshot.actionMessage;
       this.render();
@@ -53,6 +54,7 @@ class AgentMonitorWidget extends HTMLElement {
           <span>${agents.length} total</span>
         </header>
         ${renderProviderSummary(this.providers || [], agents, this.snapshotAt)}
+        ${renderScannerSummary(this.scanner)}
         <div class="list">
           ${visibleAgents.map((agent) => renderWidgetAgent(agent, agents)).join("")}
         </div>
@@ -108,6 +110,15 @@ function renderActionMessage(message) {
       ${escapeText(message.text || "")}
     </p>
   `;
+}
+
+function renderScannerSummary(scanner) {
+  if (!scanner) return "";
+  const state = scanner.enabled ? (scanner.running ? "Scanning now" : "Discovery on") : "Discovery off";
+  const detail = scanner.lastFinishedAt ? `finished ${formatTimestamp(scanner.lastFinishedAt)}` : `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  const counts = `${Number(scanner.agentCount || 0)} agents · ${Number(scanner.providerCount || 0)} providers`;
+  const error = scanner.lastError ? ` · ${scanner.lastError}` : "";
+  return `<p class="source-summary">${escapeText(state)} · ${escapeText(detail)} · ${escapeText(counts)}${escapeText(error)}</p>`;
 }
 
 function renderProviderSummary(providers, agents, snapshotAt = null) {
