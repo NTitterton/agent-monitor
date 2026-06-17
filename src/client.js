@@ -132,7 +132,19 @@ export function createAgentClient() {
       });
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const payload = await response.json();
-      await refresh();
+      const nextProviders = payload.providers || mergeProviderStatus(providers, payload.provider);
+      if (payload.agents) {
+        emit(
+          payload.agents,
+          payload.history || history,
+          nextProviders,
+          payload.config || config,
+          null,
+          payload.scanner || scanner
+        );
+      } else {
+        emit(agents, history, nextProviders, config, null, scanner);
+      }
       return payload.provider;
     },
     async detail(agentId) {
@@ -241,6 +253,15 @@ async function readJsonResponse(response) {
 
 function cloneActionMessage(message) {
   return message ? { ...message } : null;
+}
+
+function mergeProviderStatus(currentProviders, testedProvider) {
+  if (!testedProvider) return currentProviders;
+  const merged = currentProviders.map((provider) =>
+    provider.id === testedProvider.id ? { ...provider, ...testedProvider } : provider
+  );
+  if (!merged.some((provider) => provider.id === testedProvider.id)) merged.push(testedProvider);
+  return merged;
 }
 
 function isUrlGoTo(agent) {

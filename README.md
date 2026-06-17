@@ -118,7 +118,7 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 - `GET /api/agents` returns the current agent snapshot. Agents include `scannedAt` when they came from a provider snapshot.
 - `GET /api/agents/:id` returns the selected agent, lineage neighbors, and recent agent history. Stale detail requests for missing agents return `404` with refreshed agents, history, provider status, sanitized config, and scanner status so clients can reconcile their view.
 - `GET /api/providers` returns configured provider adapters, lifecycle capabilities, and `scannedAt` freshness metadata.
-- `POST /api/providers/:id/test` runs one provider snapshot check and returns that provider's health.
+- `POST /api/providers/:id/test` runs one provider snapshot check and returns that provider's health plus refreshed agents, history, provider status, sanitized config, and scanner status.
 - `GET /api/history` returns recent lifecycle actions.
 - `GET /api/config` returns non-secret setup fields for the local UI.
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.

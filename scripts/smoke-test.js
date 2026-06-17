@@ -71,6 +71,7 @@ try {
   const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
   assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");
   assert(clientSource.includes("errorPayload?.agents"), "client detail errors should apply returned snapshot context");
+  assert(clientSource.includes("mergeProviderStatus"), "client should apply provider test results to source status");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
@@ -158,6 +159,11 @@ try {
   assert(providerTest.status === 200, "provider connection test should succeed");
   assert(providerTest.body.provider.id === "local-process", "provider connection test should return provider status");
   assert(providerTest.body.provider.status === "ok", "local process provider test should be ok");
+  assert(Array.isArray(providerTest.body.agents), "provider connection test should return agents");
+  assert(Array.isArray(providerTest.body.history), "provider connection test should return history");
+  assert(Array.isArray(providerTest.body.providers), "provider connection test should return provider status list");
+  assert(providerTest.body.config?.hasApiToken === true, "provider connection test should return sanitized config");
+  assert(providerTest.body.scanner, "provider connection test should return scanner status");
 
   const unauthorized = await request("/api/agents", {
     headers: { Origin: allowedOrigin }

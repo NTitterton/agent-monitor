@@ -65,7 +65,12 @@ const server = createServer(async (request, response) => {
     if (providerTestMatch && request.method === "POST") {
       const result = await registry.testProvider(decodeURIComponent(providerTestMatch[1]));
       if (!result) return sendJson(request, response, { error: "Provider not found" }, 404);
-      return sendJson(request, response, { provider: result });
+      const payload = await withSnapshotContext({
+        provider: result,
+        agents: await registry.listAgents(),
+        history: await registry.listHistory()
+      });
+      return sendJson(request, response, payload);
     }
 
     if (url.pathname === "/api/config" && request.method === "GET") {
