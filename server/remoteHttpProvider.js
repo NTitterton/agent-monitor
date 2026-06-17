@@ -59,7 +59,7 @@ async function request(config, pathname, options) {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        ...(config.token ? { Authorization: `Bearer ${config.token}` } : {}),
+        ...authHeaders(config),
         ...(config.headers || {})
       },
       signal: controller.signal
@@ -73,6 +73,15 @@ async function request(config, pathname, options) {
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function authHeaders(config) {
+  if (!config.token) return {};
+  const tokenHeader = String(config.tokenHeader || "Authorization").trim() || "Authorization";
+  const tokenPrefix = String(config.tokenPrefix ?? "Bearer").trim();
+  return {
+    [tokenHeader]: tokenPrefix ? `${tokenPrefix} ${config.token}` : config.token
+  };
 }
 
 function normalizeAgents(agents, config) {

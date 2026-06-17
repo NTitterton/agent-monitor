@@ -24,6 +24,8 @@
       "label": "Remote Runner",
       "source": "cloud",
       "baseUrl": "https://agents.example.com/api",
+      "tokenHeader": "Authorization",
+      "tokenPrefix": "Bearer",
       "token": "replace-me"
     }
   ],

@@ -209,6 +209,8 @@ Add remote providers to `agent-monitor.config.json`:
       "label": "Remote Runner",
       "source": "cloud",
       "baseUrl": "https://agents.example.com/api",
+      "tokenHeader": "Authorization",
+      "tokenPrefix": "Bearer",
       "token": "replace-me"
     }
   ]
@@ -264,7 +266,7 @@ Action requests receive:
 { "action": "interrupt", "prompt": "optional operator prompt" }
 ```
 
-Remote provider setup can be edited from the app Settings panel. Saved provider tokens are not returned by `GET /api/config`; leaving the token field blank preserves an existing token for that provider ID.
+Remote provider setup can be edited from the app Settings panel. Saved provider tokens are not returned by `GET /api/config`; leaving the token field blank preserves an existing token for that provider ID. By default Agent Monitor sends `Authorization: Bearer <token>`, but `tokenHeader` and `tokenPrefix` can be configured for services that expect headers such as `X-Agent-Token: <token>` or `X-API-Key: <token>`.
 
 The response may return `{ "agent": {...} }`, a bare updated agent object, or `{ "agents": [...] }`. Provider health is surfaced through `GET /api/providers`; a failing remote provider is shown in the Sources panel without breaking other providers. If a provider fails after a successful scan, Agent Monitor keeps that provider's last cached agents visible while marking the provider unhealthy.
 

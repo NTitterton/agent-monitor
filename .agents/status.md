@@ -32,6 +32,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Active local agent process discovery for known agent CLIs.
 - Local process PPID/child PID metadata and monitored-agent lineage linking.
 - Remote HTTP provider contract and health reporting.
+- Remote HTTP providers support configurable token header and prefix while keeping tokens secret.
 - OpenAI Responses provider for configured response IDs and launchable model/input rows.
 - Configurable OpenAI Response spend estimates from reported input/output token usage.
 - Anthropic Message Batches provider for configured batch IDs and launchable model/input rows.

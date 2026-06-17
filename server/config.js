@@ -342,6 +342,8 @@ function publicRemoteHttpProviders(providers) {
       baseUrl: provider.baseUrl,
       dashboardUrl: provider.dashboardUrl || "",
       hasToken: Boolean(provider.token),
+      tokenHeader: provider.tokenHeader || "Authorization",
+      tokenPrefix: provider.tokenPrefix ?? "Bearer",
       timeoutMs: provider.timeoutMs
     }));
 }
@@ -408,6 +410,10 @@ function normalizeRemoteHttpProviders(value, fallback = []) {
           ? { dashboardUrl: String(provider.dashboardUrl || existing.dashboardUrl).trim() }
           : {}),
         ...(provider.token ? { token: String(provider.token) } : {}),
+        tokenHeader: String(provider.tokenHeader || existing.tokenHeader || "Authorization").trim(),
+        tokenPrefix: Object.hasOwn(provider, "tokenPrefix")
+          ? String(provider.tokenPrefix ?? "").trim()
+          : String(existing.tokenPrefix ?? "Bearer").trim(),
         ...(provider.timeoutMs ? { timeoutMs: Number(provider.timeoutMs) } : {})
       };
     });

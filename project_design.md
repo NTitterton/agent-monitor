@@ -228,6 +228,8 @@ Remote agents can expose the same normalized provider/source/type classification
 
 Provider snapshots can either report token throughput directly or only report cumulative tokens. The registry preserves positive provider-reported rates and otherwise derives `tokensPerSecond` from successive fresh snapshots for the same provider/agent ID. Embedded widgets include nonzero `costUsd` beside resource and token metrics so embeds keep spend visible. Snapshot normalization coerces `costUsd` to a number before UI totals and spend sorting.
 
+Remote HTTP auth defaults to `Authorization: Bearer <token>`, while `tokenHeader` and `tokenPrefix` support third-party runners that require raw tokens or custom API-key headers.
+
 ## 9. OpenAI Responses Provider
 
 The OpenAI Responses provider observes configured response IDs from a user's OpenAI account. It retrieves each response, maps status/model/token usage/output transcript into the normalized agent shape, estimates spend from operator-configured input/output token rates when available, and routes terminating lifecycle actions to OpenAI's cancel response endpoint.

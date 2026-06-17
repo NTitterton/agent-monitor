@@ -131,6 +131,8 @@ try {
   assert(appSource.includes("formatTokenRate({ tokensPerSecond: tokenRate })"), "browser app summary should format aggregate token throughput");
   assert(appSource.includes("parseOpenAIResponseLines"), "app settings should parse OpenAI launchable response rows");
   assert(appSource.includes("formatOpenAIResponseLines"), "app settings should format OpenAI launchable response rows");
+  assert(appSource.includes('data-remote-field="tokenHeader"'), "app settings should expose remote provider token header");
+  assert(appSource.includes('data-remote-field="tokenPrefix"'), "app settings should expose remote provider token prefix");
   assert(appSource.includes('data-openai-field="inputCostUsdPer1K"'), "app settings should expose OpenAI input cost rate");
   assert(appSource.includes('data-openai-field="outputCostUsdPer1K"'), "app settings should expose OpenAI output cost rate");
   assert(appSource.includes("parseAnthropicBatchLines"), "app settings should parse Anthropic launchable batch rows");
@@ -406,6 +408,8 @@ try {
           source: "cloud",
           baseUrl: `${apiBase}/missing`,
           dashboardUrl: `${apiBase}/dashboard`,
+          tokenHeader: "X-Agent-Token",
+          tokenPrefix: "",
           token: "remote-secret"
         }
       ]
@@ -423,6 +427,8 @@ try {
   assert(updatedConfig.body.config.remoteHttpProviders[0]?.id === "smoke-remote", "config update should add remote provider");
   assert(updatedConfig.body.config.remoteHttpProviders[0]?.type === "smoke-remote", "remote provider should expose type");
   assert(updatedConfig.body.config.remoteHttpProviders[0]?.hasToken === true, "public remote provider should report token presence");
+  assert(updatedConfig.body.config.remoteHttpProviders[0]?.tokenHeader === "X-Agent-Token", "public remote provider should expose token header");
+  assert(updatedConfig.body.config.remoteHttpProviders[0]?.tokenPrefix === "", "public remote provider should expose token prefix");
   assert(!("token" in updatedConfig.body.config.remoteHttpProviders[0]), "public remote provider should not expose token");
 
   const configFileAfterUpdate = JSON.parse(await readFile(configPath, "utf8"));
@@ -432,6 +438,8 @@ try {
   assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "config file should store remote dashboard URL");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.token === "remote-secret", "config file should store remote token");
+  assert(configFileAfterUpdate.remoteHttpProviders[0]?.tokenHeader === "X-Agent-Token", "config file should store remote token header");
+  assert(configFileAfterUpdate.remoteHttpProviders[0]?.tokenPrefix === "", "config file should store raw-token prefix mode");
 
   await waitFor(async () => {
     const status = await request("/api/scanner");
@@ -514,6 +522,8 @@ try {
   const configFileAfterRemoteUpdate = JSON.parse(await readFile(configPath, "utf8"));
   assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.token === "remote-secret", "remote token should be preserved when omitted");
   assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "remote dashboard URL should be preserved when omitted");
+  assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.tokenHeader === "X-Agent-Token", "remote token header should be preserved when omitted");
+  assert(configFileAfterRemoteUpdate.remoteHttpProviders[0]?.tokenPrefix === "", "remote token prefix should be preserved when omitted");
 
   const invalidConfig = await request("/api/config", {
     method: "PUT",
@@ -863,7 +873,7 @@ async function assertRemoteProviderNormalization() {
   const originalFetch = globalThis.fetch;
   const fetchCalls = [];
   globalThis.fetch = async (url, options = {}) => {
-    fetchCalls.push({ url: String(url), method: options.method || "GET" });
+    fetchCalls.push({ url: String(url), method: options.method || "GET", headers: options.headers || {} });
 
     if (String(url).endsWith("/agents")) {
       return jsonResponse([
@@ -927,9 +937,14 @@ async function assertRemoteProviderNormalization() {
     const provider = createRemoteHttpProvider({
       id: "mock-remote",
       label: "Mock Remote",
-      baseUrl: "https://remote.example/api"
+      baseUrl: "https://remote.example/api",
+      token: "remote-token",
+      tokenHeader: "X-Agent-Token",
+      tokenPrefix: ""
     });
     const [agent, viewOnlyAgent] = await provider.listAgents();
+    assert(fetchCalls[0]?.headers?.["X-Agent-Token"] === "remote-token", "remote provider should support raw custom token headers");
+    assert(!("Authorization" in fetchCalls[0].headers), "custom remote token headers should not also send Authorization");
     assert(agent.owner === "platform-team", "remote provider should preserve owner");
     assert(agent.workspace === "agent-monitor", "remote provider should preserve workspace");
     assert(agent.repository === "NTitterton/agent-monitor", "remote provider should preserve repository");

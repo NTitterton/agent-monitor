@@ -202,6 +202,8 @@ Acceptance criteria:
 
 Status: provider connection testing implemented through `POST /api/providers/:id/test` and Sources-panel test buttons. Provider test responses include refreshed agents, history, provider status, sanitized config, and scanner status, and the client applies the returned source status immediately. Config saves also return validation warnings for malformed provider/local-agent setup, the client preserves those warnings across the post-save refresh, and the Settings panel displays them.
 
+Remote HTTP auth note: remote provider tokens remain secret, while non-secret `tokenHeader` and `tokenPrefix` settings allow cloud runners to use `Authorization: Bearer <token>` by default or custom raw-token/API-key headers when required.
+
 ### Provider Action Semantics
 
 Agent-level capabilities should describe actions the active provider can truly perform.

@@ -531,8 +531,10 @@ function renderRemoteProviderRow(provider, index, mode) {
       <select data-remote-field="source" ${disabled} aria-label="Remote provider source ${index + 1}">
         ${["cloud", "user-account", "local"].map((source) => renderOption(source, provider.source || "cloud")).join("")}
       </select>
+      <input data-remote-field="tokenHeader" value="${escapeAttribute(provider.tokenHeader || "Authorization")}" ${disabled} aria-label="Remote provider token header ${index + 1}" />
+      <input data-remote-field="tokenPrefix" value="${escapeAttribute(provider.tokenPrefix ?? "Bearer")}" ${disabled} aria-label="Remote provider token prefix ${index + 1}" />
       <input data-remote-field="token" type="password" value="" ${disabled} aria-label="Remote provider token ${index + 1}" />
-      <span>${provider.hasToken ? "Token saved" : "No token"}</span>
+      <span>${provider.hasToken ? "Token saved" : "No token"} · auth defaults to Authorization: Bearer</span>
     </fieldset>
   `;
 }
@@ -1077,6 +1079,8 @@ function parseRemoteProviders(form) {
         ...(fields.dashboardUrl ? { dashboardUrl: fields.dashboardUrl } : {}),
         type: fields.type || fields.id,
         source: fields.source || "cloud",
+        tokenHeader: fields.tokenHeader || "Authorization",
+        tokenPrefix: fields.tokenPrefix ?? "Bearer",
         ...(fields.token ? { token: fields.token } : {})
       };
     })
