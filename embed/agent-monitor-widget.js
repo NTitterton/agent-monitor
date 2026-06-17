@@ -279,7 +279,8 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
 
   async perform(agentId, action) {
     const apiBase = this.apiBase();
-    const prompt = action.prompt ? window.prompt(`${action.label} prompt`) || "" : "";
+    const prompt = collectActionPrompt(action);
+    if (prompt === null) return;
     const agent = this.agents.find((item) => item.id === agentId);
 
     if (action.id === "go-to" && isUrlGoTo(agent)) {
@@ -456,6 +457,11 @@ function renderAction(agent, action) {
       ${escapeHtml(action.label)}
     </button>
   `;
+}
+
+function collectActionPrompt(action) {
+  if (!action?.prompt) return "";
+  return window.prompt(`${action.label} prompt`);
 }
 
 function actionDisabledReason(agent, action) {

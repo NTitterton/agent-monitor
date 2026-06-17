@@ -142,7 +142,7 @@ Agent-level `capabilities` should only include actions the provider can actually
 
 Provider actions must return an updated agent from the provider. If the provider accepts a command but does not return an updated agent, Agent Monitor treats that as a provider error instead of recording a successful lifecycle action.
 
-Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets and lifecycle actions that do not apply to the agent's current status.
+Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets and lifecycle actions that do not apply to the agent's current status. Prompt-based actions such as `Interrupt` and `End` are not dispatched if the operator cancels the prompt.
 
 ## Monitor local processes
 
@@ -320,6 +320,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Order embedded widget cards by task pressure so active/high-priority/high-CPU agents surface first.
 - Derive status filters from provider snapshots so provider-specific states remain filterable.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
+- Cancel prompt-based lifecycle actions before dispatch by closing the prompt.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
 - Configure trusted embed origins, configured local agents, local discovery, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches from the app.

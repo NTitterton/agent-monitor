@@ -191,11 +191,8 @@ class AgentMonitorApp extends HTMLElement {
         const agentId = button.getAttribute("data-agent-id");
         const actionId = button.getAttribute("data-action");
         const action = agentActions.find((item) => item.id === actionId);
-        let prompt = "";
-
-        if (action?.requiresPrompt) {
-          prompt = window.prompt(`${action.label} prompt`) || "";
-        }
+        const prompt = collectActionPrompt(action);
+        if (prompt === null) return;
 
         this.actionMessage = await client.perform(agentId, actionId, prompt);
         this.render();
@@ -207,6 +204,11 @@ class AgentMonitorApp extends HTMLElement {
 function renderActionMessage(message) {
   if (!message) return "";
   return `<p class="action-message ${message.tone || "ok"}">${escapeText(message.text || "")}</p>`;
+}
+
+function collectActionPrompt(action) {
+  if (!action?.requiresPrompt) return "";
+  return window.prompt(`${action.label} prompt`);
 }
 
 function renderFilters(filters, sources, types, statuses) {

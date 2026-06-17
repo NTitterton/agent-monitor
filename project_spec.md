@@ -188,9 +188,10 @@ Agent-level capabilities should describe actions the active provider can truly p
 - The API should reject provider action responses that do not confirm the updated agent.
 - The browser app should surface accepted and rejected action results to the operator.
 - Widgets should surface action results and should not apply local fallback mutations when a reachable API rejects an action.
+- Prompt-based lifecycle actions should not dispatch if the operator cancels the prompt dialog.
 - Lifecycle history records should include agent provider, source, and type so multi-source action history is auditable.
 
-Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status so app/widget provider-health context stays current. The browser app, module widget, and standalone widget render action feedback messages and explanatory disabled-action titles.
+Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status so app/widget provider-health context stays current. The browser app, module widget, and standalone widget render action feedback messages and explanatory disabled-action titles; prompt cancellation prevents prompt-based actions from dispatching.
 
 Reliability note: provider-backed actions that do not return an updated agent are treated as provider errors and are not recorded as successful lifecycle history.
 

@@ -64,7 +64,8 @@ class AgentMonitorWidget extends HTMLElement {
         const agentId = button.getAttribute("data-agent-id");
         const actionId = button.getAttribute("data-action");
         const action = agentActions.find((item) => item.id === actionId);
-        const prompt = action?.requiresPrompt ? window.prompt(`${action.label} prompt`) || "" : "";
+        const prompt = collectActionPrompt(action);
+        if (prompt === null) return;
         void client.perform(agentId, actionId, prompt);
       });
     });
@@ -81,6 +82,11 @@ function renderWidgetHistory(history) {
       <span>${escapeText(historyAgentLine(latest))}</span>
     </footer>
   `;
+}
+
+function collectActionPrompt(action) {
+  if (!action?.requiresPrompt) return "";
+  return window.prompt(`${action.label} prompt`);
 }
 
 function historyAgentLine(record) {
