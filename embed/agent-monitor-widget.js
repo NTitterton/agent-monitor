@@ -365,6 +365,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           source: agent.source || "",
           type: agent.type || "",
           action: action.id,
+          actionKind: action.surface ? "surface" : "lifecycle",
           label: action.label,
           prompt,
           at

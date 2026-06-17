@@ -196,7 +196,7 @@ Agent-level capabilities should describe actions the active provider can truly p
 - The browser app should surface accepted and rejected action results to the operator.
 - Widgets should surface action results and should not apply local fallback mutations when a reachable API rejects an action.
 - Prompt-based lifecycle actions should not dispatch if the operator cancels the prompt dialog.
-- Lifecycle history records should include agent provider, source, and type so multi-source action history is auditable.
+- Action history records should include agent provider, source, type, and action kind so multi-source lifecycle and surface actions are auditable.
 
 Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, `404` for stale requests against missing agents, and `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status so app/widget provider-health context stays current, including rejected requests. The browser app, module widget, and standalone widget render action feedback messages and explanatory disabled-action titles, including when providers did not advertise lifecycle capabilities; prompt cancellation prevents prompt-based actions from dispatching. Snapshot boundaries filter capabilities to known unique action IDs.
 
@@ -208,7 +208,7 @@ API reliability note: malformed JSON request bodies return `400` with `Invalid J
 
 Provider failure note: provider action exceptions return `502` with refreshed agents, history, provider status, sanitized config, and scanner status. Local configured-agent `start` waits for the child-process spawn result; missing executables or other immediate spawn failures return a provider error and are not recorded as successful lifecycle history.
 
-History status: lifecycle history records include provider, provider ID, source, and type metadata. Existing persisted history without those fields is normalized with empty metadata fields on read, and legacy IDs, timestamps, labels, prompts, and agent/provider metadata are coerced into stable API-safe values.
+History status: action history records include provider, provider ID, source, type, and `actionKind` metadata. Existing persisted history without those fields is normalized with empty metadata fields on read, and legacy IDs, timestamps, labels, prompts, action kinds, and agent/provider metadata are coerced into stable API-safe values.
 
 ### Local Process Resource Accounting
 

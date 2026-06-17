@@ -149,6 +149,8 @@ Provider actions must return the updated target agent from the provider. If the 
 
 URL-backed `go-to` actions are treated as surface navigation. Remote HTTP, OpenAI Responses, and Anthropic Message Batches return the current tracked agent for direct API `go-to` calls instead of calling mutation or cancel endpoints.
 
+Action history records include `actionKind`, set to `lifecycle` for mutating lifecycle controls and `surface` for navigation controls such as `go-to`.
+
 Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets, unadvertised provider capabilities, and lifecycle actions that do not apply to the agent's current status. Prompt-based actions such as `Interrupt` and `End` are not dispatched if the operator cancels the prompt.
 
 ## Monitor local processes

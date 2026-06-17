@@ -150,10 +150,17 @@ function normalizeHistoryRecord(record = {}) {
     source: normalizeText(record.source),
     type: normalizeText(record.type),
     action,
+    actionKind: normalizeActionKind(record.actionKind, knownAction),
     label: normalizeText(record.label) || knownAction?.label || action || "Action",
     prompt: normalizeText(record.prompt),
     at
   };
+}
+
+function normalizeActionKind(value, knownAction) {
+  const normalized = normalizeText(value);
+  if (normalized === "surface" || normalized === "lifecycle") return normalized;
+  return knownAction?.surface ? "surface" : "lifecycle";
 }
 
 function cloneAgents(agents) {

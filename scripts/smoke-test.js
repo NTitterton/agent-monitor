@@ -55,6 +55,7 @@ try {
   assert(standaloneWidgetSource.includes("tokensPerSecond: ending ? 0"), "standalone widget fallback should stop token throughput on ended actions");
   assert(standaloneWidgetSource.includes("providerId: agent.providerId"), "standalone widget fallback history should include provider ID");
   assert(standaloneWidgetSource.includes("action: action.id"), "standalone widget fallback history should include action ID");
+  assert(standaloneWidgetSource.includes("actionKind: action.surface ?"), "standalone widget fallback history should classify action kind");
   const registrySource = await readFile(new URL("../server/providerRegistry.js", import.meta.url), "utf8");
   assert(registrySource.includes("Provider did not return updated agent"), "registry should reject unconfirmed provider actions");
   assert(registrySource.includes("Provider returned a different agent"), "registry should reject mismatched provider action confirmations");
@@ -94,6 +95,7 @@ try {
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(record.at)"), "state store should normalize history timestamps");
+  assert(stateStoreSource.includes("normalizeActionKind"), "state store should normalize history action kind");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
@@ -453,6 +455,7 @@ try {
   assert(action.body.history[0]?.provider === "Local Codex", "action history should include provider");
   assert(action.body.history[0]?.source === "local", "action history should include source");
   assert(action.body.history[0]?.type === "local", "action history should include type");
+  assert(action.body.history[0]?.actionKind === "lifecycle", "lifecycle action history should be classified");
   assert(
     action.body.agents.find((agent) => agent.id === "local-codex-1")?.logs?.[0]?.message.includes("smoke test"),
     "lifecycle action should append an agent log"
@@ -554,6 +557,7 @@ try {
   assert(legacyHistory.providerId === "legacy-provider", "legacy history should trim provider ID");
   assert(legacyHistory.source === "local", "legacy history should trim source");
   assert(legacyHistory.type === "local", "legacy history should trim type");
+  assert(legacyHistory.actionKind === "lifecycle", "legacy lifecycle history should infer action kind");
   assert(legacyHistory.label === "Stop", "legacy history should infer action label");
   assert(legacyHistory.at === Date.parse("2026-01-02T03:04:05.000Z"), "legacy history should normalize ISO timestamps");
 
@@ -561,6 +565,15 @@ try {
   assert(stateFile.history.length > 0, "state file should contain history");
   assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.logs?.length > 0, "state file should contain logs");
   assert(stateFile.agents.find((agent) => agent.id === "local-codex-1")?.transcript?.length > 0, "state file should contain transcript");
+
+  const surfaceAction = await request("/api/agents/remote-build-7/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "go-to" })
+  });
+  assert(surfaceAction.status === 200, "surface go-to action should succeed");
+  assert(surfaceAction.body.history[0]?.action === "go-to", "surface go-to should be recorded in history");
+  assert(surfaceAction.body.history[0]?.actionKind === "surface", "surface go-to history should be classified");
 
   const accountProviderConfig = await request("/api/config", {
     method: "PUT",

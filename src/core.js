@@ -267,6 +267,7 @@ export function createActionRecord(agent, actionId, prompt = "", at = Date.now()
     source: agent.source || "",
     type: agent.type || "",
     action: action.id,
+    actionKind: action.surface ? "surface" : "lifecycle",
     label: action.label,
     prompt: prompt.trim(),
     at
