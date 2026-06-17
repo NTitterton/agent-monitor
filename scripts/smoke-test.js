@@ -86,6 +86,7 @@ try {
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
+  assert(stateStoreSource.includes("normalizeTimestamp(record.at)"), "state store should normalize history timestamps");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
@@ -498,6 +499,19 @@ try {
   assert(missingDetail.body.scanner, "missing agent detail should return scanner status");
 
   await stopServer(server);
+  const stateBeforeRestart = JSON.parse(await readFile(statePath, "utf8"));
+  stateBeforeRestart.history.push({
+    agentId: 123,
+    agentName: 456,
+    provider: 789,
+    providerId: " legacy-provider ",
+    source: " local ",
+    type: " local ",
+    action: "stop",
+    prompt: " normalize me ",
+    at: "2026-01-02T03:04:05.000Z"
+  });
+  await writeFile(statePath, `${JSON.stringify(stateBeforeRestart, null, 2)}\n`);
   server = await startServer();
 
   const persisted = await request("/api/agents");
@@ -514,6 +528,18 @@ try {
     persisted.body.agents.find((agent) => agent.id === "local-codex-1")?.transcript?.length > 0,
     "agent transcript should persist after restart"
   );
+
+  const persistedHistory = await request("/api/history");
+  const legacyHistory = persistedHistory.body.history.find((record) => record.prompt === "normalize me");
+  assert(legacyHistory?.id === "123-stop-1767323045000", "legacy history should receive a stable generated ID");
+  assert(legacyHistory.agentId === "123", "legacy history should normalize agent ID to a string");
+  assert(legacyHistory.agentName === "456", "legacy history should normalize agent name to a string");
+  assert(legacyHistory.provider === "789", "legacy history should normalize provider to a string");
+  assert(legacyHistory.providerId === "legacy-provider", "legacy history should trim provider ID");
+  assert(legacyHistory.source === "local", "legacy history should trim source");
+  assert(legacyHistory.type === "local", "legacy history should trim type");
+  assert(legacyHistory.label === "Stop", "legacy history should infer action label");
+  assert(legacyHistory.at === Date.parse("2026-01-02T03:04:05.000Z"), "legacy history should normalize ISO timestamps");
 
   const stateFile = JSON.parse(await readFile(statePath, "utf8"));
   assert(stateFile.history.length > 0, "state file should contain history");

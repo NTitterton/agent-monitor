@@ -135,12 +135,24 @@ function normalizeState(nextState) {
 }
 
 function normalizeHistoryRecord(record = {}) {
+  const at = normalizeTimestamp(record.at);
+  const agentId = normalizeText(record.agentId);
+  const action = normalizeText(record.action);
+  const knownAction = agentActions.find((item) => item.id === action);
+
   return {
     ...record,
-    provider: record.provider || "",
-    providerId: record.providerId || "",
-    source: record.source || "",
-    type: record.type || ""
+    id: normalizeText(record.id) || [agentId || "agent", action || "action", at].join("-"),
+    agentId,
+    agentName: normalizeText(record.agentName),
+    provider: normalizeText(record.provider),
+    providerId: normalizeText(record.providerId),
+    source: normalizeText(record.source),
+    type: normalizeText(record.type),
+    action,
+    label: normalizeText(record.label) || knownAction?.label || action || "Action",
+    prompt: normalizeText(record.prompt),
+    at
   };
 }
 
@@ -210,6 +222,10 @@ function normalizeStringList(value) {
 function normalizeOptionalString(value) {
   const text = String(value ?? "").trim();
   return text || null;
+}
+
+function normalizeText(value) {
+  return String(value ?? "").trim();
 }
 
 function finiteNumber(value, fallback = 0) {

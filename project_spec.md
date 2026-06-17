@@ -202,7 +202,7 @@ API reliability note: malformed JSON request bodies return `400` with `Invalid J
 
 Provider failure note: provider action exceptions return `502` with refreshed agents, history, provider status, sanitized config, and scanner status. Local configured-agent `start` waits for the child-process spawn result; missing executables or other immediate spawn failures return a provider error and are not recorded as successful lifecycle history.
 
-History status: lifecycle history records include provider, provider ID, source, and type metadata. Existing persisted history without those fields is normalized with empty metadata fields on read.
+History status: lifecycle history records include provider, provider ID, source, and type metadata. Existing persisted history without those fields is normalized with empty metadata fields on read, and legacy IDs, timestamps, labels, prompts, and agent/provider metadata are coerced into stable API-safe values.
 
 ### Local Process Resource Accounting
 
