@@ -231,6 +231,8 @@ Embedded-widget note: module and standalone widgets render compact provider/sour
 
 Standalone-widget normalization note: the standalone embed normalizes incoming API/fallback snapshots for numeric metrics, token confidence, process IDs, lineage IDs, capabilities, logs, and transcripts before sorting or rendering, preserving stable behavior when embedded on static personal sites.
 
+Standalone-widget fallback note: local fallback lifecycle actions update runtime/resource fields consistently with the core lifecycle model and record history with agent, provider, source, type, and action metadata.
+
 Spend note: module and standalone widgets include nonzero `costUsd` in the compact resource line so embedded views retain token/cost task-manager context.
 
 Cost note: normalized snapshots coerce `costUsd` to a number on persisted-state reads, API/client cloning, and UI summary totals so spend sorting and totals are stable even when providers report numeric strings.

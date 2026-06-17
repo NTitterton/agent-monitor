@@ -50,6 +50,9 @@ try {
   assert(standaloneWidgetSource.includes("normalizeWidgetAgents"), "standalone widget should normalize incoming snapshots");
   assert(standaloneWidgetSource.includes("normalizePidList"), "standalone widget should normalize process ID lists");
   assert(standaloneWidgetSource.includes("normalizeTokenConfidence"), "standalone widget should normalize token confidence");
+  assert(standaloneWidgetSource.includes("tokensPerSecond: ending ? 0"), "standalone widget fallback should stop token throughput on ended actions");
+  assert(standaloneWidgetSource.includes("providerId: agent.providerId"), "standalone widget fallback history should include provider ID");
+  assert(standaloneWidgetSource.includes("action: action.id"), "standalone widget fallback history should include action ID");
   const registrySource = await readFile(new URL("../server/providerRegistry.js", import.meta.url), "utf8");
   assert(registrySource.includes("Provider did not return updated agent"), "registry should reject unconfirmed provider actions");
   assert(registrySource.includes("Provider returned a different agent"), "registry should reject mismatched provider action confirmations");

@@ -326,11 +326,17 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     const at = Date.now();
     this.agents = normalizeWidgetAgents(this.agents.map((agent) => {
       if (agent.id !== agentId) return agent;
+      const nextStatus = statusForAction(action.id);
+      const ending = nextStatus === "ended";
+      const starting = nextStatus === "running";
       return {
         ...agent,
-        status: statusForAction(action.id),
-        cpu: action.id === "end" || action.id === "force-end" ? 0 : agent.cpu,
-        memoryMb: action.id === "end" || action.id === "force-end" ? 0 : agent.memoryMb,
+        status: nextStatus,
+        cpu: ending ? 0 : agent.cpu,
+        memoryMb: ending ? 0 : agent.memoryMb,
+        tokensPerSecond: ending ? 0 : agent.tokensPerSecond,
+        startedAt: starting ? at : agent.startedAt,
+        endedAt: ending ? at : undefined,
         lastAction: { action: action.id, label: action.label, prompt, at },
         logs: [
           {
@@ -347,10 +353,14 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     if (agent) {
       this.history = [
         {
+          id: `${agent.id}-${action.id}-${at}`,
+          agentId: agent.id,
           agentName: agent.name,
           provider: agent.provider || "",
+          providerId: agent.providerId || "",
           source: agent.source || "",
           type: agent.type || "",
+          action: action.id,
           label: action.label,
           prompt,
           at
