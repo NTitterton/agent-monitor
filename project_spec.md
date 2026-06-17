@@ -222,6 +222,8 @@ Spend note: module and standalone widgets include nonzero `costUsd` in the compa
 
 Cost note: normalized snapshots coerce `costUsd` to a number on persisted-state reads, API/client cloning, and UI summary totals so spend sorting and totals are stable even when providers report numeric strings.
 
+Resource note: normalized snapshots coerce CPU and memory resource fields to finite numbers on persisted-state reads, remote HTTP adapter responses, and client clones so meters, summaries, and sorting do not receive `NaN` or string values.
+
 ### Local Process Tree Controls
 
 Local lifecycle controls should target the process tree that represents the agent.

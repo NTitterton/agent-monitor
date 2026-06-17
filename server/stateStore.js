@@ -93,7 +93,9 @@ function createDefaultState() {
       ...agent,
       providerId: agentProviderIds[agent.id] || "local",
       type: agent.type || agentTypes[agent.id] || agent.providerId || "local",
+      ...normalizeResourceMetrics(agent),
       ...normalizeTokenMetrics(agent),
+      ...normalizeCostMetrics(agent),
       children: [...agent.children],
       transcript: normalizeTranscript(agent.transcript),
       logs: normalizeLogs(agent.logs)
@@ -118,6 +120,7 @@ function normalizeState(nextState) {
         ...agent,
         providerId: agent.providerId || agentProviderIds[agent.id] || "local",
         type: agent.type || agentTypes[agent.id] || agent.providerId || agentProviderIds[agent.id] || "remote",
+        ...normalizeResourceMetrics(agent, fallbackAgent),
         ...normalizeTokenMetrics(agent, fallbackAgent),
         ...normalizeCostMetrics(agent, fallbackAgent),
         ...normalizeTaskProgress(agent, fallbackAgent),
@@ -144,6 +147,7 @@ function normalizeHistoryRecord(record = {}) {
 function cloneAgents(agents) {
   return agents.map((agent) => ({
     ...agent,
+    ...normalizeResourceMetrics(agent),
     ...normalizeTokenMetrics(agent),
     ...normalizeCostMetrics(agent),
     ...normalizeTaskProgress(agent),
@@ -178,6 +182,22 @@ function normalizeCostMetrics(agent = {}, fallbackAgent = {}) {
   return {
     costUsd: Number.isFinite(costUsd) ? costUsd : 0
   };
+}
+
+function normalizeResourceMetrics(agent = {}, fallbackAgent = {}) {
+  return {
+    cpu: finiteNumber(agent.cpu ?? fallbackAgent.cpu),
+    memoryMb: finiteNumber(agent.memoryMb ?? fallbackAgent.memoryMb),
+    processCpu: finiteNumber(agent.processCpu ?? fallbackAgent.processCpu),
+    processMemoryMb: finiteNumber(agent.processMemoryMb ?? fallbackAgent.processMemoryMb),
+    childCpu: finiteNumber(agent.childCpu ?? fallbackAgent.childCpu),
+    childMemoryMb: finiteNumber(agent.childMemoryMb ?? fallbackAgent.childMemoryMb)
+  };
+}
+
+function finiteNumber(value, fallback = 0) {
+  const number = Number(value ?? fallback);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 function normalizeTaskProgress(agent = {}, fallbackAgent = {}) {

@@ -92,6 +92,8 @@ try {
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokensPerSecond === "number"), "every agent should include numeric token rate");
   assert(sameOriginAgents.body.agents.every((agent) => agent.tokenCountConfidence), "every agent should include token confidence");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.costUsd === "number"), "every agent should include numeric cost");
+  assert(sameOriginAgents.body.agents.every((agent) => typeof agent.cpu === "number"), "every agent should include numeric CPU");
+  assert(sameOriginAgents.body.agents.every((agent) => typeof agent.memoryMb === "number"), "every agent should include numeric memory");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.scannedAt === "number"), "every agent should include scan timestamp");
   assert(
     sameOriginAgents.body.agents.find((agent) => agent.id === "remote-build-7")?.capabilities?.includes("go-to"),
@@ -536,9 +538,9 @@ async function assertRemoteProviderNormalization() {
             priority: "high",
             currentStep: "Running tests",
             progressPercent: 42.4,
-            cpu: 7.5,
-            memoryMb: 256,
-            processCpu: 2.5,
+            cpu: "7.5",
+            memoryMb: "256",
+            processCpu: "2.5",
             processMemoryMb: 100,
             childCpu: 5,
             childMemoryMb: 156,
@@ -582,6 +584,8 @@ async function assertRemoteProviderNormalization() {
     assert(agent.priority === "high", "remote provider should preserve priority");
     assert(agent.currentStep === "Running tests", "remote provider should preserve current step");
     assert(agent.progressPercent === 42, "remote provider should normalize progress percent");
+    assert(agent.cpu === 7.5, "remote provider should normalize CPU");
+    assert(agent.memoryMb === 256, "remote provider should normalize memory");
     assert(agent.processCpu === 2.5, "remote provider should preserve own CPU");
     assert(agent.childCpu === 5, "remote provider should preserve child CPU");
     assert(agent.childMemoryMb === 156, "remote provider should preserve child memory");

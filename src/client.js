@@ -238,6 +238,12 @@ function cloneAgent(agent) {
   return {
     ...agent,
     type: agent.type || agent.providerId || agent.source || "unknown",
+    cpu: finiteNumber(agent.cpu),
+    memoryMb: finiteNumber(agent.memoryMb),
+    processCpu: finiteNumber(agent.processCpu),
+    processMemoryMb: finiteNumber(agent.processMemoryMb),
+    childCpu: finiteNumber(agent.childCpu),
+    childMemoryMb: finiteNumber(agent.childMemoryMb),
     tokens: Number(agent.tokens || 0),
     tokensPerSecond: Number(agent.tokensPerSecond || 0),
     tokenRateWindowMs: Number(agent.tokenRateWindowMs || 0),
@@ -249,6 +255,11 @@ function cloneAgent(agent) {
     childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
     transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
+}
+
+function finiteNumber(value, fallback = 0) {
+  const number = Number(value ?? fallback);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 function cloneConfig(config) {

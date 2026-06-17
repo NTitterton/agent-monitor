@@ -213,7 +213,7 @@ The local process provider is configured through `agent-monitor.config.json`. It
 - `stop`, `interrupt`, `end`: `SIGTERM`
 - `force-end`: `SIGKILL`
 
-Resource totals include the matched process plus descendant processes. The normalized agent also carries `processCpu`, `processMemoryMb`, `childCpu`, and `childMemoryMb` breakdown fields. Active discovery can detect known agent CLIs even when they are not explicitly configured. On macOS, `go-to` is best-effort and activates likely Terminal, browser, or editor surfaces.
+Resource totals include the matched process plus descendant processes. The normalized agent also carries `processCpu`, `processMemoryMb`, `childCpu`, and `childMemoryMb` breakdown fields. Snapshot normalization coerces these resource values to finite numbers before UI meters and task sorting. Active discovery can detect known agent CLIs even when they are not explicitly configured. On macOS, `go-to` is best-effort and activates likely Terminal, browser, or editor surfaces.
 
 ## 8. Remote HTTP Provider
 

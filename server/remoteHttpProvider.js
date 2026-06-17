@@ -78,6 +78,7 @@ function normalizeAgent(agent, config) {
   const tokens = Number(agent.tokens || 0);
   const tokensPerSecond = Number(agent.tokensPerSecond || 0);
   const tokenRateWindowMs = Number(agent.tokenRateWindowMs || 0);
+  const costUsd = Number(agent.costUsd || 0);
   const goToTarget = agent.goToTarget || agent.remoteUrl || config.dashboardUrl || config.baseUrl;
   return {
     id: agent.id,
@@ -97,17 +98,17 @@ function normalizeAgent(agent, config) {
     priority: String(agent.priority || "").trim(),
     currentStep: String(agent.currentStep || agent.step || "").trim(),
     progressPercent: normalizeProgress(agent.progressPercent ?? agent.progress),
-    cpu: Number(agent.cpu || 0),
-    memoryMb: Number(agent.memoryMb || 0),
-    processCpu: Number(agent.processCpu || 0),
-    processMemoryMb: Number(agent.processMemoryMb || 0),
-    childCpu: Number(agent.childCpu || 0),
-    childMemoryMb: Number(agent.childMemoryMb || 0),
+    cpu: finiteNumber(agent.cpu),
+    memoryMb: finiteNumber(agent.memoryMb),
+    processCpu: finiteNumber(agent.processCpu),
+    processMemoryMb: finiteNumber(agent.processMemoryMb),
+    childCpu: finiteNumber(agent.childCpu),
+    childMemoryMb: finiteNumber(agent.childMemoryMb),
     tokens: Number.isFinite(tokens) ? tokens : 0,
     tokensPerSecond: Number.isFinite(tokensPerSecond) ? tokensPerSecond : 0,
     tokenRateWindowMs: Number.isFinite(tokenRateWindowMs) ? tokenRateWindowMs : 0,
     tokenCountConfidence: normalizeTokenConfidence(agent.tokenCountConfidence, tokens > 0 ? "reported" : "unknown"),
-    costUsd: Number(agent.costUsd || 0),
+    costUsd: Number.isFinite(costUsd) ? costUsd : 0,
     startedAt,
     endedAt: agent.endedAt,
     children: Array.isArray(agent.children) ? agent.children : [],
@@ -133,6 +134,11 @@ function normalizeCapabilities(capabilities, goToTarget) {
 
 function normalizeTokenConfidence(value, fallback = "unknown") {
   return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function finiteNumber(value, fallback = 0) {
+  const number = Number(value ?? fallback);
+  return Number.isFinite(number) ? number : fallback;
 }
 
 function normalizeProgress(value) {
