@@ -59,6 +59,7 @@ try {
   assert(standaloneWidgetSource.includes("Updated ${formatTimestamp(snapshotAt)}"), "standalone widget should render snapshot freshness");
   assert(standaloneWidgetSource.includes("normalizePidList"), "standalone widget should normalize process ID lists");
   assert(standaloneWidgetSource.includes("normalizeTokenConfidence"), "standalone widget should normalize token confidence");
+  assert(standaloneWidgetSource.includes("normalizeRequestCounts"), "standalone widget should normalize provider request counts");
   assert(standaloneWidgetSource.includes("tokensPerSecond: ending ? 0"), "standalone widget fallback should stop token throughput on ended actions");
   assert(standaloneWidgetSource.includes("providerId: agent.providerId"), "standalone widget fallback history should include provider ID");
   assert(standaloneWidgetSource.includes("action: action.id"), "standalone widget fallback history should include action ID");
@@ -128,6 +129,7 @@ try {
   assert(clientSource.includes("mergeProviderStatus"), "client should apply provider test results to source status");
   assert(clientSource.includes("normalizePidList"), "client should normalize process ID lists");
   assert(clientSource.includes("normalizeTokenConfidence"), "client should normalize token confidence");
+  assert(clientSource.includes("normalizeRequestCounts"), "client should normalize provider request counts");
   assert(clientSource.includes("normalizeTimestamp"), "client should normalize timeline timestamps");
   assert(clientSource.includes("snapshotAt"), "client should preserve unified snapshot timestamps");
   const coreSource = await readFile(new URL("../src/core.js", import.meta.url), "utf8");
@@ -136,6 +138,7 @@ try {
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(record.at)"), "state store should normalize history timestamps");
+  assert(stateStoreSource.includes("normalizeProviderObject"), "state store should normalize persisted provider object metadata");
   assert(stateStoreSource.includes("normalizeActionKind"), "state store should normalize history action kind");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
@@ -806,6 +809,9 @@ async function assertRemoteProviderNormalization() {
             pid: "200",
             parentPid: "100",
             childPids: ["201", 202, "not-a-pid"],
+            remote_id: 98765,
+            model: "remote-model",
+            request_counts: { processing: "2", succeeded: 1, ignored: "nope" },
             capabilities: ["stop", "bogus", "stop"],
             goToTarget: "https://remote.example/agents/remote-normalized",
             logs: [{ at: "2026-01-02T03:05:05.000Z", message: "remote log" }],
@@ -864,6 +870,11 @@ async function assertRemoteProviderNormalization() {
     assert(agent.pid === 200, "remote provider should normalize pid");
     assert(agent.parentPid === 100, "remote provider should normalize parent pid");
     assert(agent.childPids.join(",") === "201,202", "remote provider should normalize child pids");
+    assert(agent.remoteId === "98765", "remote provider should normalize provider object IDs");
+    assert(agent.model === "remote-model", "remote provider should preserve model");
+    assert(agent.requestCounts.processing === 2, "remote provider should normalize request count numbers");
+    assert(agent.requestCounts.succeeded === 1, "remote provider should preserve valid request counts");
+    assert(!("ignored" in agent.requestCounts), "remote provider should drop invalid request counts");
     assert(agent.capabilities.join(",") === "stop,go-to", "remote provider should normalize known unique capabilities");
     assert(viewOnlyAgent.capabilities.join(",") === "go-to", "remote provider should not invent lifecycle capabilities");
     assert(agent.logs[0]?.at === Date.parse("2026-01-02T03:05:05.000Z"), "remote provider should normalize log timestamps");

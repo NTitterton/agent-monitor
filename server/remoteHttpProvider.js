@@ -123,6 +123,9 @@ function normalizeAgent(agent, config) {
     transcript: normalizeTranscript(agent.transcript),
     logs: normalizeLogs(agent.logs),
     remoteUrl: agent.remoteUrl || config.baseUrl,
+    remoteId: normalizeOptionalString(agent.remoteId ?? agent.remote_id ?? agent.providerObjectId),
+    model: String(agent.model || "").trim(),
+    requestCounts: normalizeRequestCounts(agent.requestCounts ?? agent.request_counts),
     goToTarget,
     goToKind: agent.goToKind || "url",
     windowTitle: agent.windowTitle || "",
@@ -141,6 +144,16 @@ function normalizeCapabilities(capabilities, goToTarget) {
 
 function normalizeTokenConfidence(value, fallback = "unknown") {
   return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function normalizeRequestCounts(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([key, count]) => [String(key).trim(), Number(count)])
+      .filter(([key, count]) => key && Number.isFinite(count))
+  );
 }
 
 function normalizeStringList(value) {

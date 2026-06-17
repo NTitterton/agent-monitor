@@ -171,6 +171,7 @@ function cloneAgents(agents) {
     ...normalizeTokenMetrics(agent),
     ...normalizeCostMetrics(agent),
     ...normalizeTaskProgress(agent),
+    ...normalizeProviderObject(agent),
     ...normalizeGoTo(agent),
     transcript: normalizeTranscript(agent.transcript),
     logs: normalizeLogs(agent.logs)
@@ -246,6 +247,24 @@ function normalizeTaskProgress(agent = {}, fallbackAgent = {}) {
     currentStep: String(agent.currentStep ?? fallbackAgent.currentStep ?? "").trim(),
     progressPercent: Number.isFinite(progress) ? Math.min(Math.max(Math.round(progress), 0), 100) : null
   };
+}
+
+function normalizeProviderObject(agent = {}, fallbackAgent = {}) {
+  return {
+    remoteId: normalizeOptionalString(agent.remoteId ?? agent.remote_id ?? agent.providerObjectId ?? fallbackAgent.remoteId),
+    model: String(agent.model ?? fallbackAgent.model ?? "").trim(),
+    requestCounts: normalizeRequestCounts(agent.requestCounts ?? agent.request_counts ?? fallbackAgent.requestCounts)
+  };
+}
+
+function normalizeRequestCounts(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([key, count]) => [String(key).trim(), Number(count)])
+      .filter(([key, count]) => key && Number.isFinite(count))
+  );
 }
 
 function normalizeGoTo(agent = {}, fallbackAgent = {}) {

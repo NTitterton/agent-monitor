@@ -611,6 +611,9 @@ function normalizeWidgetAgent(agent) {
     startedAt: normalizeTimestamp(agent.startedAt),
     endedAt: agent.endedAt ? normalizeTimestamp(agent.endedAt, null) : undefined,
     progressPercent: normalizeProgress(agent.progressPercent),
+    remoteId: normalizeOptionalString(agent.remoteId ?? agent.remote_id ?? agent.providerObjectId),
+    model: String(agent.model || "").trim(),
+    requestCounts: normalizeRequestCounts(agent.requestCounts ?? agent.request_counts),
     parentId: normalizeOptionalString(agent.parentId),
     children: normalizeStringList(agent.children),
     pid: normalizeOptionalPid(agent.pid),
@@ -624,6 +627,16 @@ function normalizeWidgetAgent(agent) {
 
 function normalizeTokenConfidence(value, fallback = "unknown") {
   return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function normalizeRequestCounts(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value)
+      .map(([key, count]) => [String(key).trim(), Number(count)])
+      .filter(([key, count]) => key && Number.isFinite(count))
+  );
 }
 
 function normalizeProgress(value) {

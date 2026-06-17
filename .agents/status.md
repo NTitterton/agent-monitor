@@ -71,6 +71,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Registry-level provider/source/type normalization for local, account-backed, and third-party cloud agents.
 - Local process aggregate resource accounting across matched processes and descendant child processes.
 - Remote HTTP provider preserves reported own/child process-resource breakdown fields.
+- Remote HTTP, browser client, standalone widget, and persisted state normalize provider-object fields including remote IDs, models, and request counts.
 - Numeric CPU/memory resource normalization for persisted state, remote HTTP snapshots, client clones, and smoke coverage.
 - Remote HTTP timestamp normalization for agent, log, and transcript date strings.
 - Process ID normalization for remote HTTP and client snapshots.
