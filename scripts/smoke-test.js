@@ -243,6 +243,9 @@ try {
   assert(startedLocalAgent?.status === "running", "configured local agent should report running after start");
   assert(typeof startedLocalAgent?.pid === "number", "configured local agent should report pid after start");
   assert(localStart.body.history[0]?.agentId === "smoke-local", "local start should be recorded in history");
+  assert(localStart.body.history[0]?.provider === "Local Process", "local start history should include provider");
+  assert(localStart.body.history[0]?.source === "local", "local start history should include source");
+  assert(localStart.body.history[0]?.type === "local", "local start history should include type");
 
   const localForceEnd = await request("/api/agents/smoke-local/actions", {
     method: "POST",
@@ -341,6 +344,9 @@ try {
     "interrupt should move local-codex-1 to waiting"
   );
   assert(action.body.history[0]?.prompt === "smoke test", "action prompt should be recorded");
+  assert(action.body.history[0]?.provider === "Local Codex", "action history should include provider");
+  assert(action.body.history[0]?.source === "local", "action history should include source");
+  assert(action.body.history[0]?.type === "local", "action history should include type");
   assert(
     action.body.agents.find((agent) => agent.id === "local-codex-1")?.logs?.[0]?.message.includes("smoke test"),
     "lifecycle action should append an agent log"

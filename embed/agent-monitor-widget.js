@@ -344,7 +344,18 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     });
     const agent = this.agents.find((item) => item.id === agentId);
     if (agent) {
-      this.history = [{ agentName: agent.name, label: action.label, prompt, at }, ...this.history].slice(0, 8);
+      this.history = [
+        {
+          agentName: agent.name,
+          provider: agent.provider || "",
+          source: agent.source || "",
+          type: agent.type || "",
+          label: action.label,
+          prompt,
+          at
+        },
+        ...this.history
+      ].slice(0, 8);
       this.actionMessage = { tone: "ok", text: `${action.label} applied locally to ${agent.name}` };
     }
     this.render();
@@ -403,7 +414,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     }
 
     const latest = this.history[0];
-    return `<footer><strong>${escapeHtml(latest.label)}</strong><span>${escapeHtml(latest.agentName)}</span></footer>`;
+    return `<footer><strong>${escapeHtml(latest.label)}</strong><span>${escapeHtml(historyAgentLine(latest))}</span></footer>`;
   }
 
   renderActionMessage() {
@@ -476,6 +487,10 @@ function renderProviderSummary(providers, agents) {
       ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeHtml(issueText)}
     </p>
   `;
+}
+
+function historyAgentLine(record) {
+  return [record.agentName, record.provider, record.type || record.source].filter(Boolean).join(" · ");
 }
 
 async function readJsonResponse(response) {

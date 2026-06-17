@@ -77,9 +77,13 @@ function renderWidgetHistory(history) {
   return `
     <footer>
       <strong>${escapeText(latest.label)}</strong>
-      <span>${escapeText(latest.agentName)}</span>
+      <span>${escapeText(historyAgentLine(latest))}</span>
     </footer>
   `;
+}
+
+function historyAgentLine(record) {
+  return [record.agentName, record.provider, record.type || record.source].filter(Boolean).join(" · ");
 }
 
 function renderActionMessage(message) {

@@ -53,7 +53,7 @@ export function createStateStore() {
     },
     async listHistory(limit = 25) {
       await load();
-      return state.history.slice(0, limit).map((record) => ({ ...record }));
+      return state.history.slice(0, limit).map(normalizeHistoryRecord);
     },
     async performAction(agentId, actionId, prompt = "") {
       await load();
@@ -105,7 +105,7 @@ function createDefaultState() {
 function normalizeState(nextState) {
   const fallback = createDefaultState();
   const agents = Array.isArray(nextState.agents) ? nextState.agents : fallback.agents;
-  const history = Array.isArray(nextState.history) ? nextState.history : [];
+  const history = Array.isArray(nextState.history) ? nextState.history.map(normalizeHistoryRecord) : [];
   const fallbackAgents = new Map(fallback.agents.map((agent) => [agent.id, agent]));
 
   return {
@@ -126,6 +126,16 @@ function normalizeState(nextState) {
       };
     }),
     history
+  };
+}
+
+function normalizeHistoryRecord(record = {}) {
+  return {
+    ...record,
+    provider: record.provider || "",
+    providerId: record.providerId || "",
+    source: record.source || "",
+    type: record.type || ""
   };
 }
 

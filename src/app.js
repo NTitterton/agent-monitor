@@ -255,7 +255,7 @@ function renderHistory(history, mode = "local") {
           (record) => `
             <article class="history-row">
               <strong>${escapeText(record.label)}</strong>
-              <p>${escapeText(record.agentName)} · ${formatTimestamp(record.at)}</p>
+              <p>${escapeText(historyAgentLine(record))} · ${formatTimestamp(record.at)}</p>
               ${record.prompt ? `<p class="prompt-text">${escapeText(record.prompt)}</p>` : ""}
             </article>
           `
@@ -263,6 +263,18 @@ function renderHistory(history, mode = "local") {
         .join("")}
     </section>
   `;
+}
+
+function historyAgentLine(record) {
+  return [
+    record.agentName,
+    record.provider,
+    record.type ? labelize(record.type) : "",
+    record.source ? labelize(record.source) : ""
+  ]
+    .filter(Boolean)
+    .filter(unique)
+    .join(" · ");
 }
 
 function renderSourceList(agents, providers, message = "") {
