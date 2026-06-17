@@ -82,7 +82,7 @@ Notes:
 - Remote providers should be allowed to report their own token totals and rates.
 - Remote providers may also report `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `pid`, `parentPid`, and `childPids` when they can observe process-level execution.
 
-Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract. When a provider reports cumulative tokens but no positive token rate, fresh provider snapshots derive `tokensPerSecond` from successive token deltas and expose the measured `tokenRateWindowMs`.
+Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract. Provider snapshots normalize agent `provider`, `providerId`, `source`, and `type` at the registry boundary so local, OpenAI, Anthropic, and third-party cloud agents keep stable task-manager classifications across app and widget surfaces. When a provider reports cumulative tokens but no positive token rate, fresh provider snapshots derive `tokensPerSecond` from successive token deltas and expose the measured `tokenRateWindowMs`.
 
 Acceptance criteria:
 

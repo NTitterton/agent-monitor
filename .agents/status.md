@@ -60,6 +60,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Selected-agent detail refresh from each snapshot so action and polling updates stay current.
 - Selected-agent stale detail recovery from `404` responses with refreshed snapshot context.
 - Optional owner/workspace/repository/branch/queue/priority remote-agent context in normalized snapshots, selected-agent details, and embedded widgets.
+- Registry-level provider/source/type normalization for local, account-backed, and third-party cloud agents.
 - Local process aggregate resource accounting across matched processes and descendant child processes.
 - Remote HTTP provider preserves reported own/child process-resource breakdown fields.
 - Numeric CPU/memory resource normalization for persisted state, remote HTTP snapshots, client clones, and smoke coverage.

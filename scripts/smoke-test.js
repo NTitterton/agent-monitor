@@ -6,7 +6,7 @@ import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
 import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
 import { signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
-import { applySampledTokenRates, buildProviderErrorSnapshot } from "../server/providerRegistry.js";
+import { applySampledTokenRates, buildProviderErrorSnapshot, normalizeProviderAgent } from "../server/providerRegistry.js";
 import { agentActions } from "../src/core.js";
 
 const port = 5199;
@@ -62,6 +62,7 @@ try {
   assert(registrySource.includes("buildProviderErrorSnapshot"), "registry should preserve cached agents on provider errors");
   assertSampledTokenRates();
   assertProviderErrorSnapshots();
+  assertProviderAgentNormalization();
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
   assert(appSource.includes("const statuses ="), "browser app should derive status filters from snapshots");
@@ -863,6 +864,36 @@ function assertProviderErrorSnapshots() {
   assert(result.agents[0]?.id === "stale-agent", "provider error snapshot should retain cached agents");
   result.agents[0].name = "Changed";
   assert(cached.agents[0].name === "Stale Agent", "provider error snapshot should clone cached agents");
+}
+
+function assertProviderAgentNormalization() {
+  const scannedAt = Date.parse("2026-01-02T03:04:05.000Z");
+  const agent = normalizeProviderAgent(
+    {
+      id: " third-party-cloud ",
+      label: " Third Party Cloud ",
+      source: " cloud ",
+      type: " third-party "
+    },
+    {
+      id: 123,
+      name: "  ",
+      provider: "  ",
+      providerId: "  ",
+      source: "  ",
+      type: "  ",
+      scannedAt: "not-a-timestamp"
+    },
+    scannedAt
+  );
+
+  assert(agent.id === "123", "registry should normalize provider agent IDs to strings");
+  assert(agent.name === "123", "registry should fall back blank provider agent names to ID");
+  assert(agent.provider === "Third Party Cloud", "registry should fall back blank provider labels to provider defaults");
+  assert(agent.providerId === "third-party-cloud", "registry should fall back blank provider IDs to provider defaults");
+  assert(agent.source === "cloud", "registry should fall back blank agent sources to provider source");
+  assert(agent.type === "third-party", "registry should fall back blank agent types to provider type");
+  assert(agent.scannedAt === scannedAt, "registry should normalize invalid agent scan timestamps to snapshot time");
 }
 
 async function assertAccountProviderCapabilities() {

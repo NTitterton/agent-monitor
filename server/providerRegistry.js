@@ -228,7 +228,7 @@ export function createProviderRegistry() {
     const resultCacheTtlMs = Math.max(0, Number(options.cacheTtlMs ?? snapshotCacheTtlMs));
     try {
       const agents = await provider.listAgents();
-      const normalizedAgents = agents.map((agent) => ({ scannedAt, ...agent, scannedAt: agent.scannedAt || scannedAt }));
+      const normalizedAgents = agents.map((agent) => normalizeProviderAgent(provider, agent, scannedAt));
       const result = {
         provider,
         agents: applySampledTokenRates(provider.id, normalizedAgents, scannedAt, previousTokenSnapshots),
@@ -302,6 +302,33 @@ export function createProviderRegistry() {
     performAction,
     invalidateSnapshots
   };
+}
+
+export function normalizeProviderAgent(provider = {}, agent = {}, scannedAt = Date.now()) {
+  const providerId = normalizeText(provider.id) || "unknown";
+  const providerLabel = normalizeText(provider.label) || providerId;
+  const providerSource = normalizeText(provider.source) || "unknown";
+  const providerType = normalizeText(provider.type) || providerId;
+  const agentSource = normalizeText(agent.source) || providerSource;
+  return {
+    ...agent,
+    id: normalizeText(agent.id),
+    name: normalizeText(agent.name) || normalizeText(agent.id) || "Agent",
+    provider: normalizeText(agent.provider) || providerLabel,
+    providerId: normalizeText(agent.providerId) || providerId,
+    source: agentSource,
+    type: normalizeText(agent.type) || providerType || agentSource,
+    scannedAt: normalizeScannedAt(agent.scannedAt, scannedAt)
+  };
+}
+
+function normalizeText(value) {
+  return String(value ?? "").trim();
+}
+
+function normalizeScannedAt(value, fallback) {
+  const timestamp = Number(value);
+  return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : fallback;
 }
 
 export function applySampledTokenRates(providerId, agents, scannedAt = Date.now(), previousSnapshots = new Map()) {
