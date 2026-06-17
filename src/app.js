@@ -385,14 +385,27 @@ function renderSourceList(agents, providers, message = "") {
 function renderScannerStatus(scanner) {
   if (!scanner) return "";
   const state = scanner.enabled ? (scanner.running ? "Scanning now" : "Background scan on") : "Background scan off";
-  const detail = scanner.lastFinishedAt
-    ? `Last scan ${formatScanFreshness([{ scannedAt: scanner.lastFinishedAt }])}`
-    : `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  const interval = `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  const detail = scanner.lastFinishedAt ? `finished ${formatScanFreshness([{ scannedAt: scanner.lastFinishedAt }])}` : "not finished";
   return `
-    <p class="source-message">
-      ${escapeText(state)} · ${escapeText(detail)}${scanner.lastError ? ` · ${escapeText(scanner.lastError)}` : ""}
-    </p>
+    <article class="source-row ${scanner.lastError ? "source-error" : ""}">
+      <div>
+        <strong>Active Discovery</strong>
+        <p>${escapeText(state)} · ${escapeText(interval)}</p>
+      </div>
+      <span>${escapeText(scannerSummaryLine(scanner, detail))}</span>
+    </article>
   `;
+}
+
+function scannerSummaryLine(scanner, detail) {
+  return [
+    detail,
+    scanner.lastScanAt ? `started ${formatScanFreshness([{ scannedAt: scanner.lastScanAt }])}` : "",
+    `${Number(scanner.agentCount || 0)} agents`,
+    `${Number(scanner.providerCount || 0)} providers`,
+    scanner.lastError || ""
+  ].filter(Boolean).join(" · ");
 }
 
 function renderSettings(config, mode = "local", message = "") {

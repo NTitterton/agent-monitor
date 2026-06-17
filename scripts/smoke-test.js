@@ -123,6 +123,9 @@ try {
   assert(appSource.includes("detail-action-row"), "browser app detail panel should render lifecycle controls");
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
   assert(appSource.includes("Updated ${formatTimestamp(this.snapshotAt)}"), "browser app should render unified snapshot freshness");
+  assert(appSource.includes("Active Discovery"), "browser app Sources panel should label scanner status");
+  assert(appSource.includes("scannerSummaryLine"), "browser app Sources panel should summarize scanner counts and timing");
+  assert(appSource.includes("scanner.lastError ? \"source-error\""), "browser app scanner row should highlight scanner errors");
   assert(appSource.includes("this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history)"), "browser app selected detail should refresh from snapshots");
   assert(appSource.includes('data-setting="apiToken"'), "app settings should include write-only API token control");
   assert(appSource.includes("...(apiToken ? { apiToken } : {})"), "app settings should only send nonblank API token updates");

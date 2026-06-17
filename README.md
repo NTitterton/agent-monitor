@@ -94,7 +94,7 @@ Same-origin local app requests continue to work without putting the token into `
 
 The app sidebar includes a Settings panel for trusted origins, the write-only embed API token, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, preserves non-blocking validation warnings across the save refresh, and does not expose configured API tokens or provider credentials.
 
-When snapshot refresh is enabled, the browser app polls at the configured interval and the local server runs a matching background scanner. Scanner status is available in the Sources panel and at `GET /api/scanner`.
+When snapshot refresh is enabled, the browser app polls at the configured interval and the local server runs a matching background scanner. Scanner status is available as an Active Discovery row in the Sources panel and at `GET /api/scanner`, including enabled/running state, interval, scan timing, provider count, agent count, and any scanner error.
 
 Local standalone embed demo:
 
