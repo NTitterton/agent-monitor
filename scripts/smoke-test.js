@@ -82,6 +82,9 @@ try {
   assert(appSource.includes("searchableAgentFields"), "browser app should search task-manager context fields");
   assert(appSource.includes("agent.repository"), "browser app search should include remote repository context");
   assert(appSource.includes("agent.queue"), "browser app search should include queue context");
+  assert(appSource.includes("agent.remoteId"), "browser app search should include provider object IDs");
+  assert(appSource.includes("agent.model"), "browser app search should include provider object models");
+  assert(appSource.includes("requestCountFields"), "browser app search should include provider object request counts");
   assert(appSource.includes("compareAgents"), "browser app should support task-table sorting");
   assert(appSource.includes("priority-desc"), "browser app should sort by task priority");
   assert(appSource.includes("Status Pressure"), "browser app should present operational status sorting");

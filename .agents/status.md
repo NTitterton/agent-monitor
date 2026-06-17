@@ -49,7 +49,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Compact provider/source health summaries in embedded widgets.
 - Embedded widget task-pressure ordering by status, priority, CPU, start time, and name.
 - Search/status/source/type/provider filters for the agent table.
-- Browser search includes remote context fields such as current step, owner, workspace, repository, branch, queue, and priority.
+- Browser search includes remote context fields such as current step, owner, workspace, repository, branch, queue, priority, provider object IDs, provider models, and request counts.
 - Agent table sorting by newest, CPU, memory, spend, tokens, runtime, priority, and operational status pressure.
 - Top-summary aggregate CPU, memory, tokens, token throughput, spend, running count, visible count, and provider issue count.
 - Snapshot-derived status filter options for provider-specific states.

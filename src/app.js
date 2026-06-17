@@ -959,9 +959,17 @@ function searchableAgentFields(agent) {
     agent.providerId,
     agent.source,
     agent.type,
+    agent.remoteId,
+    agent.model,
+    ...requestCountFields(agent),
     agent.windowTitle,
     agent.goToTarget
   ].filter(Boolean);
+}
+
+function requestCountFields(agent) {
+  if (!agent.requestCounts || typeof agent.requestCounts !== "object") return [];
+  return Object.entries(agent.requestCounts).flatMap(([key, value]) => [key, `${key} ${value}`, value]);
 }
 
 function compareAgents(a, b, sort) {

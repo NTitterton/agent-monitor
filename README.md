@@ -329,7 +329,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Keep last-known provider agents visible during transient provider scan failures while surfacing provider errors.
 - Sort visible tasks by newest, CPU, memory, spend, tokens, runtime, priority, and status.
 - Filter visible tasks by status, source, type, and provider instance.
-- Search visible tasks by task, current step, provider, source/type, owner, workspace, repository, branch, queue, priority, and local/window target context.
+- Search visible tasks by task, current step, provider, source/type, owner, workspace, repository, branch, queue, priority, local/window target context, provider object IDs, provider models, and request counts.
 - Show task progress percentage and current step when providers report them.
 - Show task and progress details in the selected-agent inspector.
 - Show provider object metadata such as remote IDs, models, Go To kind, and Anthropic request counts in the selected-agent inspector.

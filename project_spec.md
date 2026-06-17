@@ -60,7 +60,7 @@ Acceptance criteria:
 
 - Every agent returned by `/api/agents` has `type`.
 - The app can filter or group by `type` and by provider instance.
-- Browser search covers task-manager context fields including task/current step, owner, workspace, repository, branch, queue, priority, provider, source, type, and local/window target hints.
+- Browser search covers task-manager context fields including task/current step, owner, workspace, repository, branch, queue, priority, provider, source, type, local/window target hints, provider object IDs, provider models, and provider request counts.
 - The top summary shows aggregate task-manager totals including visible agents, running agents, CPU, memory, tokens, token throughput, spend, and provider issues.
 - The app can sort visible tasks by task-manager fields including CPU, memory, spend, tokens, runtime, priority, operational status pressure, and start time.
 - Existing `source`, `provider`, and `providerId` behavior remains backward compatible.
