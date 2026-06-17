@@ -93,10 +93,10 @@ function createDefaultState() {
       ...agent,
       providerId: agentProviderIds[agent.id] || "local",
       type: agent.type || agentTypes[agent.id] || agent.providerId || "local",
+      ...normalizeLineage(agent),
       ...normalizeResourceMetrics(agent),
       ...normalizeTokenMetrics(agent),
       ...normalizeCostMetrics(agent),
-      children: [...agent.children],
       transcript: normalizeTranscript(agent.transcript),
       logs: normalizeLogs(agent.logs)
     })),
@@ -120,12 +120,12 @@ function normalizeState(nextState) {
         ...agent,
         providerId: agent.providerId || agentProviderIds[agent.id] || "local",
         type: agent.type || agentTypes[agent.id] || agent.providerId || agentProviderIds[agent.id] || "remote",
+        ...normalizeLineage(agent, fallbackAgent),
         ...normalizeResourceMetrics(agent, fallbackAgent),
         ...normalizeTokenMetrics(agent, fallbackAgent),
         ...normalizeCostMetrics(agent, fallbackAgent),
         ...normalizeTaskProgress(agent, fallbackAgent),
         ...normalizeGoTo(agent, fallbackAgent),
-        children: Array.isArray(agent.children) ? [...agent.children] : [],
         transcript: transcript.length ? transcript : normalizeTranscript(fallbackAgent?.transcript),
         logs: logs.length ? logs : normalizeLogs(fallbackAgent?.logs)
       };
@@ -147,12 +147,12 @@ function normalizeHistoryRecord(record = {}) {
 function cloneAgents(agents) {
   return agents.map((agent) => ({
     ...agent,
+    ...normalizeLineage(agent),
     ...normalizeResourceMetrics(agent),
     ...normalizeTokenMetrics(agent),
     ...normalizeCostMetrics(agent),
     ...normalizeTaskProgress(agent),
     ...normalizeGoTo(agent),
-    children: [...agent.children],
     transcript: normalizeTranscript(agent.transcript),
     logs: normalizeLogs(agent.logs)
   }));
@@ -193,6 +193,23 @@ function normalizeResourceMetrics(agent = {}, fallbackAgent = {}) {
     childCpu: finiteNumber(agent.childCpu ?? fallbackAgent.childCpu),
     childMemoryMb: finiteNumber(agent.childMemoryMb ?? fallbackAgent.childMemoryMb)
   };
+}
+
+function normalizeLineage(agent = {}, fallbackAgent = {}) {
+  return {
+    parentId: normalizeOptionalString(agent.parentId ?? fallbackAgent.parentId),
+    children: normalizeStringList(agent.children ?? fallbackAgent.children)
+  };
+}
+
+function normalizeStringList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function normalizeOptionalString(value) {
+  const text = String(value ?? "").trim();
+  return text || null;
 }
 
 function finiteNumber(value, fallback = 0) {

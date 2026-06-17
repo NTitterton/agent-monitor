@@ -242,11 +242,22 @@ export function createProviderRegistry() {
   function cloneAgent(agent) {
     return {
       ...agent,
-      children: Array.isArray(agent.children) ? [...agent.children] : [],
+      parentId: normalizeOptionalString(agent.parentId),
+      children: normalizeStringList(agent.children),
       childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
       logs: Array.isArray(agent.logs) ? agent.logs.map((entry) => ({ ...entry })) : agent.logs,
       transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : agent.transcript
     };
+  }
+
+  function normalizeStringList(value) {
+    if (!Array.isArray(value)) return [];
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
+
+  function normalizeOptionalString(value) {
+    const text = String(value ?? "").trim();
+    return text || null;
   }
 
   return {

@@ -251,10 +251,21 @@ function cloneAgent(agent) {
     costUsd: Number(agent.costUsd || 0),
     currentStep: agent.currentStep || "",
     progressPercent: normalizeProgress(agent.progressPercent),
-    children: Array.isArray(agent.children) ? [...agent.children] : [],
+    parentId: normalizeOptionalString(agent.parentId),
+    children: normalizeStringList(agent.children),
     childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
     transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
+}
+
+function normalizeStringList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function normalizeOptionalString(value) {
+  const text = String(value ?? "").trim();
+  return text || null;
 }
 
 function finiteNumber(value, fallback = 0) {

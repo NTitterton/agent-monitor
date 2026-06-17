@@ -41,6 +41,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Smoke test harness.
 - Lineage view and selected-agent detail panel.
 - Named parent/child lineage summaries in embedded widgets.
+- String parent/child lineage ID normalization across provider, registry, state, and client snapshots.
 - Compact provider/source health summaries in embedded widgets.
 - Embedded widget task-pressure ordering by status, priority, CPU, start time, and name.
 - Search/status/source filters for the agent table.

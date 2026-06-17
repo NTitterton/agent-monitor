@@ -81,15 +81,15 @@ function normalizeAgent(agent, config) {
   const costUsd = Number(agent.costUsd || 0);
   const goToTarget = agent.goToTarget || agent.remoteUrl || config.dashboardUrl || config.baseUrl;
   return {
-    id: agent.id,
-    name: agent.name || agent.id,
+    id: String(agent.id || "").trim(),
+    name: String(agent.name || agent.id || "").trim(),
     provider: config.label || config.id,
     providerId: config.id,
     type: agent.type || config.type || config.id || "remote",
     source: config.source || "cloud",
     status: agent.status || "waiting",
-    parentId: agent.parentId || null,
-    task: agent.task || agent.name || agent.id,
+    parentId: normalizeOptionalString(agent.parentId),
+    task: String(agent.task || agent.name || agent.id || "").trim(),
     owner: String(agent.owner || "").trim(),
     workspace: String(agent.workspace || "").trim(),
     repository: String(agent.repository || agent.repo || "").trim(),
@@ -111,7 +111,7 @@ function normalizeAgent(agent, config) {
     costUsd: Number.isFinite(costUsd) ? costUsd : 0,
     startedAt,
     endedAt: agent.endedAt,
-    children: Array.isArray(agent.children) ? agent.children : [],
+    children: normalizeStringList(agent.children),
     pid: agent.pid || null,
     parentPid: agent.parentPid || null,
     childPids: Array.isArray(agent.childPids) ? agent.childPids : [],
@@ -134,6 +134,16 @@ function normalizeCapabilities(capabilities, goToTarget) {
 
 function normalizeTokenConfidence(value, fallback = "unknown") {
   return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
+function normalizeStringList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => String(item).trim()).filter(Boolean);
+}
+
+function normalizeOptionalString(value) {
+  const text = String(value ?? "").trim();
+  return text || null;
 }
 
 function finiteNumber(value, fallback = 0) {

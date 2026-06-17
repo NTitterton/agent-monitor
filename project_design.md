@@ -224,7 +224,7 @@ Remote HTTP providers are configured by `baseUrl`. Agent Monitor calls:
 
 Provider failures are isolated: `/api/providers` reports health and errors, while healthy providers continue returning agents.
 
-Remote agents can expose the same normalized resource, lineage, log, transcript, capability, and `go-to` fields as local agents. The adapter preserves provider-reported process breakdown fields and routes lifecycle actions through the remote action endpoint.
+Remote agents can expose the same normalized resource, lineage, log, transcript, capability, and `go-to` fields as local agents. The adapter preserves provider-reported process breakdown fields, normalizes parent/child lineage IDs to strings, and routes lifecycle actions through the remote action endpoint.
 
 Provider snapshots can either report token throughput directly or only report cumulative tokens. The registry preserves positive provider-reported rates and otherwise derives `tokensPerSecond` from successive fresh snapshots for the same provider/agent ID. Embedded widgets include nonzero `costUsd` beside resource and token metrics so embeds keep spend visible. Snapshot normalization coerces `costUsd` to a number before UI totals and spend sorting.
 

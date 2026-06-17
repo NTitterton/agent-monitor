@@ -94,6 +94,12 @@ try {
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.costUsd === "number"), "every agent should include numeric cost");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.cpu === "number"), "every agent should include numeric CPU");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.memoryMb === "number"), "every agent should include numeric memory");
+  assert(
+    sameOriginAgents.body.agents.every(
+      (agent) => Array.isArray(agent.children) && agent.children.every((childId) => typeof childId === "string")
+    ),
+    "every agent should include string child IDs"
+  );
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.scannedAt === "number"), "every agent should include scan timestamp");
   assert(
     sameOriginAgents.body.agents.find((agent) => agent.id === "remote-build-7")?.capabilities?.includes("go-to"),
@@ -534,6 +540,8 @@ async function assertRemoteProviderNormalization() {
             workspace: "agent-monitor",
             repository: "NTitterton/agent-monitor",
             branch: "main",
+            parentId: 123,
+            children: [456, "remote-child"],
             queue: "ci",
             priority: "high",
             currentStep: "Running tests",
@@ -580,6 +588,8 @@ async function assertRemoteProviderNormalization() {
     assert(agent.workspace === "agent-monitor", "remote provider should preserve workspace");
     assert(agent.repository === "NTitterton/agent-monitor", "remote provider should preserve repository");
     assert(agent.branch === "main", "remote provider should preserve branch");
+    assert(agent.parentId === "123", "remote provider should normalize parent IDs to strings");
+    assert(agent.children.join(",") === "456,remote-child", "remote provider should normalize child IDs to strings");
     assert(agent.queue === "ci", "remote provider should preserve queue");
     assert(agent.priority === "high", "remote provider should preserve priority");
     assert(agent.currentStep === "Running tests", "remote provider should preserve current step");
