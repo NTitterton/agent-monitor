@@ -201,6 +201,8 @@ Status: implemented for the local process provider and rendered in the app, modu
 
 Remote provider note: the HTTP adapter preserves provider-reported process-resource breakdown fields so remote/cloud agents can use the same UI model when those metrics are available.
 
+Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
+
 ### Local Process Tree Controls
 
 Local lifecycle controls should target the process tree that represents the agent.

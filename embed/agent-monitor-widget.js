@@ -368,7 +368,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           <div>
             <strong>${escapeHtml(agent.name)}</strong>
             <p>${escapeHtml(agent.provider)} · ${formatRuntime(agent)}</p>
-            <p>${escapeHtml(lineageSummary(agent))}</p>
+            <p>${escapeHtml(lineageSummary(agent, this.agents))}</p>
           </div>
           <span class="status ${tone(agent.status)}">${escapeHtml(agent.status)}</span>
         </div>
@@ -513,10 +513,17 @@ function renderLatestLog(agent) {
   return `<p class="log-preview">${escapeHtml(log.source || "agent")} · ${escapeHtml(log.message)}</p>`;
 }
 
-function lineageSummary(agent) {
+function lineageSummary(agent, agents = []) {
   const childCount = Array.isArray(agent.children) ? agent.children.length : 0;
-  const parent = agent.parentId ? `Parent ${agent.parentId}` : "Root";
-  return `${parent} · ${childCount} child${childCount === 1 ? "" : "ren"}`;
+  const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId)?.name || agent.parentId : "Root";
+  const childNames = (Array.isArray(agent.children) ? agent.children : [])
+    .map((childId) => agents.find((item) => item.id === childId)?.name || childId)
+    .slice(0, 2);
+  const childSummary =
+    childCount > 0
+      ? `${childCount} child${childCount === 1 ? "" : "ren"}: ${childNames.join(", ")}${childCount > childNames.length ? "..." : ""}`
+      : "No children";
+  return `${parent} · ${childSummary}`;
 }
 
 function escapeHtml(value) {

@@ -49,7 +49,7 @@ class AgentMonitorWidget extends HTMLElement {
           <span>${agents.length} total</span>
         </header>
         <div class="list">
-          ${agents.map(renderWidgetAgent).join("")}
+          ${agents.map((agent) => renderWidgetAgent(agent, agents)).join("")}
         </div>
         ${renderActionMessage(this.actionMessage)}
         ${renderWidgetHistory(this.history || [])}
@@ -90,14 +90,14 @@ function renderActionMessage(message) {
   `;
 }
 
-function renderWidgetAgent(agent) {
+function renderWidgetAgent(agent, agents) {
   return `
     <article>
       <div class="agent-line">
         <div>
           <strong>${escapeText(agent.name)}</strong>
           <p>${escapeText(agent.provider)} · ${formatRuntime(agent)}</p>
-          <p>${escapeText(lineageSummary(agent))}</p>
+          <p>${escapeText(lineageSummary(agent, agents))}</p>
         </div>
         <span class="${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
       </div>
@@ -110,10 +110,17 @@ function renderWidgetAgent(agent) {
   `;
 }
 
-function lineageSummary(agent) {
+function lineageSummary(agent, agents = []) {
   const childCount = agent.children.length;
-  const parent = agent.parentId ? `Parent ${agent.parentId}` : "Root";
-  return `${parent} · ${childCount} child${childCount === 1 ? "" : "ren"}`;
+  const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId)?.name || agent.parentId : "Root";
+  const childNames = agent.children
+    .map((childId) => agents.find((item) => item.id === childId)?.name || childId)
+    .slice(0, 2);
+  const childSummary =
+    childCount > 0
+      ? `${childCount} child${childCount === 1 ? "" : "ren"}: ${childNames.join(", ")}${childCount > childNames.length ? "..." : ""}`
+      : "No children";
+  return `${parent} · ${childSummary}`;
 }
 
 function renderResourceLine(agent) {

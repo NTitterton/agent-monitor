@@ -60,7 +60,9 @@ try {
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
   assert(moduleWidgetSource.includes("escapeAttribute(agent.id)"), "module widget should escape provider-supplied attributes");
   assert(moduleWidgetSource.includes("actionDisabledReason"), "module widget should explain disabled action controls");
+  assert(moduleWidgetSource.includes("lineageSummary(agent, agents)"), "module widget should resolve lineage names from the snapshot");
   assert(standaloneWidgetSource.includes("actionDisabledReason"), "standalone widget should explain disabled action controls");
+  assert(standaloneWidgetSource.includes("lineageSummary(agent, this.agents)"), "standalone widget should resolve lineage names from the snapshot");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");

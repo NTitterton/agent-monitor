@@ -306,6 +306,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Track agents from multiple provider namespaces.
 - Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
+- Show named parent/child lineage in the browser app and embedded widgets.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.
