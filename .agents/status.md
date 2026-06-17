@@ -36,6 +36,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Anthropic Message Batches provider for configured batch IDs and launchable model/input rows.
 - Standalone embeddable widget.
 - Desktop app bundle verification through `npm run desktop:build`.
+- Desktop build verification now runs the compiled desktop binary in headless self-test mode and checks local `/api/health`.
 - Desktop app startup diagnostics with captured local server output.
 - Desktop app health probing and port fallback across local ports 5173-5183.
 - Desktop app zip packaging through `npm run desktop:package`.

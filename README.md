@@ -26,9 +26,12 @@ npm run static
 ```sh
 npm run check
 npm run smoke
+npm run desktop:build
 ```
 
 `npm run smoke` starts Agent Monitor on a temporary port with isolated config and state files. It verifies static routes, API auth, CORS preflight, lifecycle actions, and state persistence across a server restart.
+
+`npm run desktop:build` compiles the macOS wrapper, verifies the generated app bundle, and runs the compiled desktop binary in a headless self-test mode that starts a temporary local server and checks `/api/health`.
 
 ## Push to GitHub
 
@@ -46,7 +49,7 @@ npm run desktop:build
 open "dist/Agent Monitor.app"
 ```
 
-The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app. The wrapper reuses an already-running Agent Monitor instance when one responds on ports `5173`-`5183`, otherwise it starts the bundled server on the first available port in that range. If startup fails, the app shows the project root and captured server output to make local setup issues easier to diagnose. `npm run desktop:build` also verifies the generated `.app` bundle, executable, plist, PkgInfo, startup diagnostics, health probing, and port fallback logic.
+The desktop app is a native macOS WebKit wrapper. It starts the local Agent Monitor Node server from this project directory and loads the app in its own window. Node must be available on the machine running the app. The wrapper reuses an already-running Agent Monitor instance when one responds on ports `5173`-`5183`, otherwise it starts the bundled server on the first available port in that range. If startup fails, the app shows the project root and captured server output to make local setup issues easier to diagnose. `npm run desktop:build` also verifies the generated `.app` bundle, executable, plist, PkgInfo, startup diagnostics, health probing, port fallback logic, and a headless runtime self-test of the compiled app binary.
 
 To create a shareable zip of the verified app bundle:
 

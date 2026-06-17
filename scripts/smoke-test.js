@@ -149,6 +149,16 @@ try {
   assert(clientSource.includes("snapshotAt"), "client should preserve unified snapshot timestamps");
   const coreSource = await readFile(new URL("../src/core.js", import.meta.url), "utf8");
   assert(coreSource.includes("Unknown runtime"), "core runtime formatting should guard invalid timestamps");
+  const verifyDesktopSource = await readFile(new URL("./verify-desktop.js", import.meta.url), "utf8");
+  assert(verifyDesktopSource.includes("assertDesktopSelfTest"), "desktop verifier should run a compiled-binary self-test");
+  assert(
+    verifyDesktopSource.includes("AGENT_MONITOR_DESKTOP_SELF_TEST"),
+    "desktop verifier should launch the wrapper in self-test mode"
+  );
+  assert(
+    verifyDesktopSource.includes("AGENT_MONITOR_DESKTOP_PORT_RANGE"),
+    "desktop verifier should isolate its local test port range"
+  );
   const stylesSource = await readFile(new URL("../src/styles.css", import.meta.url), "utf8");
   assert(stylesSource.includes("height: 100vh"), "browser app shell should use one-screen viewport height");
   assert(stylesSource.includes("repeat(8, minmax(92px, 1fr))"), "browser app desktop summary should stay on one compact row");

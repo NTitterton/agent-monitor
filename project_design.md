@@ -92,7 +92,7 @@ graph TD
 
 ## 3. High-Level Design
 
-Agent Monitor is a static web UI plus a small Node local API. The API serves the app, exposes agent/task endpoints, performs lifecycle actions through provider adapters, and persists state in a local JSON file. The desktop app is a native macOS WebKit wrapper that starts the same local Node server and opens the web UI in its own window.
+Agent Monitor is a static web UI plus a small Node local API. The API serves the app, exposes agent/task endpoints, performs lifecycle actions through provider adapters, and persists state in a local JSON file. The desktop app is a native macOS WebKit wrapper that starts the same local Node server and opens the web UI in its own window. Its build verifier can run the compiled wrapper in a headless self-test mode that starts a temporary local server and verifies `/api/health`.
 
 The system has four major layers:
 
@@ -263,7 +263,7 @@ Verification is currently handled by:
 
 - `npm run check`: JavaScript syntax checks across app, server, widgets, and scripts.
 - `npm run smoke`: starts an isolated local server with temporary config/state and verifies static routes, API auth, CORS, snapshot responses, lifecycle actions, action validation, local process start/force-end, provider normalization, per-agent detail, and persistence.
-- `npm run desktop:build`: compiles and verifies the macOS app wrapper.
+- `npm run desktop:build`: compiles the macOS app wrapper, verifies bundle structure, and runs a compiled-binary local-server self-test.
 - `npm run desktop:package`: builds and zips the verified macOS app bundle.
 
 ## 13. Known Gaps
