@@ -222,6 +222,14 @@ try {
           match: "setTimeout(() => {}, 60000)",
           cwd: ".",
           env: ["SMOKE_LOCAL=1"]
+        },
+        {
+          id: "smoke-missing-command",
+          name: "Smoke Missing Command",
+          command: "agent-monitor-missing-command",
+          args: [],
+          match: "agent-monitor-missing-command",
+          cwd: "."
         }
       ],
       snapshotRefresh: {
@@ -294,6 +302,27 @@ try {
   });
   assert(localForceEnd.status === 200, "configured local agent force-end should succeed");
   assert(localForceEnd.body.history[0]?.action === "force-end", "local force-end should be recorded in history");
+
+  const missingCommandStart = await request("/api/agents/smoke-missing-command/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "start" })
+  });
+  assert(missingCommandStart.status === 502, "missing local command start should return provider error");
+  assert(
+    missingCommandStart.body.error.includes("Failed to start local agent smoke-missing-command"),
+    "missing local command start should return a clear provider error"
+  );
+  assert(Array.isArray(missingCommandStart.body.agents), "missing local command start should return agents");
+  assert(Array.isArray(missingCommandStart.body.providers), "missing local command start should return provider status");
+  assert(missingCommandStart.body.config?.hasApiToken === true, "missing local command start should return sanitized config");
+  assert(missingCommandStart.body.scanner?.enabled === true, "missing local command start should return scanner status");
+  assert(
+    !missingCommandStart.body.history.some(
+      (record) => record.agentId === "smoke-missing-command" && record.action === "start"
+    ),
+    "failed local start should not be recorded as successful history"
+  );
 
   const remoteTokenPreserved = await request("/api/config", {
     method: "PUT",

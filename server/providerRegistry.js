@@ -116,8 +116,18 @@ export function createProviderRegistry() {
           };
         }
 
-        const changedAgent = await provider.performAction(agentId, actionId, prompt);
-        invalidateSnapshots(provider.id);
+        let changedAgent;
+        try {
+          changedAgent = await provider.performAction(agentId, actionId, prompt);
+          invalidateSnapshots(provider.id);
+        } catch (error) {
+          return {
+            error: error.message || "Provider action failed",
+            status: 502,
+            agents: await listAgents(),
+            history: await stateStore.listHistory()
+          };
+        }
         if (!changedAgent) {
           return {
             error: "Provider did not return updated agent",

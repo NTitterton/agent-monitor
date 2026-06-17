@@ -67,6 +67,8 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Server-side stale-agent action rejection with refreshed snapshot context.
 - Server-side rejection for provider actions that do not return an updated agent.
 - Server-side rejection for provider actions that confirm a different agent ID.
+- Server-side provider action exception handling with refreshed snapshot context.
+- Local configured-agent start failures reported as provider errors instead of successful history.
 - Unified lifecycle action responses with refreshed agents, history, provider status, sanitized config, and scanner status.
 - Browser app action feedback for accepted and rejected lifecycle requests.
 - Browser app prompt cancellation for interrupt/end actions before dispatch.

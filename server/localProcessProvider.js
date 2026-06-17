@@ -39,7 +39,7 @@ export function createLocalProcessProvider() {
           // Window activation is best-effort and may be blocked by OS permissions.
         }
       } else if (actionId === "start" && !agent.discovered) {
-        startAgent(agent);
+        await startAgent(agent);
       } else if (actionId !== "start") {
         await signalAgent(agent, actionId, prompt);
       }
@@ -79,19 +79,36 @@ async function readConfiguredAgents(config = null) {
     }));
 }
 
-function startAgent(agent) {
-  if (runningChildren.has(agent.id)) return;
+async function startAgent(agent) {
+  if (runningChildren.has(agent.id)) return runningChildren.get(agent.id);
 
-  const child = spawn(agent.command, agent.args || [], {
-    cwd: resolve(new URL("..", import.meta.url).pathname, agent.cwd || "."),
-    detached: false,
-    env: { ...process.env, ...(agent.env || {}) },
-    stdio: "ignore"
+  let startError = null;
+  let child;
+  try {
+    child = spawn(agent.command, agent.args || [], {
+      cwd: resolve(new URL("..", import.meta.url).pathname, agent.cwd || "."),
+      detached: false,
+      env: { ...process.env, ...(agent.env || {}) },
+      stdio: "ignore"
+    });
+  } catch (error) {
+    throw new Error(`Failed to start local agent ${agent.id}: ${error.message}`);
+  }
+
+  child.once("error", (error) => {
+    startError = error;
+    runningChildren.delete(agent.id);
   });
+
+  await new Promise((resolveTimer) => setTimeout(resolveTimer, 25));
+  if (startError) {
+    throw new Error(`Failed to start local agent ${agent.id}: ${startError.message}`);
+  }
 
   child.unref();
   runningChildren.set(agent.id, child);
   child.once("exit", () => runningChildren.delete(agent.id));
+  return child;
 }
 
 async function signalAgent(agent, actionId) {
