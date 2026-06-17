@@ -105,7 +105,7 @@ Repo-module widget demo:
 <script type="module" src="/path/to/agent-monitor/src/widget.js"></script>
 ```
 
-The widget currently uses the same local mock provider as the app. The provider boundary is in `src/core.js`; that is where OpenAI, Anthropic, local process, and cloud agent adapters should plug in.
+The module widget uses the same client as the browser app, so it reads from the local API when Agent Monitor is running and falls back to local demo state when it is embedded without the API.
 
 When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive. The app and widgets escape provider-supplied text/attributes and show lifecycle action feedback; if the API is reachable but rejects an action, the standalone widget leaves its current state unchanged instead of applying a local fallback action and shows the rejection message in the widget.
 
@@ -137,6 +137,8 @@ Provider adapters live in `server/providerRegistry.js`. The current adapters are
 ```
 
 Agent-level `capabilities` should only include actions the provider can actually perform. The app disables unsupported controls, and the local API validates action IDs before enforcing capabilities. Unknown action IDs return `400`; direct action requests that are not in an agent's advertised capabilities return `409`. Configured local agents expose `start` because Agent Monitor can launch their commands. Remote HTTP agents may expose `start` when the remote service supports it. OpenAI Responses and Anthropic Message Batches currently expose cancel-style lifecycle actions plus optional `go-to` links, but do not expose `start` for already-created tracked objects.
+
+Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets and lifecycle actions that do not apply to the agent's current status.
 
 ## Monitor local processes
 

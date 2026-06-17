@@ -54,10 +54,13 @@ try {
       appSource.includes("escapeText(record.prompt)"),
     "browser app should escape provider-supplied agent, provider, and history text"
   );
+  assert(appSource.includes("actionDisabledReason"), "browser app should explain disabled action controls");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
   assert(moduleWidgetSource.includes("escapeAttribute(agent.id)"), "module widget should escape provider-supplied attributes");
+  assert(moduleWidgetSource.includes("actionDisabledReason"), "module widget should explain disabled action controls");
+  assert(standaloneWidgetSource.includes("actionDisabledReason"), "standalone widget should explain disabled action controls");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");

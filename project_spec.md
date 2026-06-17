@@ -111,7 +111,7 @@ Acceptance criteria:
 - Local process Go To is best-effort and platform-specific.
 - If no target is known, the button is hidden or disabled with a clear unavailable state.
 
-Status: partial implementation for macOS local process agents and URL-backed remote/account agents. `Go To` activates likely Terminal/iTerm, browser, or editor surfaces from local process metadata, and opens `goToTarget` URLs for remote dashboards/provider pages. Exact terminal tab selection still needs deeper host integration.
+Status: partial implementation for macOS local process agents and URL-backed remote/account agents. `Go To` activates likely Terminal/iTerm, browser, or editor surfaces from local process metadata, and opens `goToTarget` URLs for remote dashboards/provider pages. Unsupported or unavailable Go To controls are disabled with explanatory titles. Exact terminal tab selection still needs deeper host integration.
 
 Open questions:
 
@@ -186,7 +186,7 @@ Agent-level capabilities should describe actions the active provider can truly p
 - The browser app should surface accepted and rejected action results to the operator.
 - Widgets should surface action results and should not apply local fallback mutations when a reachable API rejects an action.
 
-Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. The browser app, module widget, and standalone widget render action feedback messages.
+Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. The browser app, module widget, and standalone widget render action feedback messages and explanatory disabled-action titles.
 
 ### Local Process Resource Accounting
 

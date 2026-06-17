@@ -879,22 +879,36 @@ function formatTrackedLines(items, remoteIdKey) {
 }
 
 function renderAction(agent, action) {
-  const disabled =
-    (action.surface && !agent.capabilities?.includes(action.id)) ||
-    (agent.capabilities && !agent.capabilities.includes(action.id)) ||
-    (agent.status === "ended" && action.id !== "start") ||
-    (agent.status === "running" && action.id === "start");
+  const disabledReason = actionDisabledReason(agent, action);
   return `
     <button
       class="${action.destructive ? "danger" : ""}"
       type="button"
       data-agent-id="${escapeAttribute(agent.id)}"
       data-action="${escapeAttribute(action.id)}"
-      ${disabled ? "disabled" : ""}
+      title="${escapeAttribute(disabledReason || actionTitle(agent, action))}"
+      aria-label="${escapeAttribute(`${action.label} ${agent.name}`)}"
+      ${disabledReason ? "disabled" : ""}
     >
       ${escapeText(action.label)}
     </button>
   `;
+}
+
+function actionDisabledReason(agent, action) {
+  if (action.surface && !agent.capabilities?.includes(action.id)) return `${action.label} is unavailable for this agent`;
+  if (agent.capabilities && !agent.capabilities.includes(action.id)) return `${action.label} is not supported by ${agent.provider}`;
+  if (agent.status === "ended" && action.id !== "start") return "Ended agents can only be started";
+  if (agent.status === "running" && action.id === "start") return "Agent is already running";
+  return "";
+}
+
+function actionTitle(agent, action) {
+  if (action.id === "go-to") {
+    if (agent.goToKind === "url") return `Open ${agent.windowTitle || agent.goToTarget || agent.remoteUrl}`;
+    if (agent.goToKind) return `Bring ${agent.windowTitle || agent.name} forward`;
+  }
+  return `${action.label} ${agent.name}`;
 }
 
 function labelize(value) {
