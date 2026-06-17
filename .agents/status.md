@@ -79,13 +79,16 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Unified lifecycle action responses with refreshed agents, history, provider status, sanitized config, and scanner status.
 - Browser app action feedback for accepted and rejected lifecycle requests.
 - Browser app prompt cancellation for interrupt/end actions before dispatch.
+- Browser app destructive-action confirmation before dispatch.
 - Browser app escaping for provider-supplied text, history prompts, and action/provider attributes.
 - Module widget action feedback for accepted and rejected lifecycle requests.
 - Module widget prompt cancellation for interrupt/end actions before dispatch.
+- Module widget destructive-action confirmation before dispatch.
 - Module widget escaping for provider-supplied text and action messages.
 - Standalone widget snapshot normalization for metrics, lineage, process IDs, capabilities, logs, and transcripts.
 - Standalone widget action feedback for accepted and rejected lifecycle requests.
 - Standalone widget prompt cancellation for interrupt/end actions before dispatch.
+- Standalone widget destructive-action confirmation before dispatch.
 - Standalone widget local fallback lifecycle timestamps/resources and metadata-rich history.
 - Standalone widget avoids local fallback mutation when a reachable API rejects an action.
 - `Go To` action for macOS local process agents that activates likely Terminal/iTerm, browser, or editor surfaces.

@@ -476,6 +476,7 @@ function renderAction(agent, action) {
 }
 
 function collectActionPrompt(action) {
+  if (action?.danger && !window.confirm(`${action.label} is destructive. Continue?`)) return null;
   if (!action?.prompt) return "";
   return window.prompt(`${action.label} prompt`);
 }

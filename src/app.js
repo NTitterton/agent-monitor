@@ -211,6 +211,7 @@ function renderActionMessage(message) {
 }
 
 function collectActionPrompt(action) {
+  if (action?.destructive && !window.confirm(`${action.label} is destructive. Continue?`)) return null;
   if (!action?.requiresPrompt) return "";
   return window.prompt(`${action.label} prompt`);
 }
