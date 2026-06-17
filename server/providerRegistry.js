@@ -1,4 +1,4 @@
-import { agentActions, lifecycleActions } from "../src/core.js";
+import { agentActions, isTerminalStatus, lifecycleActions } from "../src/core.js";
 import { readAnthropicMessageBatchesProviders } from "./anthropicMessageBatchesProvider.js";
 import { createLocalProcessProvider, hasLocalProcessConfig } from "./localProcessProvider.js";
 import { readOpenAIResponsesProviders } from "./openAIResponsesProvider.js";
@@ -88,7 +88,8 @@ export function createProviderRegistry() {
   }
 
   async function performAction(agentId, actionId, prompt = "") {
-    if (!agentActions.some((action) => action.id === actionId)) {
+    const requestedAction = agentActions.find((action) => action.id === actionId);
+    if (!requestedAction) {
       return {
         error: "Invalid action",
         status: 400,
@@ -108,6 +109,14 @@ export function createProviderRegistry() {
       const agent = agents.find((item) => item.id === agentId);
       if (agent) {
         if (Array.isArray(agent.capabilities) && !agent.capabilities.includes(actionId)) {
+          return {
+            error: "Action not supported",
+            status: 409,
+            agents: await listAgents(),
+            history: await stateStore.listHistory()
+          };
+        }
+        if (isTerminalStatus(agent.status) && actionId !== "start" && !requestedAction.surface) {
           return {
             error: "Action not supported",
             status: 409,

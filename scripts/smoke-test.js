@@ -81,6 +81,7 @@ try {
     "browser app should escape provider-supplied agent, provider, and history text"
   );
   assert(appSource.includes("actionDisabledReason"), "browser app should explain disabled action controls");
+  assert(appSource.includes("isTerminalStatus"), "browser app should treat provider terminal statuses as terminal");
   assert(appSource.includes("did not advertise"), "browser app should explain unadvertised provider capabilities");
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
@@ -107,6 +108,7 @@ try {
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
   assert(moduleWidgetSource.includes("escapeAttribute(agent.id)"), "module widget should escape provider-supplied attributes");
   assert(moduleWidgetSource.includes("actionDisabledReason"), "module widget should explain disabled action controls");
+  assert(moduleWidgetSource.includes("isTerminalStatus"), "module widget should treat provider terminal statuses as terminal");
   assert(moduleWidgetSource.includes("did not advertise"), "module widget should explain unadvertised provider capabilities");
   assert(moduleWidgetSource.includes("lineageSummary(agent, agents)"), "module widget should resolve lineage names from the snapshot");
   assert(moduleWidgetSource.includes("renderProviderSummary"), "module widget should render provider/source health");
@@ -119,6 +121,7 @@ try {
   assert(moduleWidgetSource.includes("collectActionPrompt"), "module widget should cancel prompt actions when the prompt is canceled");
   assert(moduleWidgetSource.includes("window.confirm"), "module widget should confirm destructive actions");
   assert(standaloneWidgetSource.includes("actionDisabledReason"), "standalone widget should explain disabled action controls");
+  assert(standaloneWidgetSource.includes("isTerminalStatus"), "standalone widget should treat provider terminal statuses as terminal");
   assert(standaloneWidgetSource.includes("did not advertise"), "standalone widget should explain unadvertised provider capabilities");
   assert(standaloneWidgetSource.includes("lineageSummary(agent, this.agents)"), "standalone widget should resolve lineage names from the snapshot");
   assert(standaloneWidgetSource.includes("renderProviderSummary"), "standalone widget should render provider/source health");
@@ -480,6 +483,14 @@ try {
   assert(unsupportedAction.status === 409, "unsupported agent action should return conflict");
   assert(unsupportedAction.body.error === "Action not supported", "unsupported agent action should return a clear error");
   assert(Array.isArray(unsupportedAction.body.providers), "unsupported action should return provider status");
+
+  const terminalAction = await request("/api/agents/remote-build-7/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "stop" })
+  });
+  assert(terminalAction.status === 409, "terminal agent lifecycle action should return conflict");
+  assert(terminalAction.body.error === "Action not supported", "terminal agent lifecycle action should return a clear error");
 
   const invalidAction = await request("/api/agents/local-codex-1/actions", {
     method: "POST",

@@ -172,6 +172,23 @@ export const surfaceActions = [
 
 export const agentActions = [...lifecycleActions, ...surfaceActions];
 
+const terminalStatuses = new Set([
+  "ended",
+  "completed",
+  "complete",
+  "succeeded",
+  "done",
+  "failed",
+  "error",
+  "cancelled",
+  "canceled",
+  "expired"
+]);
+
+export function isTerminalStatus(status) {
+  return terminalStatuses.has(String(status || "").toLowerCase());
+}
+
 export function createAgentStore(seedAgents = initialAgents) {
   let agents = seedAgents.map(cloneAgent);
   const subscribers = new Set();

@@ -486,7 +486,7 @@ function actionDisabledReason(agent, action) {
   if (Array.isArray(agent.capabilities) && !agent.capabilities.includes(action.id)) {
     return `${agent.provider} did not advertise ${action.label}`;
   }
-  if (agent.status === "ended" && action.id !== "start") return "Ended agents can only be started";
+  if (isTerminalStatus(agent.status) && action.id !== "start" && !action.surface) return "Terminal agents can only be started";
   if (agent.status === "running" && action.id === "start") return "Agent is already running";
   return "";
 }
@@ -677,6 +677,23 @@ function historyAgentLine(record) {
 
 function actionKindLabel(record) {
   return record.actionKind === "surface" ? "Surface" : "Lifecycle";
+}
+
+const terminalStatuses = new Set([
+  "ended",
+  "completed",
+  "complete",
+  "succeeded",
+  "done",
+  "failed",
+  "error",
+  "cancelled",
+  "canceled",
+  "expired"
+]);
+
+function isTerminalStatus(status) {
+  return terminalStatuses.has(String(status || "").toLowerCase());
 }
 
 async function readJsonResponse(response) {

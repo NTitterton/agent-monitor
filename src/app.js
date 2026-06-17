@@ -3,6 +3,7 @@ import {
   formatMemory,
   formatRuntime,
   agentActions,
+  isTerminalStatus,
   statusTone
 } from "./core.js";
 import { createAgentClient } from "./client.js";
@@ -1053,7 +1054,7 @@ function actionDisabledReason(agent, action) {
   if (Array.isArray(agent.capabilities) && !agent.capabilities.includes(action.id)) {
     return `${agent.provider} did not advertise ${action.label}`;
   }
-  if (agent.status === "ended" && action.id !== "start") return "Ended agents can only be started";
+  if (isTerminalStatus(agent.status) && action.id !== "start" && !action.surface) return "Terminal agents can only be started";
   if (agent.status === "running" && action.id === "start") return "Agent is already running";
   return "";
 }

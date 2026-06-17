@@ -73,6 +73,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Server-side stale-agent action rejection with refreshed snapshot context.
 - Server-side rejection for provider actions that do not return an updated agent.
 - Server-side rejection for provider actions that confirm a different agent ID.
+- Server-side rejection for non-start lifecycle actions against terminal provider statuses.
 - Server-side malformed JSON rejection with `400 Invalid JSON`.
 - Server-side provider action exception handling with refreshed snapshot context.
 - Local configured-agent start failures reported as provider errors instead of successful history.
@@ -97,6 +98,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Action history records classify lifecycle actions separately from surface actions such as `Go To`.
 - Browser app and widgets label lifecycle versus surface action history.
 - Explanatory disabled-action titles for unavailable lifecycle, unadvertised provider capability, and `Go To` controls across app and widgets.
+- Terminal provider statuses disable non-start lifecycle controls while preserving `Go To`.
 - Optional browser-app auto refresh cadence and `scannedAt` freshness metadata for provider snapshots.
 - Unified API `snapshotAt` timestamps surfaced in the browser topbar and embedded widget source summaries.
 - Per-agent provider health and scan freshness in the browser task table and selected-agent inspector.
