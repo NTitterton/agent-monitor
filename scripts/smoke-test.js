@@ -38,6 +38,7 @@ try {
   const standaloneWidgetSource = await readFile(new URL("../embed/agent-monitor-widget.js", import.meta.url), "utf8");
   assert(standaloneWidgetSource.includes("/api/snapshot"), "standalone widget should prefer the unified snapshot API");
   assert(standaloneWidgetSource.includes("/api/agents"), "standalone widget should keep legacy agent API fallback");
+  assert(standaloneWidgetSource.includes("if (!response.ok) return;"), "standalone widget should not locally apply rejected API actions");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");

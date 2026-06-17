@@ -267,7 +267,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         headers: this.headers(),
         body: JSON.stringify({ action: action.id, prompt })
       });
-      if (!response.ok) throw new Error(`Agent Monitor returned ${response.status}`);
+      if (!response.ok) return;
       const payload = await response.json();
       this.agents = payload.agents || this.agents;
       this.history = payload.history || this.history;
