@@ -71,6 +71,14 @@ try {
   const remoteProviderSource = await readFile(new URL("../server/remoteHttpProvider.js", import.meta.url), "utf8");
   assert(remoteProviderSource.includes("extractAgents"), "remote provider should accept flexible agent list payloads");
   assert(remoteProviderSource.includes("extractAgent"), "remote provider should accept flexible action agent payloads");
+  const readmeSource = await readFile(new URL("../README.md", import.meta.url), "utf8");
+  assert(readmeSource.includes("docs/hosted-embed.md"), "README should link the hosted personal-site embed guide");
+  const hostedEmbedGuide = await readFile(new URL("../docs/hosted-embed.md", import.meta.url), "utf8");
+  assert(hostedEmbedGuide.includes("https://zo.computer"), "hosted embed guide should cover the zo.computer use case");
+  assert(hostedEmbedGuide.includes('api-base="http://127.0.0.1:5173"'), "hosted embed guide should show local API base");
+  assert(hostedEmbedGuide.includes('auth-header="authorization"'), "hosted embed guide should document bearer token mode");
+  assert(hostedEmbedGuide.includes("local fallback data"), "hosted embed guide should explain offline fallback behavior");
+  assert(hostedEmbedGuide.includes("localhost/private-network"), "hosted embed guide should note browser localhost restrictions");
   assertSampledTokenRates();
   assertProviderErrorSnapshots();
   assertProviderAgentNormalization();

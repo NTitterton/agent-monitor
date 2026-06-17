@@ -36,6 +36,8 @@ Agent Monitor should run as a browser app, standalone desktop app, and embeddabl
 
 Status: browser app, module widget, standalone widget, and macOS desktop wrapper are implemented. The browser app and widgets escape provider-supplied text and attributes before rendering. `npm run desktop:build` compiles and verifies the generated `.app` bundle, including a headless self-test that runs the compiled desktop binary, starts a temporary local server, and checks `/api/health`. Desktop startup diagnostics show project root and captured server output when the local server cannot start. The desktop wrapper identifies already-running Agent Monitor servers through `/api/health`, reuses ports `5173`-`5183` when available, and otherwise starts on the first open port in that range. `npm run desktop:package` creates a shareable zip from the verified app bundle.
 
+Hosted embed status: implemented documentation in `docs/hosted-embed.md` for static personal sites such as `zo.computer` that host `agent-monitor-widget.js` while calling the local Agent Monitor API through trusted-origin CORS and an optional widget token. The guide documents copy-paste snippets, token header choices, fallback behavior, refresh cadence, browser localhost restrictions, and local health checks.
+
 ### Browser Layout
 
 The browser app should behave like a one-screen operations console.
@@ -335,5 +337,5 @@ Status: implemented for state-backed agents, remote HTTP provider payloads, and 
 1. Improve platform-specific Go To targeting for terminal tabs, browser tabs, and editor workspaces where documented automation APIs are available.
 2. Add broader provider-specific start/resume creation flows where APIs expose them.
 3. Add richer live usage/cost sampling when account providers expose streaming or incremental usage telemetry.
-4. Add richer embedded-site deployment docs for hosted personal sites calling a local Agent Monitor API.
-5. Add optional richer desktop packaging, such as signed/notarized builds or a first-run setup flow.
+4. Add optional richer desktop packaging, such as signed/notarized builds or a first-run setup flow.
+5. Add optional hosted relay/companion extension designs if browser localhost restrictions become a real deployment blocker.

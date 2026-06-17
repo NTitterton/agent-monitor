@@ -257,6 +257,8 @@ The standalone widget prefers `/api/snapshot`, falls back to the legacy `/api/ag
 
 Both widget implementations preserve the full snapshot for lineage lookups while rendering cards in task-pressure order: active status, provider-reported priority, CPU usage, newest start time, then name.
 
+Hosted personal sites can serve `embed/agent-monitor-widget.js` as a static asset while the browser calls the local Agent Monitor API. `docs/hosted-embed.md` documents the `zo.computer`-style deployment model, CORS/token setup, snippet variants, fallback behavior, browser localhost restrictions, and quick local checks.
+
 ## 12. Verification
 
 Verification is currently handled by:

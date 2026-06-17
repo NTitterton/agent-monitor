@@ -95,6 +95,8 @@ The widget sends `api-token` as `X-Agent-Monitor-Token` by default. Set `auth-he
 
 Same-origin local app requests continue to work without putting the token into `index.html`.
 
+For a hosted personal-site checklist, including `zo.computer`-style static hosting, trusted origins, token delivery, and localhost browser security notes, see [docs/hosted-embed.md](docs/hosted-embed.md).
+
 The app sidebar includes a collapsible Settings menu for trusted origins, the write-only embed API token, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, preserves non-blocking validation warnings across the save refresh, and does not expose configured API tokens or provider credentials. The desktop browser layout is sized as a one-screen operations console: the Sources rail and agent task list scroll independently while the header and filters stay reachable, the task list is weighted as the dominant Activity Monitor-style region, and selected-agent detail lives in a compact expandable inspector.
 
 When snapshot refresh is enabled, the browser app polls at the configured interval and the local server runs a matching background scanner. Scanner status is available as an Active Discovery row in the Sources panel and at `GET /api/scanner`, including enabled/running state, interval, scan timing, provider count, agent count, and any scanner error.
