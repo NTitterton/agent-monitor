@@ -80,6 +80,8 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Remote HTTP timestamp normalization for agent, log, and transcript date strings.
 - Process ID normalization for remote HTTP and client snapshots.
 - Local process lifecycle controls signal descendant process trees before root PIDs.
+- Configured local process agents expose `Start` only while stopped, preventing duplicate local command spawns.
+- Configured local process starts use private saved environment variables without exposing them in public config or snapshots.
 - Smoke coverage for starting and force-ending a configured local process agent.
 - Server-side capability enforcement for unsupported direct action requests.
 - Server-side validation for unknown action IDs.

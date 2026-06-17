@@ -208,7 +208,7 @@ stateDiagram-v2
 
 ## 7. Local Process Provider
 
-The local process provider is configured through `agent-monitor.config.json`. It uses `ps` snapshots for PID, parent PID, descendant child PIDs, CPU, memory, command, and start time. It can start configured commands and sends process-tree signals for termination:
+The local process provider is configured through `agent-monitor.config.json`. It uses `ps` snapshots for PID, parent PID, descendant child PIDs, CPU, memory, command, and start time. It can start configured commands while they are stopped, passes private configured environment variables into spawned processes without returning those env values in public config or snapshots, and sends process-tree signals for termination:
 
 - `stop`, `interrupt`, `end`: `SIGTERM`
 - `force-end`: `SIGKILL`

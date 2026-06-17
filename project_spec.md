@@ -206,7 +206,7 @@ Status: provider connection testing implemented through `POST /api/providers/:id
 
 Agent-level capabilities should describe actions the active provider can truly perform.
 
-- Configured local agents can expose `start` because Agent Monitor can spawn their configured command.
+- Configured local agents expose `start` only while not running because Agent Monitor can spawn their configured command.
 - Remote HTTP agents can expose `start` or future resume-like controls when the remote API advertises those capabilities.
 - Remote HTTP agents that omit `capabilities` are treated as view-only except for inferred URL-backed `go-to`; Agent Monitor does not invent lifecycle controls for remote/cloud agents.
 - OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions for tracked objects, plus optional `go-to` links, but do not expose `start` for already-created work.
@@ -231,7 +231,7 @@ Surface-action note: URL-backed `go-to` is treated as a navigation surface actio
 
 API reliability note: malformed JSON request bodies return `400` with `Invalid JSON`, so clients and widgets can distinguish bad operator/client input from server failures.
 
-Provider failure note: provider action exceptions return `502` with refreshed agents, history, provider status, sanitized config, and scanner status. Local configured-agent `start` waits for the child-process spawn result; missing executables or other immediate spawn failures return a provider error and are not recorded as successful lifecycle history.
+Provider failure note: provider action exceptions return `502` with refreshed agents, history, provider status, sanitized config, and scanner status. Local configured-agent `start` waits for the child-process spawn result; missing executables or other immediate spawn failures return a provider error and are not recorded as successful lifecycle history. Running configured local agents do not advertise duplicate `start`, so direct duplicate starts are rejected by the API capability gate. Local starts use the private configured agent row so saved environment variables are passed to spawned commands without exposing them in public config or agent snapshots.
 
 History status: action history records include provider, provider ID, source, type, and `actionKind` metadata. Existing persisted history without those fields is normalized with empty metadata fields on read, and legacy IDs, timestamps, labels, prompts, action kinds, and agent/provider metadata are coerced into stable API-safe values. The browser app and both widget variants label lifecycle versus surface history so `go-to` navigation does not appear as a mutating lifecycle control.
 
@@ -288,7 +288,7 @@ Local lifecycle controls should target the process tree that represents the agen
 - `force-end` sends `SIGKILL` to descendant processes before the root process.
 - Signaling descendants first gives child workers a chance to exit before their parent is terminated.
 
-Status: implemented for the local process provider. Smoke tests cover child-before-root PID ordering for nested process trees.
+Status: implemented for the local process provider. Smoke tests cover child-before-root PID ordering for nested process trees, configured local start/force-end, private env propagation into spawned commands, and duplicate-start rejection while a configured local agent is already running.
 
 End-to-end coverage:
 

@@ -376,8 +376,8 @@ try {
           id: "smoke-local",
           name: "Smoke Local",
           command: "node",
-          args: ["-e", "setTimeout(() => {}, 60000)"],
-          match: "setTimeout(() => {}, 60000)",
+          args: ["-e", "if (process.env.SMOKE_LOCAL !== '1') process.exit(42); setTimeout(() => {}, 60000)"],
+          match: "SMOKE_LOCAL !== '1') process.exit(42)",
           cwd: ".",
           env: ["SMOKE_LOCAL=1"]
         },
@@ -448,10 +448,19 @@ try {
   const startedLocalAgent = localStart.body.agents.find((agent) => agent.id === "smoke-local");
   assert(startedLocalAgent?.status === "running", "configured local agent should report running after start");
   assert(typeof startedLocalAgent?.pid === "number", "configured local agent should report pid after start");
+  assert(!startedLocalAgent.capabilities.includes("start"), "running configured local agent should not expose duplicate start");
   assert(localStart.body.history[0]?.agentId === "smoke-local", "local start should be recorded in history");
   assert(localStart.body.history[0]?.provider === "Local Process", "local start history should include provider");
   assert(localStart.body.history[0]?.source === "local", "local start history should include source");
   assert(localStart.body.history[0]?.type === "local", "local start history should include type");
+
+  const duplicateLocalStart = await request("/api/agents/smoke-local/actions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "start" })
+  });
+  assert(duplicateLocalStart.status === 409, "running configured local agent duplicate start should be rejected");
+  assert(duplicateLocalStart.body.error === "Action not supported", "duplicate local start should return a clear conflict");
 
   const localForceEnd = await request("/api/agents/smoke-local/actions", {
     method: "POST",

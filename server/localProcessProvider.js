@@ -38,8 +38,9 @@ export function createLocalProcessProvider() {
         } catch {
           // Window activation is best-effort and may be blocked by OS permissions.
         }
-      } else if (actionId === "start" && !agent.discovered) {
-        await startAgent(agent);
+      } else if (actionId === "start" && !agent.discovered && agent.status !== "running") {
+        const configuredAgent = (await readConfiguredAgents()).find((item) => item.id === agentId);
+        await startAgent(configuredAgent || agent);
       } else if (actionId !== "start") {
         await signalAgent(agent, actionId, prompt);
       }
@@ -179,7 +180,10 @@ function toProcessAgent(agent, processes) {
     args: agent.args,
     discovered: Boolean(agent.discovered),
     capabilities: agentActions
-      .filter((action) => !agent.discovered || action.id !== "start")
+      .filter((action) => {
+        if (action.id !== "start") return true;
+        return !agent.discovered && !isRunning;
+      })
       .map((action) => action.id)
   };
 }
