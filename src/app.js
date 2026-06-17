@@ -555,8 +555,10 @@ function renderOpenAIProviderRow(provider, index, mode) {
       <input data-openai-field="apiKey" type="password" value="" ${disabled} aria-label="OpenAI API key ${index + 1}" />
       <input data-openai-field="organization" value="${escapeAttribute(provider.organization || "")}" ${disabled} aria-label="OpenAI organization ${index + 1}" />
       <input data-openai-field="project" value="${escapeAttribute(provider.project || "")}" ${disabled} aria-label="OpenAI project ${index + 1}" />
+      <input data-openai-field="inputCostUsdPer1K" type="number" min="0" step="0.000001" value="${escapeAttribute(provider.inputCostUsdPer1K || 0)}" ${disabled} aria-label="OpenAI input cost per 1K tokens ${index + 1}" />
+      <input data-openai-field="outputCostUsdPer1K" type="number" min="0" step="0.000001" value="${escapeAttribute(provider.outputCostUsdPer1K || 0)}" ${disabled} aria-label="OpenAI output cost per 1K tokens ${index + 1}" />
       <textarea data-openai-field="responses" rows="3" ${disabled} aria-label="OpenAI response list ${index + 1}">${escapeText(formatOpenAIResponseLines(provider.responses || []))}</textarea>
-      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · tracked: id | name | responseId | task | goToUrl · launch: id | name | model | input | goToUrl</span>
+      <span>${provider.hasApiKey ? "API key saved" : "No API key"} · tracked: id | name | responseId | task | goToUrl · launch: id | name | model | input | goToUrl · optional cost rates are USD per 1K input/output tokens</span>
     </fieldset>
   `;
 }
@@ -1109,6 +1111,8 @@ function parseOpenAIProviders(form) {
         ...(fields.apiKey ? { apiKey: fields.apiKey } : {}),
         ...(fields.organization ? { organization: fields.organization } : {}),
         ...(fields.project ? { project: fields.project } : {}),
+        inputCostUsdPer1K: Number(fields.inputCostUsdPer1K || 0),
+        outputCostUsdPer1K: Number(fields.outputCostUsdPer1K || 0),
         responses: parseOpenAIResponseLines(fields.responses)
       };
     })

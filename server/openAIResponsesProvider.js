@@ -110,6 +110,7 @@ function normalizeResponse(response, providerConfig, responseConfig) {
   const startedAt = response.created_at ? response.created_at * 1000 : Date.now();
   const endedAt = status === "ended" ? Date.now() : undefined;
   const totalTokens = inputTokens + outputTokens;
+  const costUsd = estimateResponseCostUsd(providerConfig, responseConfig, inputTokens, outputTokens);
   const tokenRateWindowMs = Math.max(1000, (endedAt || Date.now()) - startedAt);
   const goToTarget = responseConfig.goToTarget || responseConfig.dashboardUrl || "";
   const transcript = normalizeResponseTranscript(response, startedAt);
@@ -130,7 +131,7 @@ function normalizeResponse(response, providerConfig, responseConfig) {
     tokensPerSecond: totalTokens ? Number((totalTokens / (tokenRateWindowMs / 1000)).toFixed(2)) : 0,
     tokenRateWindowMs: totalTokens ? tokenRateWindowMs : 0,
     tokenCountConfidence: totalTokens ? "reported" : "unknown",
-    costUsd: 0,
+    costUsd,
     startedAt,
     endedAt,
     children: responseConfig.children || [],
@@ -158,6 +159,19 @@ function normalizeResponse(response, providerConfig, responseConfig) {
     model: response.model,
     capabilities: normalizeCapabilities(goToTarget)
   };
+}
+
+function estimateResponseCostUsd(providerConfig, responseConfig, inputTokens, outputTokens) {
+  const inputRate = finiteRate(responseConfig.inputCostUsdPer1K ?? providerConfig.inputCostUsdPer1K);
+  const outputRate = finiteRate(responseConfig.outputCostUsdPer1K ?? providerConfig.outputCostUsdPer1K);
+  const inputCost = inputRate ? (inputTokens / 1000) * inputRate : 0;
+  const outputCost = outputRate ? (outputTokens / 1000) * outputRate : 0;
+  return Number((inputCost + outputCost).toFixed(6));
+}
+
+function finiteRate(value) {
+  const number = Number(value || 0);
+  return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
 function normalizeLaunchableResponse(providerConfig, responseConfig) {

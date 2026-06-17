@@ -101,7 +101,7 @@ Notes:
 - Remote providers should be allowed to report their own token totals and rates.
 - Remote providers may also report `processCpu`, `processMemoryMb`, `childCpu`, `childMemoryMb`, `pid`, `parentPid`, and `childPids` when they can observe process-level execution.
 
-Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract. Provider snapshots normalize agent `provider`, `providerId`, `source`, and `type` at the registry boundary so local, OpenAI, Anthropic, and third-party cloud agents keep stable task-manager classifications across app and widget surfaces. When a provider reports cumulative tokens but no positive token rate, fresh provider snapshots derive `tokensPerSecond` from successive token deltas and expose the measured `tokenRateWindowMs`.
+Status: implemented for normalized snapshots, the main app, widgets, and the remote provider contract. Provider snapshots normalize agent `provider`, `providerId`, `source`, and `type` at the registry boundary so local, OpenAI, Anthropic, and third-party cloud agents keep stable task-manager classifications across app and widget surfaces. When a provider reports cumulative tokens but no positive token rate, fresh provider snapshots derive `tokensPerSecond` from successive token deltas and expose the measured `tokenRateWindowMs`. OpenAI Responses can estimate `costUsd` from reported input/output usage when operator-configured USD-per-1K token rates are available; rates are configurable rather than hardcoded.
 
 Acceptance criteria:
 
@@ -336,6 +336,6 @@ Status: implemented for state-backed agents, remote HTTP provider payloads, and 
 
 1. Improve platform-specific Go To targeting for terminal tabs, browser tabs, and editor workspaces where documented automation APIs are available.
 2. Add broader provider-specific start/resume/listing flows where APIs expose them; OpenAI Responses remain configured-row based unless an account listing endpoint becomes available.
-3. Add richer live usage/cost sampling when account providers expose streaming or incremental usage telemetry.
+3. Add richer live/incremental usage sampling when account providers expose streaming or partial telemetry.
 4. Add optional richer desktop packaging, such as signed/notarized builds or a first-run setup flow.
 5. Add optional hosted relay/companion extension designs if browser localhost restrictions become a real deployment blocker.

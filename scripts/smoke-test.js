@@ -131,6 +131,8 @@ try {
   assert(appSource.includes("formatTokenRate({ tokensPerSecond: tokenRate })"), "browser app summary should format aggregate token throughput");
   assert(appSource.includes("parseOpenAIResponseLines"), "app settings should parse OpenAI launchable response rows");
   assert(appSource.includes("formatOpenAIResponseLines"), "app settings should format OpenAI launchable response rows");
+  assert(appSource.includes('data-openai-field="inputCostUsdPer1K"'), "app settings should expose OpenAI input cost rate");
+  assert(appSource.includes('data-openai-field="outputCostUsdPer1K"'), "app settings should expose OpenAI output cost rate");
   assert(appSource.includes("parseAnthropicBatchLines"), "app settings should parse Anthropic launchable batch rows");
   assert(appSource.includes("formatAnthropicBatchLines"), "app settings should format Anthropic launchable batch rows");
   assert(appSource.includes('data-anthropic-field="discoverRecent"'), "app settings should expose Anthropic recent-batch discovery");
@@ -753,6 +755,8 @@ try {
           label: "Smoke OpenAI",
           apiKeyEnv: "SMOKE_OPENAI_KEY",
           apiKey: "openai-secret",
+          inputCostUsdPer1K: 0.1,
+          outputCostUsdPer1K: 0.2,
           responses: [
             {
               id: "smoke-response",
@@ -786,6 +790,8 @@ try {
   });
   assert(accountProviderConfig.status === 200, "account provider config update should succeed");
   assert(accountProviderConfig.body.config.openAIResponsesProviders[0]?.hasApiKey === true, "OpenAI public config should report API key presence");
+  assert(accountProviderConfig.body.config.openAIResponsesProviders[0]?.inputCostUsdPer1K === 0.1, "OpenAI public config should expose input cost rate");
+  assert(accountProviderConfig.body.config.openAIResponsesProviders[0]?.outputCostUsdPer1K === 0.2, "OpenAI public config should expose output cost rate");
   assert(accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]?.hasApiKey === true, "Anthropic public config should report API key presence");
   assert(accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]?.discoverRecent === true, "Anthropic public config should expose discovery toggle");
   assert(accountProviderConfig.body.config.anthropicMessageBatchesProviders[0]?.discoverLimit === 2, "Anthropic public config should expose discovery limit");
@@ -794,6 +800,7 @@ try {
 
   const accountConfigFile = JSON.parse(await readFile(configPath, "utf8"));
   assert(accountConfigFile.openAIResponsesProviders[0]?.apiKey === "openai-secret", "OpenAI API key should be stored");
+  assert(accountConfigFile.openAIResponsesProviders[0]?.inputCostUsdPer1K === 0.1, "OpenAI input cost rate should be stored");
   assert(accountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be stored");
   assert(accountConfigFile.anthropicMessageBatchesProviders[0]?.discoverRecent === true, "Anthropic discovery toggle should be stored");
 
@@ -806,6 +813,7 @@ try {
           id: "smoke-openai",
           label: "Smoke OpenAI Updated",
           apiKeyEnv: "SMOKE_OPENAI_KEY",
+          inputCostUsdPer1K: 0.1,
           responses: [
             {
               id: "smoke-response",
@@ -836,6 +844,7 @@ try {
   });
   const preservedAccountConfigFile = JSON.parse(await readFile(configPath, "utf8"));
   assert(preservedAccountConfigFile.openAIResponsesProviders[0]?.apiKey === "openai-secret", "OpenAI API key should be preserved when omitted");
+  assert(preservedAccountConfigFile.openAIResponsesProviders[0]?.outputCostUsdPer1K === 0.2, "OpenAI output cost rate should be preserved when omitted");
   assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.apiKey === "anthropic-secret", "Anthropic API key should be preserved when omitted");
   assert(preservedAccountConfigFile.anthropicMessageBatchesProviders[0]?.discoverLimit === 2, "Anthropic discovery limit should be preserved when omitted");
 
@@ -1263,12 +1272,15 @@ async function assertAccountProviderCapabilities() {
     const openAIProvider = createOpenAIResponsesProvider({
       id: "mock-openai",
       apiKey: "test",
+      inputCostUsdPer1K: 0.1,
+      outputCostUsdPer1K: 0.2,
       responses: [{ id: "mock-response", responseId: "resp_smoke", goToTarget: "https://platform.openai.com/responses/resp_smoke" }]
     });
     const [openAIAgent] = await openAIProvider.listAgents();
     assert(openAIAgent.capabilities.includes("stop"), "OpenAI response should expose cancel-style actions");
     assert(openAIAgent.capabilities.includes("go-to"), "OpenAI response should expose configured go-to URL");
     assert(!openAIAgent.capabilities.includes("start"), "OpenAI response should not expose unsupported start action");
+    assert(openAIAgent.costUsd === 0.002, "OpenAI response should estimate spend from configured token rates");
     const unsupportedOpenAIStart = await openAIProvider.performAction("mock-response", "start");
     assert(unsupportedOpenAIStart === null, "OpenAI response start should be unsupported");
     const openAIGoTo = await openAIProvider.performAction("mock-response", "go-to");

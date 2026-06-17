@@ -230,7 +230,7 @@ Provider snapshots can either report token throughput directly or only report cu
 
 ## 9. OpenAI Responses Provider
 
-The OpenAI Responses provider observes configured response IDs from a user's OpenAI account. It retrieves each response, maps status/model/token usage/output transcript into the normalized agent shape, and routes terminating lifecycle actions to OpenAI's cancel response endpoint.
+The OpenAI Responses provider observes configured response IDs from a user's OpenAI account. It retrieves each response, maps status/model/token usage/output transcript into the normalized agent shape, estimates spend from operator-configured input/output token rates when available, and routes terminating lifecycle actions to OpenAI's cancel response endpoint.
 
 Rows with `model` and `input` but no `responseId` are launchable placeholders. They render as waiting OpenAI agents with `start`; starting one creates a background Response, persists the returned response ID in config, and then tracks the created response through the normal retrieval path.
 

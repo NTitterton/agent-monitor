@@ -305,6 +305,8 @@ function publicOpenAIResponsesProviders(providers) {
       hasApiKey: Boolean(provider.apiKey),
       organization: provider.organization || "",
       project: provider.project || "",
+      inputCostUsdPer1K: provider.inputCostUsdPer1K || 0,
+      outputCostUsdPer1K: provider.outputCostUsdPer1K || 0,
       responses: normalizeOpenAITrackedResponses(provider.responses)
     }));
 }
@@ -427,6 +429,8 @@ function normalizeOpenAIResponsesProviders(value, fallback = []) {
         ...(provider.apiKey ? { apiKey: String(provider.apiKey) } : {}),
         ...(provider.organization ? { organization: String(provider.organization).trim() } : {}),
         ...(provider.project ? { project: String(provider.project).trim() } : {}),
+        inputCostUsdPer1K: normalizeCostRate(provider.inputCostUsdPer1K ?? existing.inputCostUsdPer1K),
+        outputCostUsdPer1K: normalizeCostRate(provider.outputCostUsdPer1K ?? existing.outputCostUsdPer1K),
         responses: normalizeOpenAITrackedResponses(provider.responses)
       };
     });
@@ -462,6 +466,11 @@ function normalizeAnthropicMessageBatchesProviders(value, fallback = []) {
 function normalizeDiscoverLimit(value) {
   const number = Number(value || 10);
   return Number.isFinite(number) ? Math.min(Math.max(Math.round(number), 1), 100) : 10;
+}
+
+function normalizeCostRate(value) {
+  const number = Number(value || 0);
+  return Number.isFinite(number) && number > 0 ? number : 0;
 }
 
 function normalizeTrackedItems(items, remoteIdKey) {
@@ -501,6 +510,8 @@ function normalizeOpenAITrackedResponses(items) {
       ...(item.responseId ? { responseId: String(item.responseId).trim() } : {}),
       ...(item.model ? { model: String(item.model).trim() } : {}),
       ...(item.input ? { input: String(item.input).trim() } : {}),
+      ...(item.inputCostUsdPer1K ? { inputCostUsdPer1K: normalizeCostRate(item.inputCostUsdPer1K) } : {}),
+      ...(item.outputCostUsdPer1K ? { outputCostUsdPer1K: normalizeCostRate(item.outputCostUsdPer1K) } : {}),
       task: String(item.task || item.name || item.id).trim(),
       ...(item.parentId ? { parentId: String(item.parentId).trim() } : {}),
       ...(item.goToTarget || item.dashboardUrl

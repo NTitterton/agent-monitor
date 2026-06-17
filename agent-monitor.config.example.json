@@ -32,6 +32,8 @@
       "id": "openai-responses",
       "label": "OpenAI Responses",
       "apiKeyEnv": "OPENAI_API_KEY",
+      "inputCostUsdPer1K": 0,
+      "outputCostUsdPer1K": 0,
       "responses": [
         {
           "id": "openai-response-example",
