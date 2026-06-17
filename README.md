@@ -109,7 +109,7 @@ The module widget uses the same client as the browser app, so it reads from the 
 
 When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive. The app and widgets escape provider-supplied text/attributes and show lifecycle action feedback; if the API is reachable but rejects an action, the standalone widget leaves its current state unchanged instead of applying a local fallback action and shows the rejection message in the widget.
 
-Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, and provider issue count when an adapter is failing. Agent cards also show compact remote context when providers report owner, workspace, repository, branch, queue, or priority fields.
+Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, and provider issue count when an adapter is failing. Agent cards also show compact remote context when providers report owner, workspace, repository, branch, queue, or priority fields, and include nonzero per-agent spend in the resource line.
 
 ## Local API
 

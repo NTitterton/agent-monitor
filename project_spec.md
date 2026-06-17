@@ -216,6 +216,8 @@ Lineage note: the browser app and widgets resolve known parent/child agent IDs i
 
 Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app.
 
+Spend note: module and standalone widgets include nonzero `costUsd` in the compact resource line so embedded views retain token/cost task-manager context.
+
 ### Local Process Tree Controls
 
 Local lifecycle controls should target the process tree that represents the agent.

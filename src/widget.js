@@ -181,7 +181,14 @@ function renderResourceLine(agent) {
   if (agent.tokenCountConfidence && agent.tokenCountConfidence !== "reported") {
     parts.push(`${agent.tokenCountConfidence} tokens`);
   }
+  const spend = formatSpend(agent.costUsd);
+  if (spend) parts.push(spend);
   return parts.join(" · ");
+}
+
+function formatSpend(costUsd) {
+  const spend = Number(costUsd || 0);
+  return Number.isFinite(spend) && spend > 0 ? `$${spend.toFixed(2)}` : "";
 }
 
 function renderLatestLog(agent) {

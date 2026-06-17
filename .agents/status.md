@@ -47,6 +47,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Stable per-agent `type` field and type filter.
 - Token throughput and token count confidence in normalized snapshots, main app, widgets, and remote provider docs.
 - Sampled token throughput from successive provider snapshots when only cumulative tokens are reported.
+- Per-agent spend display in embedded widget resource lines.
 - Optional `currentStep` and `progressPercent` task-progress metadata in normalized snapshots, app, widgets, and remote provider docs.
 - Selected-agent task card with task, current step, and progress details.
 - Optional owner/workspace/repository/branch/queue/priority remote-agent context in normalized snapshots, selected-agent details, and embedded widgets.
