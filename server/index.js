@@ -2,12 +2,14 @@ import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { createServer } from "node:http";
 import { extname, join, normalize, resolve } from "node:path";
+import { createBackgroundScanner } from "./backgroundScanner.js";
 import { readConfig, readPublicConfig, updateConfig } from "./config.js";
 import { createProviderRegistry } from "./providerRegistry.js";
 
 const rootDir = resolve(new URL("..", import.meta.url).pathname);
 const port = Number(process.env.PORT || 5173);
 const registry = createProviderRegistry();
+const scanner = createBackgroundScanner({ registry });
 
 const contentTypes = {
   ".css": "text/css; charset=utf-8",
@@ -39,7 +41,8 @@ const server = createServer(async (request, response) => {
         agents,
         history: await registry.listHistory(),
         providers: await registry.providers(),
-        config: await readPublicConfig()
+        config: await readPublicConfig(),
+        scanner: scanner.status()
       });
     }
 
@@ -73,7 +76,12 @@ const server = createServer(async (request, response) => {
       const body = await readJson(request);
       const config = await updateConfig(body.config || body);
       registry.invalidateSnapshots();
+      await scanner.reconfigure();
       return sendJson(request, response, { config });
+    }
+
+    if (url.pathname === "/api/scanner" && request.method === "GET") {
+      return sendJson(request, response, { scanner: scanner.status() });
     }
 
     const detailMatch = url.pathname.match(/^\/api\/agents\/([^/]+)$/);
@@ -109,6 +117,15 @@ const server = createServer(async (request, response) => {
 
 server.listen(port, "127.0.0.1", () => {
   console.log(`Agent Monitor listening at http://127.0.0.1:${port}/`);
+});
+
+scanner.start().catch((error) => {
+  console.error(`Background scanner failed to start: ${error.message}`);
+});
+
+process.on("SIGTERM", () => {
+  scanner.stop();
+  server.close(() => process.exit(0));
 });
 
 async function serveStatic(pathname, response) {

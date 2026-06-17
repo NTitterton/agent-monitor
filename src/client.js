@@ -7,14 +7,23 @@ export function createAgentClient() {
   let history = [];
   let providers = [];
   let config = null;
+  let scanner = null;
   let mode = "local";
   let actionMessage = null;
 
-  function emit(nextAgents, nextHistory = history, nextProviders = providers, nextConfig = config, nextActionMessage = actionMessage) {
+  function emit(
+    nextAgents,
+    nextHistory = history,
+    nextProviders = providers,
+    nextConfig = config,
+    nextActionMessage = actionMessage,
+    nextScanner = scanner
+  ) {
     agents = nextAgents.map(cloneAgent);
     history = nextHistory.map((record) => ({ ...record }));
     providers = nextProviders.map((provider) => ({ ...provider }));
     config = cloneConfig(nextConfig);
+    scanner = cloneScanner(nextScanner);
     actionMessage = cloneActionMessage(nextActionMessage);
     subscribers.forEach((subscriber) => subscriber(snapshot()));
   }
@@ -25,7 +34,14 @@ export function createAgentClient() {
       if (!response.ok) throw new Error(`API returned ${response.status}`);
       const payload = await response.json();
       mode = "api";
-      emit(payload.agents, payload.history || [], payload.providers || [], payload.config || null);
+      emit(
+        payload.agents,
+        payload.history || [],
+        payload.providers || [],
+        payload.config || null,
+        null,
+        payload.scanner || null
+      );
     } catch {
       await refreshLegacy();
     }
@@ -66,6 +82,7 @@ export function createAgentClient() {
       history: historyList(),
       providers: providers.map((provider) => ({ ...provider })),
       config: cloneConfig(config),
+      scanner: cloneScanner(scanner),
       actionMessage: cloneActionMessage(actionMessage),
       mode
     };
@@ -243,4 +260,8 @@ function cloneConfig(config) {
         }))
       : []
   };
+}
+
+function cloneScanner(scanner) {
+  return scanner ? { ...scanner } : null;
 }

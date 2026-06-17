@@ -92,6 +92,8 @@ Same-origin local app requests continue to work without putting the token into `
 
 The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, surfaces non-blocking validation warnings, and does not expose configured API tokens or provider credentials.
 
+When snapshot refresh is enabled, the browser app polls at the configured interval and the local server runs a matching background scanner. Scanner status is available in the Sources panel and at `GET /api/scanner`.
+
 Local standalone embed demo:
 
 - http://localhost:5173/embed-standalone.html
@@ -110,6 +112,7 @@ When the widget is served from Agent Monitor's local server, lifecycle actions u
 ## Local API
 
 - `GET /api/snapshot` returns agents, recent history, provider status, and sanitized config in one response. The browser app uses this as its primary refresh path.
+- `GET /api/scanner` returns server-side background scanner status.
 - `GET /api/agents` returns the current agent snapshot. Agents include `scannedAt` when they came from a provider snapshot.
 - `GET /api/providers` returns configured provider adapters, lifecycle capabilities, and `scannedAt` freshness metadata.
 - `POST /api/providers/:id/test` runs one provider snapshot check and returns that provider's health.

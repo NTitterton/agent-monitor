@@ -68,6 +68,24 @@ export function createProviderRegistry() {
     return groups.flatMap((result) => result.agents).sort((a, b) => a.startedAt - b.startedAt);
   }
 
+  async function refreshSnapshots(options = {}) {
+    const activeProviders = await listActiveProviders();
+    const results = await Promise.all(
+      activeProviders.map((provider) =>
+        safeListAgents(provider, {
+          force: options.force !== false,
+          cacheTtlMs: options.cacheTtlMs
+        })
+      )
+    );
+    return {
+      scannedAt: Date.now(),
+      providerCount: results.length,
+      agentCount: results.reduce((total, result) => total + result.agents.length, 0),
+      errors: results.filter((result) => result.error).length
+    };
+  }
+
   async function performAction(agentId, actionId, prompt = "") {
     if (!agentActions.some((action) => action.id === actionId)) {
       return {
@@ -168,23 +186,26 @@ export function createProviderRegistry() {
   async function safeListAgents(provider, options = {}) {
     const cacheKey = provider.id;
     const cached = snapshotCache.get(cacheKey);
-    if (!options.force && cached && snapshotCacheTtlMs > 0 && Date.now() - cached.scannedAt <= snapshotCacheTtlMs) {
+    const cacheTtlMs = cached?.cacheTtlMs ?? snapshotCacheTtlMs;
+    if (!options.force && cached && cacheTtlMs > 0 && Date.now() - cached.scannedAt <= cacheTtlMs) {
       return cloneSnapshotResult(cached);
     }
 
     const scannedAt = Date.now();
+    const resultCacheTtlMs = Math.max(0, Number(options.cacheTtlMs ?? snapshotCacheTtlMs));
     try {
       const agents = await provider.listAgents();
       const result = {
         provider,
         agents: agents.map((agent) => ({ scannedAt, ...agent, scannedAt: agent.scannedAt || scannedAt })),
         scannedAt,
+        cacheTtlMs: resultCacheTtlMs,
         error: null
       };
       snapshotCache.set(cacheKey, result);
       return cloneSnapshotResult(result);
     } catch (error) {
-      const result = { provider, agents: [], scannedAt, error };
+      const result = { provider, agents: [], scannedAt, cacheTtlMs: resultCacheTtlMs, error };
       snapshotCache.set(cacheKey, result);
       return cloneSnapshotResult(result);
     }
@@ -222,6 +243,7 @@ export function createProviderRegistry() {
       return listProviderStatus();
     },
     listAgents,
+    refreshSnapshots,
     getAgent,
     listHistory: stateStore.listHistory,
     testProvider,

@@ -16,6 +16,7 @@ class AgentMonitorApp extends HTMLElement {
       this.history = snapshot.history;
       this.providers = snapshot.providers;
       this.config = snapshot.config;
+      this.scanner = snapshot.scanner;
       this.actionMessage = snapshot.actionMessage;
       this.mode = snapshot.mode;
       this.selectedAgentId = this.selectedAgentId || snapshot.agents[0]?.id || null;
@@ -93,6 +94,7 @@ class AgentMonitorApp extends HTMLElement {
         <section class="workspace">
           <aside class="panel sources-panel">
             <h2>Sources</h2>
+            ${renderScannerStatus(this.scanner)}
             ${renderSourceList(agents, this.providers || [], this.providerTestMessage)}
             ${renderSettings(this.config, this.mode, this.settingsMessage)}
             ${renderLineageTree(agents)}
@@ -302,6 +304,19 @@ function renderSourceList(agents, providers, message = "") {
     .join("");
 
   return `${message ? `<p class="source-message">${escapeText(message)}</p>` : ""}${sourceRows}${providerRows}`;
+}
+
+function renderScannerStatus(scanner) {
+  if (!scanner) return "";
+  const state = scanner.enabled ? (scanner.running ? "Scanning now" : "Background scan on") : "Background scan off";
+  const detail = scanner.lastFinishedAt
+    ? `Last scan ${formatScanFreshness([{ scannedAt: scanner.lastFinishedAt }])}`
+    : `${Math.round(Number(scanner.intervalMs || 15000) / 1000)}s interval`;
+  return `
+    <p class="source-message">
+      ${escapeText(state)} · ${escapeText(detail)}${scanner.lastError ? ` · ${escapeText(scanner.lastError)}` : ""}
+    </p>
+  `;
 }
 
 function renderSettings(config, mode = "local", message = "") {

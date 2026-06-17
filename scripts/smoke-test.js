@@ -83,11 +83,16 @@ try {
   assert(Array.isArray(snapshot.body.history), "snapshot should include history");
   assert(snapshot.body.config.hasApiToken === true, "snapshot should include sanitized config");
   assert(!("apiToken" in snapshot.body.config), "snapshot should not expose token");
+  assert(snapshot.body.scanner?.enabled === false, "snapshot should include disabled background scanner status by default");
   assert(
     snapshot.body.providers.find((provider) => provider.id === "local")?.scannedAt ===
       snapshot.body.agents.find((agent) => agent.providerId === "local")?.scannedAt,
     "snapshot provider status should reuse the agent scan"
   );
+
+  const scannerStatus = await request("/api/scanner");
+  assert(scannerStatus.status === 200, "scanner status request should succeed");
+  assert(scannerStatus.body.scanner.enabled === false, "scanner should default to disabled");
 
   const providers = await request("/api/providers");
   assert(providers.status === 200, "provider status request should succeed");
@@ -209,6 +214,14 @@ try {
   assert(configFileAfterUpdate.allowedOrigins.includes(addedOrigin), "config file should include added origin");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.dashboardUrl === `${apiBase}/dashboard`, "config file should store remote dashboard URL");
   assert(configFileAfterUpdate.remoteHttpProviders[0]?.token === "remote-secret", "config file should store remote token");
+
+  await waitFor(async () => {
+    const status = await request("/api/scanner");
+    return status.body.scanner.enabled === true && status.body.scanner.lastFinishedAt;
+  });
+  const enabledScannerStatus = await request("/api/scanner");
+  assert(enabledScannerStatus.body.scanner.intervalMs === 12000, "scanner should use snapshot refresh interval");
+  assert(enabledScannerStatus.body.scanner.providerCount >= 1, "scanner should refresh provider snapshots");
 
   const localStart = await request("/api/agents/smoke-local/actions", {
     method: "POST",

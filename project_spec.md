@@ -17,14 +17,13 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 
 ## Current Scanning Behavior
 
-Agent Monitor does not currently run a standalone background scanner.
-
 - The browser app fetches a snapshot on initial load and when the Refresh button is clicked.
 - The module widget uses the same client behavior as the browser app.
 - The standalone embeddable widget polls every 15 seconds by default via `refresh-ms`.
 - The local process provider runs `ps` and active local agent discovery whenever `/api/agents` or `/api/providers` asks providers for a fresh snapshot.
 - The browser app and standalone embeddable widget use `GET /api/snapshot` to fetch agents, history, provider status, and sanitized config in one response.
 - Provider snapshots are cached for 1000 ms by default, configurable with `AGENT_MONITOR_SCAN_CACHE_MS`, so unified snapshots and paired legacy `/api/agents` plus `/api/providers` requests reuse the same scan.
+- When `snapshotRefresh.enabled` is true, the local server also runs a background scanner at `snapshotRefresh.intervalMs`; the scanner warms provider snapshots with the same interval as the cache window and exposes status through `/api/scanner` and `/api/snapshot`.
 
 ## New Requirements
 
@@ -136,12 +135,13 @@ Initial proposal:
 - Standalone widget default: 15 seconds.
 - Local process scan: on each provider snapshot request, with possible short in-memory cache if polling becomes aggressive.
 
-Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, source-list scan freshness display, a unified snapshot endpoint used by the app and standalone widget, and a short provider snapshot cache to avoid duplicate scans during refresh.
+Status: implemented for optional browser-app polling, configurable refresh interval, provider/agent `scannedAt` metadata, source-list scan freshness display, a unified snapshot endpoint used by the app and standalone widget, a server-side background scanner that follows `snapshotRefresh`, and provider snapshot caching to avoid duplicate scans during refresh.
 
 Acceptance criteria:
 
 - Settings expose snapshot refresh cadence.
 - API responses include enough timestamp metadata to show scan freshness.
+- `/api/scanner` reports whether server-side background scanning is enabled, running, and when it last completed.
 
 ### Provider Setup
 

@@ -16,6 +16,7 @@ graph TD
     subgraph "Local Agent Monitor Runtime"
         StaticServer["Node HTTP Server<br/>server/index.js"]
         API["Local HTTP API<br/>/api/snapshot, /api/agents, /api/providers"]
+        Scanner["Background Scanner<br/>server/backgroundScanner.js"]
         Registry["Provider Registry<br/>server/providerRegistry.js"]
         StateStore[("State Store<br/>data/agent-state.json")]
         Config[("Local Config<br/>agent-monitor.config.json")]
@@ -41,7 +42,9 @@ graph TD
     ModuleWidget --> API
     StandaloneWidget -- "CORS + optional token" --> API
     StaticServer --> API
+    StaticServer --> Scanner
     API --> Registry
+    Scanner --> Registry
     Registry --> StateStore
     Registry --> Config
     Registry --> SeedProviders
@@ -60,7 +63,7 @@ graph TD
     classDef provider fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px;
     classDef external fill:#EEE,stroke:#666,stroke-width:2px;
     class Desktop,Browser,ModuleWidget,StandaloneWidget surface;
-    class StaticServer,API,Registry runtime;
+    class StaticServer,API,Scanner,Registry runtime;
     class StateStore,Config store;
     class SeedProviders,LocalProcess,RemoteHTTP,OpenAIResponses,AnthropicBatches provider;
     class LocalAgents,OpenAI,Anthropic,CloudAgents external;
@@ -95,7 +98,8 @@ The system has four major layers:
 
 - **Surfaces:** desktop app, browser app, module widget, and standalone widget.
 - **Local API:** static file server, API router, CORS/auth handling, and JSON response helpers.
-- **Provider registry:** discovers configured providers, normalizes agent snapshots, caches short-lived scans, records lifecycle history, validates lifecycle actions, and routes supported actions.
+- **Provider registry:** discovers configured providers, normalizes agent snapshots, caches scans, records lifecycle history, validates lifecycle actions, and routes supported actions.
+- **Background scanner:** optionally refreshes provider snapshots on the configured cadence so task-manager state stays warm even when the UI is idle.
 - **Provider adapters:** seed adapters, local process adapter, remote HTTP adapter, configured OpenAI Responses observer, and configured Anthropic Message Batches observer.
 
 ## 4. Core Data Flow
