@@ -47,6 +47,8 @@ try {
   assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
+  const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
+  assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");

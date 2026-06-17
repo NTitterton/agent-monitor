@@ -49,6 +49,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Server-side capability enforcement for unsupported direct action requests.
 - Server-side validation for unknown action IDs.
 - Browser app action feedback for accepted and rejected lifecycle requests.
+- Module widget action feedback for accepted and rejected lifecycle requests.
 - Standalone widget action feedback for accepted and rejected lifecycle requests.
 - Standalone widget avoids local fallback mutation when a reachable API rejects an action.
 - `Go To` action for macOS local process agents that activates likely Terminal/iTerm, browser, or editor surfaces.

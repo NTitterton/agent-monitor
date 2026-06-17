@@ -71,6 +71,25 @@ export default `
     color: #172033;
   }
 
+  .action-message {
+    margin: 0;
+    padding: 10px 20px;
+    border-top: 1px solid #e6e9ef;
+    background: #eef5ff;
+    color: #244c7a;
+    font-size: 0.8rem;
+  }
+
+  .action-message.warn {
+    background: #fff8e8;
+    color: #7a4d00;
+  }
+
+  .action-message.error {
+    background: #fff8f8;
+    color: #a62626;
+  }
+
   .agent-line {
     display: flex;
     align-items: flex-start;

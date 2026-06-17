@@ -20,6 +20,7 @@ class AgentMonitorWidget extends HTMLElement {
     this.unsubscribe = client.subscribe((snapshot) => {
       this.agents = snapshot.agents;
       this.history = snapshot.history;
+      this.actionMessage = snapshot.actionMessage;
       this.render();
     });
     const refreshMs = Number(this.getAttribute("refresh-ms") || 0);
@@ -50,6 +51,7 @@ class AgentMonitorWidget extends HTMLElement {
         <div class="list">
           ${agents.map(renderWidgetAgent).join("")}
         </div>
+        ${renderActionMessage(this.actionMessage)}
         ${renderWidgetHistory(this.history || [])}
       </section>
     `;
@@ -75,6 +77,16 @@ function renderWidgetHistory(history) {
       <strong>${latest.label}</strong>
       <span>${latest.agentName}</span>
     </footer>
+  `;
+}
+
+function renderActionMessage(message) {
+  if (!message) return "";
+
+  return `
+    <p class="action-message ${message.tone || "ok"}">
+      ${message.text || ""}
+    </p>
   `;
 }
 
