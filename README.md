@@ -109,6 +109,8 @@ The module widget uses the same client as the browser app, so it reads from the 
 
 When the widget is served from Agent Monitor's local server, lifecycle actions use the HTTP API and refresh through `/api/snapshot`. When embedded from static hosting without the API, it falls back to local in-memory state so the component still renders and remains interactive. The app and widgets escape provider-supplied text/attributes and show lifecycle action feedback; if the API is reachable but rejects an action, the standalone widget leaves its current state unchanged instead of applying a local fallback action and shows the rejection message in the widget.
 
+Embedded widgets show compact provider/source health from `/api/snapshot`, including provider count, source count, and provider issue count when an adapter is failing.
+
 ## Local API
 
 - `GET /api/snapshot` returns agents, recent history, provider status, and sanitized config in one response. The browser app uses this as its primary refresh path.
@@ -307,6 +309,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
 - Show named parent/child lineage in the browser app and embedded widgets.
+- Show compact provider/source health in embedded widgets.
 - Start, stop, interrupt with prompt, end with prompt, and force end agents.
 - Run as a full browser app or embedded widget.
 - Use a local API when available, with static fallback for hosted embeds.

@@ -20,6 +20,7 @@ class AgentMonitorWidget extends HTMLElement {
     this.unsubscribe = client.subscribe((snapshot) => {
       this.agents = snapshot.agents;
       this.history = snapshot.history;
+      this.providers = snapshot.providers;
       this.actionMessage = snapshot.actionMessage;
       this.render();
     });
@@ -48,6 +49,7 @@ class AgentMonitorWidget extends HTMLElement {
           </div>
           <span>${agents.length} total</span>
         </header>
+        ${renderProviderSummary(this.providers || [], agents)}
         <div class="list">
           ${agents.map((agent) => renderWidgetAgent(agent, agents)).join("")}
         </div>
@@ -86,6 +88,23 @@ function renderActionMessage(message) {
   return `
     <p class="action-message ${escapeAttribute(message.tone || "ok")}">
       ${escapeText(message.text || "")}
+    </p>
+  `;
+}
+
+function renderProviderSummary(providers, agents) {
+  if (!providers.length && !agents.length) return "";
+
+  const sources = new Set([
+    ...providers.map((provider) => provider.source).filter(Boolean),
+    ...agents.map((agent) => agent.source).filter(Boolean)
+  ]);
+  const issues = providers.filter((provider) => provider.status === "error").length;
+  const providerCount = providers.length || new Set(agents.map((agent) => agent.provider).filter(Boolean)).size;
+  const issueText = issues ? ` · ${issues} issue${issues === 1 ? "" : "s"}` : "";
+  return `
+    <p class="source-summary">
+      ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeText(issueText)}
     </p>
   `;
 }

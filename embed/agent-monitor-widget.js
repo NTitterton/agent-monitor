@@ -99,6 +99,15 @@ const styles = `
     font-size: 0.9rem;
   }
 
+  .source-summary {
+    margin: 0;
+    padding: 10px 20px;
+    border-top: 1px solid #e6e9ef;
+    background: #f7f9fc;
+    color: #5d687a;
+    font-size: 0.8rem;
+  }
+
   article {
     padding: 16px 20px;
     border-top: 1px solid #e6e9ef;
@@ -226,6 +235,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     super();
     this.attachShadow({ mode: "open" });
     this.agents = fallbackAgents;
+    this.providers = [];
     this.history = [];
     this.actionMessage = null;
   }
@@ -248,6 +258,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       const payload = await this.fetchSnapshot(apiBase);
       this.agents = payload.agents || [];
       this.history = payload.history || [];
+      this.providers = payload.providers || [];
       this.render();
     } catch {
       this.render();
@@ -299,6 +310,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       const payload = await response.json();
       this.agents = payload.agents || this.agents;
       this.history = payload.history || this.history;
+      this.providers = payload.providers || this.providers;
       this.actionMessage = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
       this.render();
     } catch {
@@ -347,6 +359,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           </div>
           <span>${this.agents.length} total</span>
         </header>
+        ${renderProviderSummary(this.providers, this.agents)}
         ${this.agents.map((agent) => this.renderAgent(agent)).join("")}
         ${this.renderActionMessage()}
         ${this.renderFooter()}
@@ -443,6 +456,23 @@ function actionTitle(agent, action) {
     if (agent.goToKind) return `Bring ${agent.windowTitle || agent.name} forward`;
   }
   return `${action.label} ${agent.name}`;
+}
+
+function renderProviderSummary(providers, agents) {
+  if (!providers.length && !agents.length) return "";
+
+  const sources = new Set([
+    ...providers.map((provider) => provider.source).filter(Boolean),
+    ...agents.map((agent) => agent.source).filter(Boolean)
+  ]);
+  const issues = providers.filter((provider) => provider.status === "error").length;
+  const providerCount = providers.length || new Set(agents.map((agent) => agent.provider).filter(Boolean)).size;
+  const issueText = issues ? ` · ${issues} issue${issues === 1 ? "" : "s"}` : "";
+  return `
+    <p class="source-summary">
+      ${providerCount} provider${providerCount === 1 ? "" : "s"} · ${sources.size || 1} source${sources.size === 1 ? "" : "s"}${escapeHtml(issueText)}
+    </p>
+  `;
 }
 
 async function readJsonResponse(response) {

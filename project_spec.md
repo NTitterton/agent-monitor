@@ -203,6 +203,8 @@ Remote provider note: the HTTP adapter preserves provider-reported process-resou
 
 Lineage note: the browser app and widgets resolve known parent/child agent IDs into display names where the current snapshot includes those agents, falling back to IDs only when the related agent is absent.
 
+Embedded-widget note: module and standalone widgets render compact provider/source health from the unified snapshot so embeds show adapter issues without opening the full app.
+
 ### Local Process Tree Controls
 
 Local lifecycle controls should target the process tree that represents the agent.

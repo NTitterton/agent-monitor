@@ -50,6 +50,15 @@ export default `
     display: grid;
   }
 
+  .source-summary {
+    margin: 0;
+    padding: 10px 20px;
+    border-top: 1px solid #e6e9ef;
+    background: #f7f9fc;
+    color: #5d687a;
+    font-size: 0.8rem;
+  }
+
   article {
     padding: 16px 20px;
     border-top: 1px solid #e6e9ef;
