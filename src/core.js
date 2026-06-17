@@ -19,6 +19,7 @@ export const initialAgents = [
     costUsd: 0.42,
     startedAt: now - 1000 * 60 * 42,
     children: ["openai-research-2"],
+    capabilities: ["start", "stop", "interrupt", "end", "force-end"],
     transcript: [
       {
         at: now - 1000 * 60 * 40,

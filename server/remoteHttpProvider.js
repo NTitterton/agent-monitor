@@ -1,4 +1,4 @@
-import { lifecycleActions } from "../src/core.js";
+import { agentActions, lifecycleActions } from "../src/core.js";
 import { readConfig } from "./config.js";
 
 const timeoutMs = 5000;
@@ -126,10 +126,12 @@ function normalizeAgent(agent, config) {
 }
 
 function normalizeCapabilities(capabilities, goToTarget) {
+  const knownActions = new Set(agentActions.map((action) => action.id));
   const values = Array.isArray(capabilities)
-    ? capabilities.map((capability) => String(capability)).filter(Boolean)
+    ? capabilities.map((capability) => String(capability).trim()).filter((capability) => knownActions.has(capability))
     : lifecycleActions.map((action) => action.id);
-  return goToTarget && !values.includes("go-to") ? [...values, "go-to"] : values;
+  const nextValues = goToTarget ? [...values, "go-to"] : values;
+  return [...new Set(nextValues)];
 }
 
 function normalizeTokenConfidence(value, fallback = "unknown") {

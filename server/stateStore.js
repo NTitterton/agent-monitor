@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { applyLifecycleAction, createActionRecord, initialAgents } from "../src/core.js";
+import { agentActions, applyLifecycleAction, createActionRecord, initialAgents, lifecycleActions } from "../src/core.js";
 
 const defaultStatePath = resolve(new URL("../data/agent-state.json", import.meta.url).pathname);
 
@@ -228,18 +228,27 @@ function normalizeTaskProgress(agent = {}, fallbackAgent = {}) {
 function normalizeGoTo(agent = {}, fallbackAgent = {}) {
   const goToTarget = agent.goToTarget ?? fallbackAgent.goToTarget;
   const remoteUrl = agent.remoteUrl ?? fallbackAgent.remoteUrl;
-  const capabilities = Array.isArray(agent.capabilities)
-    ? agent.capabilities
-    : Array.isArray(fallbackAgent.capabilities)
-      ? fallbackAgent.capabilities
-      : undefined;
+  const defaultCapabilities = lifecycleActions.map((action) => action.id);
+  const capabilities = normalizeCapabilities(
+    Array.isArray(agent.capabilities)
+      ? agent.capabilities
+      : Array.isArray(fallbackAgent.capabilities)
+        ? fallbackAgent.capabilities
+        : defaultCapabilities
+  );
   return {
     ...(remoteUrl ? { remoteUrl } : {}),
     ...(goToTarget ? { goToTarget } : {}),
     ...(agent.goToKind || fallbackAgent.goToKind ? { goToKind: agent.goToKind || fallbackAgent.goToKind } : {}),
     ...(agent.windowTitle || fallbackAgent.windowTitle ? { windowTitle: agent.windowTitle || fallbackAgent.windowTitle } : {}),
-    ...(capabilities ? { capabilities: [...capabilities] } : {})
+    ...(capabilities ? { capabilities } : {})
   };
+}
+
+function normalizeCapabilities(capabilities) {
+  if (!Array.isArray(capabilities)) return null;
+  const knownActions = new Set(agentActions.map((action) => action.id));
+  return [...new Set(capabilities.map((capability) => String(capability).trim()).filter((capability) => knownActions.has(capability)))];
 }
 
 function normalizeLogs(logs) {

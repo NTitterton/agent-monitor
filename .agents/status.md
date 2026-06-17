@@ -82,6 +82,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Short provider snapshot cache so paired app refresh requests do not rescan adapters twice.
 - Provider connection test endpoint and Sources-panel test buttons.
 - Provider-specific action capabilities so OpenAI/Anthropic tracked objects do not expose unsupported `start` actions.
+- Capability normalization to known unique action IDs across provider, registry, state, and client snapshots.
 - Non-blocking setup validation warnings from `/api/config` and Settings panel display.
 - GitHub push helper that creates/attaches `origin` and pushes after auth is fixed.
 

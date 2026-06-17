@@ -183,6 +183,7 @@ Agent-level capabilities should describe actions the active provider can truly p
 - Configured local agents can expose `start` because Agent Monitor can spawn their configured command.
 - Remote HTTP agents can expose `start` or future resume-like controls when the remote API advertises those capabilities.
 - OpenAI Responses and Anthropic Message Batches expose cancel-style lifecycle actions for tracked objects, plus optional `go-to` links, but do not expose `start` for already-created work.
+- Capability arrays should only contain known Agent Monitor action IDs and should not contain duplicates.
 - The API should reject unknown action IDs before dispatching to providers.
 - The API should reject direct action requests that are not listed in an agent's advertised `capabilities`.
 - The API should reject provider action responses that do not confirm the updated agent.
@@ -191,7 +192,7 @@ Agent-level capabilities should describe actions the active provider can truly p
 - Prompt-based lifecycle actions should not dispatch if the operator cancels the prompt dialog.
 - Lifecycle history records should include agent provider, source, and type so multi-source action history is auditable.
 
-Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status so app/widget provider-health context stays current. The browser app, module widget, and standalone widget render action feedback messages and explanatory disabled-action titles; prompt cancellation prevents prompt-based actions from dispatching.
+Status: implemented for local process, remote HTTP, OpenAI Responses, and Anthropic Message Batches adapters. Smoke tests assert that account-backed tracked objects do not advertise unsupported `start` actions, that the API returns `400` for unknown actions, that the API returns `409` for unsupported direct action requests, and that the standalone widget does not locally apply rejected API actions. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status so app/widget provider-health context stays current. The browser app, module widget, and standalone widget render action feedback messages and explanatory disabled-action titles; prompt cancellation prevents prompt-based actions from dispatching. Snapshot boundaries filter capabilities to known unique action IDs.
 
 Reliability note: provider-backed actions that do not return an updated agent are treated as provider errors and are not recorded as successful lifecycle history.
 

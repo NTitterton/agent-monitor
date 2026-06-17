@@ -7,6 +7,7 @@ import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessag
 import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
 import { signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
 import { applySampledTokenRates } from "../server/providerRegistry.js";
+import { agentActions } from "../src/core.js";
 
 const port = 5199;
 const apiBase = `http://127.0.0.1:${port}`;
@@ -94,6 +95,13 @@ try {
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.costUsd === "number"), "every agent should include numeric cost");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.cpu === "number"), "every agent should include numeric CPU");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.memoryMb === "number"), "every agent should include numeric memory");
+  const knownActionIds = new Set(agentActions.map((action) => action.id));
+  assert(
+    sameOriginAgents.body.agents.every(
+      (agent) => Array.isArray(agent.capabilities) && agent.capabilities.every((capability) => knownActionIds.has(capability))
+    ),
+    "every agent should include known capabilities"
+  );
   assert(
     sameOriginAgents.body.agents.every(
       (agent) => Array.isArray(agent.children) && agent.children.every((childId) => typeof childId === "string")
@@ -555,7 +563,7 @@ async function assertRemoteProviderNormalization() {
             pid: 200,
             parentPid: 100,
             childPids: [201, 202],
-            capabilities: ["stop"],
+            capabilities: ["stop", "bogus", "stop"],
             goToTarget: "https://remote.example/agents/remote-normalized"
           }
         ]
@@ -602,7 +610,7 @@ async function assertRemoteProviderNormalization() {
     assert(agent.pid === 200, "remote provider should preserve pid");
     assert(agent.parentPid === 100, "remote provider should preserve parent pid");
     assert(agent.childPids.length === 2, "remote provider should preserve child pids");
-    assert(agent.capabilities.includes("go-to"), "remote provider should add URL go-to capability");
+    assert(agent.capabilities.join(",") === "stop,go-to", "remote provider should normalize known unique capabilities");
 
     const changedAgent = await provider.performAction("remote-normalized", "stop", "pause");
     assert(changedAgent.status === "waiting", "remote action response should normalize returned agent");

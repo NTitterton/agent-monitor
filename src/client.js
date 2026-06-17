@@ -254,8 +254,15 @@ function cloneAgent(agent) {
     parentId: normalizeOptionalString(agent.parentId),
     children: normalizeStringList(agent.children),
     childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
+    capabilities: normalizeCapabilities(agent.capabilities),
     transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
+}
+
+function normalizeCapabilities(capabilities) {
+  if (!Array.isArray(capabilities)) return [];
+  const knownActions = new Set(agentActions.map((action) => action.id));
+  return [...new Set(capabilities.map((capability) => String(capability).trim()).filter((capability) => knownActions.has(capability)))];
 }
 
 function normalizeStringList(value) {
