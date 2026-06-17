@@ -585,6 +585,18 @@ h2 {
   margin-bottom: 6px;
 }
 
+.detail-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  max-width: 360px;
+}
+
+.detail-action-row {
+  justify-content: flex-end;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -668,6 +680,19 @@ h2 {
 
   .filter-bar {
     grid-template-columns: 1fr;
+  }
+
+  .detail-heading {
+    flex-direction: column;
+  }
+
+  .detail-controls {
+    align-items: flex-start;
+    max-width: none;
+  }
+
+  .detail-action-row {
+    justify-content: flex-start;
   }
 
   .detail-grid,

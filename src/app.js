@@ -611,7 +611,12 @@ function renderDetailPanel(detail, providers = []) {
           <p class="eyebrow">Selected Agent</p>
           <h2>${escapeText(agent.name)}</h2>
         </div>
-        <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
+        <div class="detail-controls">
+          <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
+          <div class="action-row detail-action-row">
+            ${agentActions.map((action) => renderAction(agent, action)).join("")}
+          </div>
+        </div>
       </div>
       <div class="detail-grid">
         <article>

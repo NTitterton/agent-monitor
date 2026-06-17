@@ -153,7 +153,7 @@ URL-backed `go-to` actions are treated as surface navigation. Remote HTTP, OpenA
 
 Action history records include `actionKind`, set to `lifecycle` for mutating lifecycle controls and `surface` for navigation controls such as `go-to`.
 
-Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets, unadvertised provider capabilities, and lifecycle actions that do not apply to the agent's current status. Prompt-based actions such as `Interrupt` and `End` are not dispatched if the operator cancels the prompt, and destructive actions such as `Force End` require confirmation before dispatch.
+Disabled action buttons include a title explaining why the action is unavailable, including unsupported `Go To` targets, unadvertised provider capabilities, and lifecycle actions that do not apply to the agent's current status. The browser app exposes the same controls from the task table and the selected-agent inspector. Prompt-based actions such as `Interrupt` and `End` are not dispatched if the operator cancels the prompt, and destructive actions such as `Force End` require confirmation before dispatch.
 
 ## Monitor local processes
 
