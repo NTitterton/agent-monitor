@@ -178,6 +178,7 @@ function renderWidgetAgent(agent, agents) {
           <p>${escapeText(agent.provider)} · ${formatRuntime(agent)}</p>
           <p>${escapeText(lineageSummary(agent, agents))}</p>
           ${renderAgentContext(agent)}
+          ${renderProviderObject(agent)}
         </div>
         <span class="${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
       </div>
@@ -206,6 +207,26 @@ function lineageSummary(agent, agents = []) {
 function renderAgentContext(agent) {
   const context = agentContextLine(agent);
   return context ? `<p>${escapeText(context)}</p>` : "";
+}
+
+function renderProviderObject(agent) {
+  const object = providerObjectLine(agent);
+  return object ? `<p>${escapeText(object)}</p>` : "";
+}
+
+function providerObjectLine(agent) {
+  const parts = [];
+  if (agent.remoteId) parts.push(`remote ${agent.remoteId}`);
+  if (agent.model) parts.push(`model ${agent.model}`);
+  if (agent.requestCounts && typeof agent.requestCounts === "object") {
+    const requestLine = Object.entries(agent.requestCounts)
+      .filter(([, value]) => Number(value || 0) > 0)
+      .map(([key, value]) => `${key} ${value}`)
+      .join(", ");
+    if (requestLine) parts.push(requestLine);
+  }
+  if (agent.goToKind && agent.goToKind !== "unknown") parts.push(`go-to ${agent.goToKind}`);
+  return parts.join(" · ");
 }
 
 function agentContextLine(agent) {

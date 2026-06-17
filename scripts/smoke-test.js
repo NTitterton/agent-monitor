@@ -151,6 +151,7 @@ try {
   assert(moduleWidgetSource.includes("this.snapshotAt = snapshot.snapshotAt"), "module widget should preserve snapshot freshness");
   assert(moduleWidgetSource.includes("Updated ${formatTimestamp(snapshotAt)}"), "module widget should render snapshot freshness");
   assert(moduleWidgetSource.includes("agentContextLine"), "module widget should render remote agent context");
+  assert(moduleWidgetSource.includes("providerObjectLine"), "module widget should render provider object metadata");
   assert(moduleWidgetSource.includes("formatSpend(agent.costUsd)"), "module widget should render agent spend");
   assert(moduleWidgetSource.includes("sortWidgetAgents"), "module widget should order agents by task pressure");
   assert(moduleWidgetSource.includes("processing: 50"), "module widget should rank provider-specific active statuses");
@@ -162,6 +163,7 @@ try {
   assert(standaloneWidgetSource.includes("lineageSummary(agent, this.agents)"), "standalone widget should resolve lineage names from the snapshot");
   assert(standaloneWidgetSource.includes("renderProviderSummary"), "standalone widget should render provider/source health");
   assert(standaloneWidgetSource.includes("agentContextLine"), "standalone widget should render remote agent context");
+  assert(standaloneWidgetSource.includes("providerObjectLine"), "standalone widget should render provider object metadata");
   assert(standaloneWidgetSource.includes("formatSpend(agent.costUsd)"), "standalone widget should render agent spend");
   assert(standaloneWidgetSource.includes("sortWidgetAgents"), "standalone widget should order agents by task pressure");
   assert(standaloneWidgetSource.includes("processing: 50"), "standalone widget should rank provider-specific active statuses");

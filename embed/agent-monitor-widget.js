@@ -430,6 +430,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
             <p>${escapeHtml(agent.provider)} · ${formatRuntime(agent)}</p>
             <p>${escapeHtml(lineageSummary(agent, this.agents))}</p>
             ${renderAgentContext(agent)}
+            ${renderProviderObject(agent)}
           </div>
           <span class="status ${tone(agent.status)}">${escapeHtml(agent.status)}</span>
         </div>
@@ -807,6 +808,26 @@ function formatSpend(costUsd) {
 function renderAgentContext(agent) {
   const context = agentContextLine(agent);
   return context ? `<p>${escapeHtml(context)}</p>` : "";
+}
+
+function renderProviderObject(agent) {
+  const object = providerObjectLine(agent);
+  return object ? `<p>${escapeHtml(object)}</p>` : "";
+}
+
+function providerObjectLine(agent) {
+  const parts = [];
+  if (agent.remoteId) parts.push(`remote ${agent.remoteId}`);
+  if (agent.model) parts.push(`model ${agent.model}`);
+  if (agent.requestCounts && typeof agent.requestCounts === "object") {
+    const requestLine = Object.entries(agent.requestCounts)
+      .filter(([, value]) => Number(value || 0) > 0)
+      .map(([key, value]) => `${key} ${value}`)
+      .join(", ");
+    if (requestLine) parts.push(requestLine);
+  }
+  if (agent.goToKind && agent.goToKind !== "unknown") parts.push(`go-to ${agent.goToKind}`);
+  return parts.join(" · ");
 }
 
 function agentContextLine(agent) {
