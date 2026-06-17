@@ -44,10 +44,10 @@ The browser app should behave like a one-screen operations console.
 - Summary metrics should not create dead header space; prefer a compact header and dense metrics over large marketing-style title/metric blocks.
 - The left Sources rail should remain operational and scannable. Long configuration forms should live behind a Settings disclosure/menu rather than permanently occupying the rail.
 - The agent list should be the primary scroll area when many agents exist, so Sources, filters, and selected-agent detail remain reachable.
-- On desktop, the agent list should dominate the main panel, roughly like Activity Monitor: target at least 60% of main-panel vertical space for the process/task list, with detail and controls kept compact.
+- On desktop, the agent list should dominate the main panel, roughly like Activity Monitor: target around 75-80% of main-panel vertical space for the process/task list, with detail and controls kept compact.
 - Search and filter controls should stay compact and avoid large empty horizontal gaps.
 
-Status: implemented as a compact viewport-height app shell with a denser one-row desktop summary, collapsible Settings disclosure in the Sources rail, scrollable Sources rail, one-row desktop filters, scrollable dominant agent table, sticky task-table header, and compact bounded selected-agent detail panel. Further visual refinement can continue, but the default desktop layout no longer requires the long settings form or agent list to push the entire page vertically.
+Status: implemented as a compact viewport-height app shell with a denser one-row desktop summary, collapsible Settings disclosure in the Sources rail, scrollable Sources rail, one-row desktop filters, scrollable dominant agent table weighted at roughly 78% of the main panel, sticky task-table header, denser table rows/actions, and compact bounded selected-agent detail panel. Further visual refinement can continue, but the default desktop layout no longer requires the long settings form or agent list to push the entire page vertically.
 
 ### Agent Type
 

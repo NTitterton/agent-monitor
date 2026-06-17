@@ -154,8 +154,9 @@ try {
   assert(stylesSource.includes("repeat(5, minmax(110px, 0.75fr))"), "browser app desktop filters should keep sort on the primary filter row");
   assert(stylesSource.includes(".settings-block:not([open])"), "collapsed settings should avoid occupying the Sources rail");
   assert(stylesSource.includes(".agent-table") && stylesSource.includes("overflow: auto"), "agent table should be the scrollable task list");
-  assert(stylesSource.includes("flex: 1 1 68%"), "agent table should dominate the main panel");
-  assert(stylesSource.includes("max-height: 22%"), "selected-agent detail should stay compact below the task list");
+  assert(stylesSource.includes("flex: 1 1 78%"), "agent table should dominate the main panel");
+  assert(stylesSource.includes("max-height: 16%"), "selected-agent detail should stay compact below the task list");
+  assert(stylesSource.includes("min-height: 34px"), "task table header should stay compact");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
