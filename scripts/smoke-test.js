@@ -75,6 +75,11 @@ try {
   assert(clientSource.includes("errorPayload?.agents"), "client detail errors should apply returned snapshot context");
   assert(clientSource.includes("mergeProviderStatus"), "client should apply provider test results to source status");
   assert(clientSource.includes("normalizePidList"), "client should normalize process ID lists");
+  assert(clientSource.includes("normalizeTokenConfidence"), "client should normalize token confidence");
+  assert(clientSource.includes("normalizeTimestamp"), "client should normalize timeline timestamps");
+  const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
+  assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
+  assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");

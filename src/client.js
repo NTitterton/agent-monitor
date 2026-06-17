@@ -271,6 +271,7 @@ function isUrlGoTo(agent) {
 }
 
 function cloneAgent(agent) {
+  const tokens = finiteNumber(agent.tokens);
   return {
     ...agent,
     type: agent.type || agent.providerId || agent.source || "unknown",
@@ -280,11 +281,13 @@ function cloneAgent(agent) {
     processMemoryMb: finiteNumber(agent.processMemoryMb),
     childCpu: finiteNumber(agent.childCpu),
     childMemoryMb: finiteNumber(agent.childMemoryMb),
-    tokens: Number(agent.tokens || 0),
-    tokensPerSecond: Number(agent.tokensPerSecond || 0),
-    tokenRateWindowMs: Number(agent.tokenRateWindowMs || 0),
-    tokenCountConfidence: agent.tokenCountConfidence || (agent.tokens ? "estimated" : "unknown"),
-    costUsd: Number(agent.costUsd || 0),
+    tokens,
+    tokensPerSecond: finiteNumber(agent.tokensPerSecond),
+    tokenRateWindowMs: finiteNumber(agent.tokenRateWindowMs),
+    tokenCountConfidence: normalizeTokenConfidence(agent.tokenCountConfidence, tokens ? "estimated" : "unknown"),
+    costUsd: finiteNumber(agent.costUsd),
+    startedAt: normalizeTimestamp(agent.startedAt),
+    endedAt: agent.endedAt ? normalizeTimestamp(agent.endedAt, null) : undefined,
     currentStep: agent.currentStep || "",
     progressPercent: normalizeProgress(agent.progressPercent),
     parentId: normalizeOptionalString(agent.parentId),
@@ -293,7 +296,8 @@ function cloneAgent(agent) {
     parentPid: normalizeOptionalPid(agent.parentPid),
     childPids: normalizePidList(agent.childPids),
     capabilities: normalizeCapabilities(agent.capabilities),
-    transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
+    logs: normalizeLogs(agent.logs),
+    transcript: normalizeTranscript(agent.transcript)
   };
 }
 
@@ -313,6 +317,10 @@ function normalizeOptionalString(value) {
   return text || null;
 }
 
+function normalizeTokenConfidence(value, fallback = "unknown") {
+  return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : fallback;
+}
+
 function normalizeOptionalPid(value) {
   if (value === null || value === undefined || value === "") return null;
   const number = Number(value);
@@ -327,6 +335,38 @@ function normalizePidList(value) {
 function finiteNumber(value, fallback = 0) {
   const number = Number(value ?? fallback);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function normalizeTimestamp(value, fallback = Date.now()) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) return numeric;
+  const parsed = Date.parse(String(value));
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function normalizeLogs(logs) {
+  if (!Array.isArray(logs)) return [];
+  return logs
+    .filter((log) => log && log.message)
+    .map((log) => ({
+      ...log,
+      at: normalizeTimestamp(log.at),
+      message: String(log.message)
+    }))
+    .slice(0, 50);
+}
+
+function normalizeTranscript(transcript) {
+  if (!Array.isArray(transcript)) return [];
+  return transcript
+    .filter((entry) => entry && (entry.content || entry.message || entry.text))
+    .map((entry) => ({
+      ...entry,
+      at: normalizeTimestamp(entry.at),
+      content: String(entry.content || entry.message || entry.text).trim()
+    }))
+    .slice(0, 100);
 }
 
 function cloneConfig(config) {

@@ -257,7 +257,7 @@ function normalizeLogs(logs) {
   return logs
     .filter((log) => log && log.message)
     .map((log) => ({
-      at: Number(log.at || Date.now()),
+      at: normalizeTimestamp(log.at),
       level: log.level || "info",
       source: log.source || "agent",
       message: String(log.message)
@@ -271,7 +271,7 @@ function normalizeTranscript(transcript) {
   return transcript
     .filter((entry) => entry && (entry.content || entry.message || entry.text))
     .map((entry) => ({
-      at: Number(entry.at || Date.now()),
+      at: normalizeTimestamp(entry.at),
       role: normalizeRole(entry.role),
       source: entry.source || "agent",
       content: String(entry.content || entry.message || entry.text).trim()
@@ -281,6 +281,14 @@ function normalizeTranscript(transcript) {
 
 function normalizeRole(role) {
   return ["system", "user", "assistant", "tool"].includes(role) ? role : "assistant";
+}
+
+function normalizeTimestamp(value, fallback = Date.now()) {
+  if (value === null || value === undefined || value === "") return fallback;
+  const numeric = Number(value);
+  if (Number.isFinite(numeric)) return numeric;
+  const parsed = Date.parse(String(value));
+  return Number.isNaN(parsed) ? fallback : parsed;
 }
 
 function getStatePath() {
