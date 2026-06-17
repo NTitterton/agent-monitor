@@ -141,6 +141,18 @@ export function createAgentClient() {
           headers: { Accept: "application/json" }
         });
         if (response.ok) return response.json();
+        const errorPayload = await readJsonResponse(response);
+        if (errorPayload?.agents) {
+          emit(
+            errorPayload.agents,
+            errorPayload.history || history,
+            errorPayload.providers || providers,
+            errorPayload.config || config,
+            { tone: "warn", text: errorPayload.error || `Agent detail failed (${response.status})` },
+            errorPayload.scanner || scanner
+          );
+          return null;
+        }
       }
 
       const currentAgents = list();

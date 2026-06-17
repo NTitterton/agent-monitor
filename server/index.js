@@ -87,7 +87,14 @@ const server = createServer(async (request, response) => {
     const detailMatch = url.pathname.match(/^\/api\/agents\/([^/]+)$/);
     if (detailMatch && request.method === "GET") {
       const detail = await registry.getAgent(decodeURIComponent(detailMatch[1]));
-      if (!detail) return sendJson(request, response, { error: "Agent not found" }, 404);
+      if (!detail) {
+        const payload = await withSnapshotContext({
+          error: "Agent not found",
+          agents: await registry.listAgents(),
+          history: await registry.listHistory()
+        });
+        return sendJson(request, response, payload, 404);
+      }
       return sendJson(request, response, detail);
     }
 

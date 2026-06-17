@@ -70,6 +70,7 @@ try {
   assert(appSource.includes("this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history)"), "browser app selected detail should refresh from snapshots");
   const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
   assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");
+  assert(clientSource.includes("errorPayload?.agents"), "client detail errors should apply returned snapshot context");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
@@ -429,6 +430,15 @@ try {
   assert(detail.body.history[0]?.prompt === "smoke test", "agent detail should include agent history");
   assert(detail.body.agent.logs[0]?.source === "operator", "agent detail should include logs");
   assert(detail.body.agent.transcript?.length > 0, "agent detail should include transcript");
+
+  const missingDetail = await request("/api/agents/missing-agent");
+  assert(missingDetail.status === 404, "missing agent detail should return not found");
+  assert(missingDetail.body.error === "Agent not found", "missing agent detail should return a clear error");
+  assert(Array.isArray(missingDetail.body.agents), "missing agent detail should return agents");
+  assert(Array.isArray(missingDetail.body.history), "missing agent detail should return history");
+  assert(Array.isArray(missingDetail.body.providers), "missing agent detail should return provider status");
+  assert(missingDetail.body.config?.hasApiToken === true, "missing agent detail should return sanitized config");
+  assert(missingDetail.body.scanner, "missing agent detail should return scanner status");
 
   await stopServer(server);
   server = await startServer();

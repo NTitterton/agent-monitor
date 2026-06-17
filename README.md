@@ -116,6 +116,7 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 - `GET /api/snapshot` returns agents, recent history, provider status, and sanitized config in one response. The browser app uses this as its primary refresh path.
 - `GET /api/scanner` returns server-side background scanner status.
 - `GET /api/agents` returns the current agent snapshot. Agents include `scannedAt` when they came from a provider snapshot.
+- `GET /api/agents/:id` returns the selected agent, lineage neighbors, and recent agent history. Stale detail requests for missing agents return `404` with refreshed agents, history, provider status, sanitized config, and scanner status so clients can reconcile their view.
 - `GET /api/providers` returns configured provider adapters, lifecycle capabilities, and `scannedAt` freshness metadata.
 - `POST /api/providers/:id/test` runs one provider snapshot check and returns that provider's health.
 - `GET /api/history` returns recent lifecycle actions.
