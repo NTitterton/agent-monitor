@@ -8,6 +8,7 @@ export function createAgentClient() {
   let providers = [];
   let config = null;
   let scanner = null;
+  let snapshotAt = null;
   let mode = "local";
   let actionMessage = null;
 
@@ -17,13 +18,15 @@ export function createAgentClient() {
     nextProviders = providers,
     nextConfig = config,
     nextActionMessage = actionMessage,
-    nextScanner = scanner
+    nextScanner = scanner,
+    nextSnapshotAt = snapshotAt
   ) {
     agents = nextAgents.map(cloneAgent);
     history = nextHistory.map((record) => ({ ...record }));
     providers = nextProviders.map((provider) => ({ ...provider }));
     config = cloneConfig(nextConfig);
     scanner = cloneScanner(nextScanner);
+    snapshotAt = normalizeOptionalTimestamp(nextSnapshotAt);
     actionMessage = cloneActionMessage(nextActionMessage);
     subscribers.forEach((subscriber) => subscriber(snapshot()));
   }
@@ -40,7 +43,8 @@ export function createAgentClient() {
         payload.providers || [],
         payload.config || null,
         null,
-        payload.scanner || null
+        payload.scanner || null,
+        payload.snapshotAt || Date.now()
       );
     } catch {
       await refreshLegacy();
@@ -57,15 +61,23 @@ export function createAgentClient() {
       const providerPayload = providerResponse.ok ? await providerResponse.json() : { providers: [] };
       const configResponse = await fetch("/api/config", { headers: { Accept: "application/json" } });
       const configPayload = configResponse.ok ? await configResponse.json() : { config: null };
-      emit(payload.agents, payload.history || [], providerPayload.providers || [], configPayload.config);
+      emit(
+        payload.agents,
+        payload.history || [],
+        providerPayload.providers || [],
+        configPayload.config,
+        null,
+        null,
+        payload.snapshotAt || Date.now()
+      );
     } catch {
       mode = "local";
-      emit(localStore.list());
+      emit(localStore.list(), history, providers, config, actionMessage, scanner, null);
     }
   }
 
   localStore.subscribe((nextAgents) => {
-    if (mode === "local") emit(nextAgents);
+    if (mode === "local") emit(nextAgents, history, providers, config, actionMessage, scanner, null);
   });
 
   function list() {
@@ -83,6 +95,7 @@ export function createAgentClient() {
       providers: providers.map((provider) => ({ ...provider })),
       config: cloneConfig(config),
       scanner: cloneScanner(scanner),
+      snapshotAt,
       actionMessage: cloneActionMessage(actionMessage),
       mode
     };
@@ -140,10 +153,11 @@ export function createAgentClient() {
           nextProviders,
           payload.config || config,
           null,
-          payload.scanner || scanner
+          payload.scanner || scanner,
+          payload.snapshotAt || Date.now()
         );
       } else {
-        emit(agents, history, nextProviders, config, null, scanner);
+        emit(agents, history, nextProviders, config, null, scanner, payload.snapshotAt || Date.now());
       }
       return payload.provider;
     },
@@ -161,7 +175,8 @@ export function createAgentClient() {
             errorPayload.providers || providers,
             errorPayload.config || config,
             { tone: "warn", text: errorPayload.error || `Agent detail failed (${response.status})` },
-            errorPayload.scanner || scanner
+            errorPayload.scanner || scanner,
+            errorPayload.snapshotAt || Date.now()
           );
           return null;
         }
@@ -212,7 +227,8 @@ export function createAgentClient() {
               errorPayload?.providers || providers,
               errorPayload?.config || config,
               message,
-              errorPayload?.scanner || scanner
+              errorPayload?.scanner || scanner,
+              errorPayload?.snapshotAt || Date.now()
             );
             return message;
           }
@@ -224,7 +240,8 @@ export function createAgentClient() {
             payload.providers || providers,
             payload.config || config,
             message,
-            payload.scanner || scanner
+            payload.scanner || scanner,
+            payload.snapshotAt || Date.now()
           );
           return message;
         } catch {
@@ -236,7 +253,7 @@ export function createAgentClient() {
       if (agent) {
         history = [createActionRecord(agent, actionId, prompt), ...history].filter(Boolean).slice(0, 25);
         const message = { tone: "ok", text: `${action.label} applied locally to ${agent.name}` };
-        emit(localStore.list(), history, providers, config, message);
+        emit(localStore.list(), history, providers, config, message, scanner, null);
         return message;
       }
     }
@@ -343,6 +360,11 @@ function normalizeTimestamp(value, fallback = Date.now()) {
   if (Number.isFinite(numeric)) return numeric;
   const parsed = Date.parse(String(value));
   return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function normalizeOptionalTimestamp(value) {
+  if (value === null || value === undefined || value === "") return null;
+  return normalizeTimestamp(value, null);
 }
 
 function normalizeLogs(logs) {

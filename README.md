@@ -124,6 +124,8 @@ Embedded widgets show compact provider/source health from `/api/snapshot`, inclu
 - `PUT /api/config` updates trusted origins, local discovery settings, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches while preserving existing provider credentials.
 - `POST /api/agents/:id/actions` accepts `{ "action": "start|stop|interrupt|end|force-end|go-to", "prompt": "optional text" }`. Action responses include refreshed agents, history, provider status, sanitized config, and scanner status, including rejected requests. Unknown action IDs return `400`; missing agents return `404`; valid actions outside the target agent's `capabilities` return `409`.
 
+Snapshot-style API responses include `snapshotAt`, the server time when the response view was assembled. The browser app shows that timestamp in the top bar, while per-provider `scannedAt` values still describe adapter freshness.
+
 Malformed JSON request bodies return `400` with `Invalid JSON` instead of being treated as server errors.
 
 Provider snapshots are reused for a short window so app refreshes and paired legacy calls to `/api/agents` plus `/api/providers` do not rescan every adapter twice. The default cache window is 1000 ms and can be changed with `AGENT_MONITOR_SCAN_CACHE_MS`.

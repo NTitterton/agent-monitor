@@ -75,6 +75,7 @@ try {
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
   assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
+  assert(appSource.includes("Updated ${formatTimestamp(this.snapshotAt)}"), "browser app should render unified snapshot freshness");
   assert(appSource.includes("this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history)"), "browser app selected detail should refresh from snapshots");
   const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
   assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");
@@ -83,6 +84,7 @@ try {
   assert(clientSource.includes("normalizePidList"), "client should normalize process ID lists");
   assert(clientSource.includes("normalizeTokenConfidence"), "client should normalize token confidence");
   assert(clientSource.includes("normalizeTimestamp"), "client should normalize timeline timestamps");
+  assert(clientSource.includes("snapshotAt"), "client should preserve unified snapshot timestamps");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("normalizeTimestamp(log.at)"), "state store should normalize log timestamps");
   assert(stateStoreSource.includes("normalizeTimestamp(entry.at)"), "state store should normalize transcript timestamps");
@@ -108,6 +110,7 @@ try {
 
   const sameOriginAgents = await request("/api/agents");
   assert(sameOriginAgents.status === 200, "same-origin API request should succeed");
+  assert(typeof sameOriginAgents.body.snapshotAt === "number", "agent list should include snapshot timestamp");
   assert(Array.isArray(sameOriginAgents.body.agents), "agent list should be an array");
   assert(sameOriginAgents.body.agents.every((agent) => agent.type), "every agent should include type");
   assert(sameOriginAgents.body.agents.every((agent) => typeof agent.tokens === "number"), "every agent should include numeric tokens");
@@ -141,6 +144,7 @@ try {
 
   const snapshot = await request("/api/snapshot");
   assert(snapshot.status === 200, "snapshot request should succeed");
+  assert(typeof snapshot.body.snapshotAt === "number", "snapshot should include snapshot timestamp");
   assert(Array.isArray(snapshot.body.agents), "snapshot should include agents");
   assert(Array.isArray(snapshot.body.providers), "snapshot should include providers");
   assert(Array.isArray(snapshot.body.history), "snapshot should include history");
@@ -155,10 +159,12 @@ try {
 
   const scannerStatus = await request("/api/scanner");
   assert(scannerStatus.status === 200, "scanner status request should succeed");
+  assert(typeof scannerStatus.body.snapshotAt === "number", "scanner status should include snapshot timestamp");
   assert(scannerStatus.body.scanner.enabled === false, "scanner should default to disabled");
 
   const providers = await request("/api/providers");
   assert(providers.status === 200, "provider status request should succeed");
+  assert(typeof providers.body.snapshotAt === "number", "provider status should include snapshot timestamp");
   assert(providers.body.providers.every((provider) => typeof provider.scannedAt === "number"), "every provider should include scan timestamp");
   assert(
     providers.body.providers.find((provider) => provider.id === "local-process")?.capabilities.includes("go-to"),
@@ -179,6 +185,7 @@ try {
   assert(Array.isArray(providerTest.body.providers), "provider connection test should return provider status list");
   assert(providerTest.body.config?.hasApiToken === true, "provider connection test should return sanitized config");
   assert(providerTest.body.scanner, "provider connection test should return scanner status");
+  assert(typeof providerTest.body.snapshotAt === "number", "provider connection test should return snapshot timestamp");
 
   const unauthorized = await request("/api/agents", {
     headers: { Origin: allowedOrigin }

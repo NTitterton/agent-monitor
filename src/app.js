@@ -17,6 +17,7 @@ class AgentMonitorApp extends HTMLElement {
       this.providers = snapshot.providers;
       this.config = snapshot.config;
       this.scanner = snapshot.scanner;
+      this.snapshotAt = snapshot.snapshotAt;
       this.actionMessage = snapshot.actionMessage;
       this.mode = snapshot.mode;
       this.selectedAgentId = snapshot.agents.some((agent) => agent.id === this.selectedAgentId)
@@ -72,7 +73,7 @@ class AgentMonitorApp extends HTMLElement {
       <main class="app-shell">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Local-first control plane</p>
+            <p class="eyebrow">Local-first control plane${this.snapshotAt ? ` · Updated ${formatTimestamp(this.snapshotAt)}` : ""}</p>
             <h1>Agent Monitor</h1>
           </div>
           <div class="summary-grid" aria-label="Agent summary">

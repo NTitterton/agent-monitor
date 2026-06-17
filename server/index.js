@@ -37,28 +37,28 @@ const server = createServer(async (request, response) => {
 
     if (url.pathname === "/api/snapshot" && request.method === "GET") {
       const agents = await registry.listAgents();
-      return sendJson(request, response, {
+      return sendJson(request, response, withApiMeta({
         agents,
         history: await registry.listHistory(),
         providers: await registry.providers(),
         config: await readPublicConfig(),
         scanner: scanner.status()
-      });
+      }));
     }
 
     if (url.pathname === "/api/agents" && request.method === "GET") {
-      return sendJson(request, response, {
+      return sendJson(request, response, withApiMeta({
         agents: await registry.listAgents(),
         history: await registry.listHistory()
-      });
+      }));
     }
 
     if (url.pathname === "/api/history" && request.method === "GET") {
-      return sendJson(request, response, { history: await registry.listHistory() });
+      return sendJson(request, response, withApiMeta({ history: await registry.listHistory() }));
     }
 
     if (url.pathname === "/api/providers" && request.method === "GET") {
-      return sendJson(request, response, { providers: await registry.providers() });
+      return sendJson(request, response, withApiMeta({ providers: await registry.providers() }));
     }
 
     const providerTestMatch = url.pathname.match(/^\/api\/providers\/([^/]+)\/test$/);
@@ -86,7 +86,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (url.pathname === "/api/scanner" && request.method === "GET") {
-      return sendJson(request, response, { scanner: scanner.status() });
+      return sendJson(request, response, withApiMeta({ scanner: scanner.status() }));
     }
 
     const detailMatch = url.pathname.match(/^\/api\/agents\/([^/]+)$/);
@@ -144,11 +144,18 @@ process.on("SIGTERM", () => {
 });
 
 async function withSnapshotContext(payload) {
-  return {
+  return withApiMeta({
     ...payload,
     providers: await registry.providers(),
     config: await readPublicConfig(),
     scanner: scanner.status()
+  });
+}
+
+function withApiMeta(payload) {
+  return {
+    ...payload,
+    snapshotAt: Date.now()
   };
 }
 

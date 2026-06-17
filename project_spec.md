@@ -22,6 +22,7 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 - The standalone embeddable widget polls every 15 seconds by default via `refresh-ms`.
 - The local process provider runs `ps` and active local agent discovery whenever `/api/agents` or `/api/providers` asks providers for a fresh snapshot.
 - The browser app and standalone embeddable widget use `GET /api/snapshot` to fetch agents, history, provider status, and sanitized config in one response.
+- Snapshot-style API responses include `snapshotAt`, the server assembly time for that view. The browser app displays it separately from provider `scannedAt` freshness.
 - Provider snapshots are cached for 1000 ms by default, configurable with `AGENT_MONITOR_SCAN_CACHE_MS`, so unified snapshots and paired legacy `/api/agents` plus `/api/providers` requests reuse the same scan.
 - When `snapshotRefresh.enabled` is true, the local server also runs a background scanner at `snapshotRefresh.intervalMs`; the scanner warms provider snapshots with the same interval as the cache window and exposes status through `/api/scanner` and `/api/snapshot`.
 
