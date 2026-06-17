@@ -105,6 +105,8 @@ try {
   assert(appSource.includes("formatCpu(cpu)"), "browser app summary should format aggregate CPU");
   assert(appSource.includes("<p>Tokens</p>"), "browser app summary should render aggregate tokens");
   assert(appSource.includes("formatTokenTotal(tokens)"), "browser app summary should format aggregate tokens");
+  assert(appSource.includes("<p>Tok/sec</p>"), "browser app summary should render aggregate token throughput");
+  assert(appSource.includes("formatTokenRate({ tokensPerSecond: tokenRate })"), "browser app summary should format aggregate token throughput");
   assert(appSource.includes("summary-warning"), "browser app summary should highlight provider issues");
   assert(appSource.includes("detail-action-row"), "browser app detail panel should render lifecycle controls");
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");

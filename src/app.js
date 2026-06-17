@@ -65,6 +65,7 @@ class AgentMonitorApp extends HTMLElement {
     const cpu = agents.reduce((total, agent) => total + Number(agent.cpu || 0), 0);
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
     const tokens = agents.reduce((total, agent) => total + Number(agent.tokens || 0), 0);
+    const tokenRate = agents.reduce((total, agent) => total + Number(agent.tokensPerSecond || 0), 0);
     const spend = agents.reduce((total, agent) => total + Number(agent.costUsd || 0), 0);
     const history = this.history || [];
     const providerIssues = (this.providers || []).filter((provider) => provider.status === "error").length;
@@ -101,6 +102,10 @@ class AgentMonitorApp extends HTMLElement {
             <article>
               <span>${formatTokenTotal(tokens)}</span>
               <p>Tokens</p>
+            </article>
+            <article>
+              <span>${formatTokenRate({ tokensPerSecond: tokenRate })}</span>
+              <p>Tok/sec</p>
             </article>
             <article>
               <span>$${spend.toFixed(2)}</span>
