@@ -79,7 +79,7 @@ For cross-site embeds, add the site origins that may call the local API:
 }
 ```
 
-`allowedOrigins` and `apiToken` are read from `agent-monitor.config.json`. API routes answer CORS preflight requests for trusted origins. When `apiToken` is set, cross-origin widget requests must include the same token:
+`allowedOrigins` and `apiToken` are read from `agent-monitor.config.json`, and the local Settings panel can rotate the embed API token without exposing the current value. API routes answer CORS preflight requests for trusted origins. When `apiToken` is set, cross-origin widget requests must include the same token:
 
 ```html
 <agent-monitor-widget
@@ -92,7 +92,7 @@ The widget sends `api-token` as `X-Agent-Monitor-Token` by default. Set `auth-he
 
 Same-origin local app requests continue to work without putting the token into `index.html`.
 
-The app sidebar includes a Settings panel for trusted origins, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, preserves non-blocking validation warnings across the save refresh, and does not expose configured API tokens or provider credentials.
+The app sidebar includes a Settings panel for trusted origins, the write-only embed API token, local discovery include/exclude patterns, snapshot refresh cadence, remote HTTP providers, OpenAI Responses, and Anthropic Message Batches. It writes through the local API, preserves non-blocking validation warnings across the save refresh, and does not expose configured API tokens or provider credentials.
 
 When snapshot refresh is enabled, the browser app polls at the configured interval and the local server runs a matching background scanner. Scanner status is available in the Sources panel and at `GET /api/scanner`.
 

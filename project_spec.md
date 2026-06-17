@@ -25,6 +25,7 @@ There is no project-specific OpenAI markdown spec format in use here. This file 
 - Snapshot-style API responses include `snapshotAt`, the server assembly time for that view. The browser app and embedded widgets display it separately from provider `scannedAt` freshness.
 - Provider snapshots are cached for 1000 ms by default, configurable with `AGENT_MONITOR_SCAN_CACHE_MS`, so unified snapshots and paired legacy `/api/agents` plus `/api/providers` requests reuse the same scan.
 - When `snapshotRefresh.enabled` is true, the local server also runs a background scanner at `snapshotRefresh.intervalMs`; the scanner warms provider snapshots with the same interval as the cache window and exposes status through `/api/scanner` and `/api/snapshot`.
+- The local Settings panel can rotate the write-only embed API token while public config responses expose only `hasApiToken`.
 
 ## New Requirements
 

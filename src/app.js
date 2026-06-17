@@ -140,8 +140,10 @@ class AgentMonitorApp extends HTMLElement {
     this.querySelector(".settings-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
+      const apiToken = form.querySelector('[data-setting="apiToken"]').value.trim();
       const patch = {
         allowedOrigins: parseLines(form.querySelector('[data-setting="allowedOrigins"]').value),
+        ...(apiToken ? { apiToken } : {}),
         localDiscovery: {
           enabled: form.querySelector('[data-setting="localDiscoveryEnabled"]').checked,
           include: parseLines(form.querySelector('[data-setting="localDiscoveryInclude"]').value),
@@ -384,6 +386,10 @@ function renderSettings(config, mode = "local", message = "") {
         <label>
           <span>Trusted Origins</span>
           <textarea data-setting="allowedOrigins" rows="3" ${mode === "api" ? "" : "disabled"}>${escapeText((config?.allowedOrigins || []).join("\n"))}</textarea>
+        </label>
+        <label>
+          <span>Embed API Token</span>
+          <input data-setting="apiToken" type="password" value="" placeholder="${config?.hasApiToken ? "Token saved" : "No token"}" ${mode === "api" ? "" : "disabled"} />
         </label>
         <label class="toggle-row">
           <input data-setting="localDiscoveryEnabled" type="checkbox" ${discovery.enabled ? "checked" : ""} ${mode === "api" ? "" : "disabled"} />

@@ -95,6 +95,8 @@ try {
   assert(appSource.includes("renderAgentHealthLine"), "browser app table should render per-agent health freshness");
   assert(appSource.includes("Updated ${formatTimestamp(this.snapshotAt)}"), "browser app should render unified snapshot freshness");
   assert(appSource.includes("this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history)"), "browser app selected detail should refresh from snapshots");
+  assert(appSource.includes('data-setting="apiToken"'), "app settings should include write-only API token control");
+  assert(appSource.includes("...(apiToken ? { apiToken } : {})"), "app settings should only send nonblank API token updates");
   const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
   assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");
   assert(clientSource.includes("errorPayload?.agents"), "client detail errors should apply returned snapshot context");
@@ -472,6 +474,25 @@ try {
     }
   });
   assert(updatedOriginRequest.status === 200, "newly trusted origin should be allowed");
+
+  const rotatedApiToken = "rotated-smoke-token";
+  const rotatedTokenConfig = await request("/api/config", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ apiToken: rotatedApiToken })
+  });
+  assert(rotatedTokenConfig.status === 200, "API token rotation should succeed");
+  assert(rotatedTokenConfig.body.config.hasApiToken === true, "rotated API token should remain sanitized");
+  assert(!("apiToken" in rotatedTokenConfig.body.config), "rotated API token should not be exposed");
+  const configFileAfterTokenRotation = JSON.parse(await readFile(configPath, "utf8"));
+  assert(configFileAfterTokenRotation.apiToken === rotatedApiToken, "config file should store rotated API token");
+  const rotatedOriginRequest = await request("/api/agents", {
+    headers: {
+      Origin: addedOrigin,
+      "X-Agent-Monitor-Token": rotatedApiToken
+    }
+  });
+  assert(rotatedOriginRequest.status === 200, "rotated API token should authorize trusted origins");
 
   const action = await request("/api/agents/local-codex-1/actions", {
     method: "POST",

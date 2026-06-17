@@ -21,6 +21,9 @@ export async function updateConfig(patch) {
   const current = await readConfig();
   const next = {
     ...current,
+    ...(Object.hasOwn(patch, "apiToken") && String(patch.apiToken || "").trim()
+      ? { apiToken: String(patch.apiToken).trim() }
+      : {}),
     ...(Object.hasOwn(patch, "allowedOrigins")
       ? { allowedOrigins: normalizeStringList(patch.allowedOrigins) }
       : {}),
