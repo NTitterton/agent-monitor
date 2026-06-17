@@ -38,7 +38,13 @@ try {
   const standaloneWidgetSource = await readFile(new URL("../embed/agent-monitor-widget.js", import.meta.url), "utf8");
   assert(standaloneWidgetSource.includes("/api/snapshot"), "standalone widget should prefer the unified snapshot API");
   assert(standaloneWidgetSource.includes("/api/agents"), "standalone widget should keep legacy agent API fallback");
-  assert(standaloneWidgetSource.includes("if (!response.ok) return;"), "standalone widget should not locally apply rejected API actions");
+  assert(
+    standaloneWidgetSource.includes("if (!response.ok) {") &&
+      standaloneWidgetSource.includes("this.actionMessage =") &&
+      standaloneWidgetSource.includes("payload?.error"),
+    "standalone widget should render rejected API actions without local fallback"
+  );
+  assert(standaloneWidgetSource.includes("renderActionMessage"), "standalone widget should render action feedback");
   const appSource = await readFile(new URL("../src/app.js", import.meta.url), "utf8");
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
 

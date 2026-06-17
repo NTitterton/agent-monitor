@@ -200,6 +200,25 @@ const styles = `
     background: #f7f9fc;
     font-size: 0.8rem;
   }
+
+  .action-message {
+    margin: 0;
+    padding: 10px 20px;
+    border-top: 1px solid #e6e9ef;
+    background: #eef5ff;
+    color: #244c7a;
+    font-size: 0.8rem;
+  }
+
+  .action-message.warn {
+    background: #fff8e8;
+    color: #7a4d00;
+  }
+
+  .action-message.error {
+    background: #fff8f8;
+    color: #a62626;
+  }
 `;
 
 class StandaloneAgentMonitorWidget extends HTMLElement {
@@ -208,6 +227,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     this.attachShadow({ mode: "open" });
     this.agents = fallbackAgents;
     this.history = [];
+    this.actionMessage = null;
   }
 
   connectedCallback() {
@@ -267,10 +287,19 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
         headers: this.headers(),
         body: JSON.stringify({ action: action.id, prompt })
       });
-      if (!response.ok) return;
+      if (!response.ok) {
+        const payload = await readJsonResponse(response);
+        this.actionMessage = {
+          tone: response.status >= 500 ? "error" : "warn",
+          text: payload?.error || `Action failed (${response.status})`
+        };
+        this.render();
+        return;
+      }
       const payload = await response.json();
       this.agents = payload.agents || this.agents;
       this.history = payload.history || this.history;
+      this.actionMessage = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
       this.render();
     } catch {
       this.applyLocalAction(agentId, action, prompt);
@@ -301,6 +330,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     const agent = this.agents.find((item) => item.id === agentId);
     if (agent) {
       this.history = [{ agentName: agent.name, label: action.label, prompt, at }, ...this.history].slice(0, 8);
+      this.actionMessage = { tone: "ok", text: `${action.label} applied locally to ${agent.name}` };
     }
     this.render();
   }
@@ -318,6 +348,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
           <span>${this.agents.length} total</span>
         </header>
         ${this.agents.map((agent) => this.renderAgent(agent)).join("")}
+        ${this.renderActionMessage()}
         ${this.renderFooter()}
       </section>
     `;
@@ -359,6 +390,11 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
     return `<footer><strong>${escapeHtml(latest.label)}</strong><span>${escapeHtml(latest.agentName)}</span></footer>`;
   }
 
+  renderActionMessage() {
+    if (!this.actionMessage) return "";
+    return `<p class="action-message ${this.actionMessage.tone || "ok"}">${escapeHtml(this.actionMessage.text || "")}</p>`;
+  }
+
   apiBase() {
     return this.getAttribute("api-base")?.replace(/\/+$/, "") || "";
   }
@@ -393,6 +429,14 @@ function renderAction(agent, action) {
       ${action.label}
     </button>
   `;
+}
+
+async function readJsonResponse(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 function statusForAction(actionId) {
