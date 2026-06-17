@@ -88,7 +88,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Server-side provider action exception handling with refreshed snapshot context.
 - Local configured-agent start failures reported as provider errors instead of successful history.
 - Unified lifecycle action responses with refreshed agents, history, provider status, sanitized config, and scanner status.
-- Browser app action feedback for accepted and rejected lifecycle requests.
+- Browser app action feedback for accepted and rejected lifecycle requests, including refreshed status/provider context.
 - Browser app prompt cancellation for interrupt/end actions before dispatch.
 - Browser app destructive-action confirmation before dispatch.
 - Browser app escaping for provider-supplied text, history prompts, and action/provider attributes.
@@ -97,7 +97,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Module widget destructive-action confirmation before dispatch.
 - Module widget escaping for provider-supplied text and action messages.
 - Standalone widget snapshot normalization for metrics, lineage, process IDs, capabilities, logs, and transcripts.
-- Standalone widget action feedback for accepted and rejected lifecycle requests.
+- Standalone widget action feedback for accepted and rejected lifecycle requests, including refreshed status/provider context.
 - Standalone widget prompt cancellation for interrupt/end actions before dispatch.
 - Standalone widget destructive-action confirmation before dispatch.
 - Standalone widget local fallback lifecycle timestamps/resources and metadata-rich history.

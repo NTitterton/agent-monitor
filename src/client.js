@@ -233,7 +233,7 @@ export function createAgentClient() {
             return message;
           }
           const payload = await response.json();
-          const message = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
+          const message = actionResultMessage(action, payload.agents, agentId, agent);
           emit(
             payload.agents,
             payload.history || history,
@@ -257,6 +257,19 @@ export function createAgentClient() {
         return message;
       }
     }
+  };
+}
+
+function actionResultMessage(action, nextAgents = [], agentId, fallbackAgent = null) {
+  const agent = Array.isArray(nextAgents) ? nextAgents.find((item) => item.id === agentId) : null;
+  const target = agent || fallbackAgent || { id: agentId };
+  return {
+    tone: "ok",
+    text: [
+      `${action.label} sent to ${target.name || target.id || agentId}`,
+      target.status ? `status ${target.status}` : "",
+      target.provider ? `provider ${target.provider}` : ""
+    ].filter(Boolean).join(" · ")
   };
 }
 

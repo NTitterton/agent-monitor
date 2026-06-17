@@ -338,7 +338,7 @@ class StandaloneAgentMonitorWidget extends HTMLElement {
       this.providers = payload.providers || this.providers;
       this.scanner = payload.scanner ? normalizeScanner(payload.scanner) : this.scanner;
       this.snapshotAt = normalizeOptionalTimestamp(payload.snapshotAt) || this.snapshotAt;
-      this.actionMessage = { tone: "ok", text: `${action.label} sent to ${agent?.name || agentId}` };
+      this.actionMessage = actionResultMessage(action, this.agents, agentId, agent);
       this.render();
     } catch {
       this.applyLocalAction(agentId, action, prompt);
@@ -749,6 +749,19 @@ function historyAgentLine(record) {
 
 function actionKindLabel(record) {
   return record.actionKind === "surface" ? "Surface" : "Lifecycle";
+}
+
+function actionResultMessage(action, nextAgents = [], agentId, fallbackAgent = null) {
+  const agent = Array.isArray(nextAgents) ? nextAgents.find((item) => item.id === agentId) : null;
+  const target = agent || fallbackAgent || { id: agentId };
+  return {
+    tone: "ok",
+    text: [
+      `${action.label} sent to ${target.name || target.id || agentId}`,
+      target.status ? `status ${target.status}` : "",
+      target.provider ? `provider ${target.provider}` : ""
+    ].filter(Boolean).join(" · ")
+  };
 }
 
 const terminalStatuses = new Set([

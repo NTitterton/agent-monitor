@@ -140,6 +140,8 @@ try {
   assert(clientSource.includes("normalizeTokenConfidence"), "client should normalize token confidence");
   assert(clientSource.includes("normalizeRequestCounts"), "client should normalize provider request counts");
   assert(clientSource.includes("normalizeTimestamp"), "client should normalize timeline timestamps");
+  assert(clientSource.includes("actionResultMessage"), "client should render status-aware action success messages");
+  assert(clientSource.includes("status ${target.status}"), "client action messages should include refreshed status");
   assert(clientSource.includes("snapshotAt"), "client should preserve unified snapshot timestamps");
   const coreSource = await readFile(new URL("../src/core.js", import.meta.url), "utf8");
   assert(coreSource.includes("Unknown runtime"), "core runtime formatting should guard invalid timestamps");
@@ -186,6 +188,7 @@ try {
   assert(standaloneWidgetSource.includes("collectActionPrompt"), "standalone widget should cancel prompt actions when the prompt is canceled");
   assert(standaloneWidgetSource.includes("window.confirm"), "standalone widget should confirm destructive actions");
   assert(standaloneWidgetSource.includes("actionKindLabel"), "standalone widget should label lifecycle versus surface history");
+  assert(standaloneWidgetSource.includes("actionResultMessage"), "standalone widget should render status-aware action success messages");
   assert(standaloneWidgetSource.includes("Unknown runtime"), "standalone widget should guard invalid runtimes");
   assert(standaloneWidgetSource.includes("return \"Unknown\""), "standalone widget should guard invalid timestamps");
 
