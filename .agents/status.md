@@ -61,6 +61,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Remote HTTP provider preserves reported own/child process-resource breakdown fields.
 - Numeric CPU/memory resource normalization for persisted state, remote HTTP snapshots, client clones, and smoke coverage.
 - Remote HTTP timestamp normalization for agent, log, and transcript date strings.
+- Process ID normalization for remote HTTP and client snapshots.
 - Local process lifecycle controls signal descendant process trees before root PIDs.
 - Smoke coverage for starting and force-ending a configured local process agent.
 - Server-side capability enforcement for unsupported direct action requests.

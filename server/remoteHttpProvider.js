@@ -112,9 +112,9 @@ function normalizeAgent(agent, config) {
     startedAt,
     endedAt: agent.endedAt ? normalizeTimestamp(agent.endedAt, null) : undefined,
     children: normalizeStringList(agent.children),
-    pid: agent.pid || null,
-    parentPid: agent.parentPid || null,
-    childPids: Array.isArray(agent.childPids) ? agent.childPids : [],
+    pid: normalizeOptionalPid(agent.pid),
+    parentPid: normalizeOptionalPid(agent.parentPid),
+    childPids: normalizePidList(agent.childPids),
     transcript: normalizeTranscript(agent.transcript),
     logs: normalizeLogs(agent.logs),
     remoteUrl: agent.remoteUrl || config.baseUrl,
@@ -146,6 +146,17 @@ function normalizeStringList(value) {
 function normalizeOptionalString(value) {
   const text = String(value ?? "").trim();
   return text || null;
+}
+
+function normalizeOptionalPid(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function normalizePidList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizeOptionalPid).filter((pid) => pid !== null);
 }
 
 function finiteNumber(value, fallback = 0) {

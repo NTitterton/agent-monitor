@@ -237,6 +237,8 @@ Resource note: normalized snapshots coerce CPU and memory resource fields to fin
 
 Timestamp note: the remote HTTP adapter accepts numeric millisecond timestamps and parseable date strings for agent `startedAt`/`endedAt`, log `at`, and transcript `at` fields, normalizing them to milliseconds before rendering runtime, sorting, or timelines.
 
+Process ID note: remote HTTP adapter responses and client snapshots normalize `pid`, `parentPid`, and `childPids` to finite numbers, dropping invalid child PID entries so process lineage displays have a stable shape.
+
 ### Local Process Tree Controls
 
 Local lifecycle controls should target the process tree that represents the agent.

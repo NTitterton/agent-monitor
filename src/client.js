@@ -289,7 +289,9 @@ function cloneAgent(agent) {
     progressPercent: normalizeProgress(agent.progressPercent),
     parentId: normalizeOptionalString(agent.parentId),
     children: normalizeStringList(agent.children),
-    childPids: Array.isArray(agent.childPids) ? [...agent.childPids] : [],
+    pid: normalizeOptionalPid(agent.pid),
+    parentPid: normalizeOptionalPid(agent.parentPid),
+    childPids: normalizePidList(agent.childPids),
     capabilities: normalizeCapabilities(agent.capabilities),
     transcript: Array.isArray(agent.transcript) ? agent.transcript.map((entry) => ({ ...entry })) : []
   };
@@ -309,6 +311,17 @@ function normalizeStringList(value) {
 function normalizeOptionalString(value) {
   const text = String(value ?? "").trim();
   return text || null;
+}
+
+function normalizeOptionalPid(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function normalizePidList(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map(normalizeOptionalPid).filter((pid) => pid !== null);
 }
 
 function finiteNumber(value, fallback = 0) {

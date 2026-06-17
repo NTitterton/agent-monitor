@@ -74,6 +74,7 @@ try {
   assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");
   assert(clientSource.includes("errorPayload?.agents"), "client detail errors should apply returned snapshot context");
   assert(clientSource.includes("mergeProviderStatus"), "client should apply provider test results to source status");
+  assert(clientSource.includes("normalizePidList"), "client should normalize process ID lists");
   const moduleWidgetSource = await readFile(new URL("../src/widget.js", import.meta.url), "utf8");
   assert(moduleWidgetSource.includes("renderActionMessage"), "module widget should render action feedback");
   assert(moduleWidgetSource.includes("function escapeText"), "module widget should escape dynamic text");
@@ -626,9 +627,9 @@ async function assertRemoteProviderNormalization() {
             processMemoryMb: 100,
             childCpu: 5,
             childMemoryMb: 156,
-            pid: 200,
-            parentPid: 100,
-            childPids: [201, 202],
+            pid: "200",
+            parentPid: "100",
+            childPids: ["201", 202, "not-a-pid"],
             capabilities: ["stop", "bogus", "stop"],
             goToTarget: "https://remote.example/agents/remote-normalized",
             logs: [{ at: "2026-01-02T03:05:05.000Z", message: "remote log" }],
@@ -677,9 +678,9 @@ async function assertRemoteProviderNormalization() {
     assert(agent.processCpu === 2.5, "remote provider should preserve own CPU");
     assert(agent.childCpu === 5, "remote provider should preserve child CPU");
     assert(agent.childMemoryMb === 156, "remote provider should preserve child memory");
-    assert(agent.pid === 200, "remote provider should preserve pid");
-    assert(agent.parentPid === 100, "remote provider should preserve parent pid");
-    assert(agent.childPids.length === 2, "remote provider should preserve child pids");
+    assert(agent.pid === 200, "remote provider should normalize pid");
+    assert(agent.parentPid === 100, "remote provider should normalize parent pid");
+    assert(agent.childPids.join(",") === "201,202", "remote provider should normalize child pids");
     assert(agent.capabilities.join(",") === "stop,go-to", "remote provider should normalize known unique capabilities");
     assert(agent.logs[0]?.at === Date.parse("2026-01-02T03:05:05.000Z"), "remote provider should normalize log timestamps");
     assert(
