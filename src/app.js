@@ -54,7 +54,7 @@ class AgentMonitorApp extends HTMLElement {
 
   render() {
     const agents = this.agents || [];
-    const filters = this.filters || { query: "", status: "all", source: "all", type: "all" };
+    const filters = this.filters || { query: "", status: "all", source: "all", type: "all", sort: "started-desc" };
     const filteredAgents = filterAgents(agents, filters);
     const running = agents.filter((agent) => agent.status === "running").length;
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
@@ -171,7 +171,8 @@ class AgentMonitorApp extends HTMLElement {
           query: this.querySelector('[data-filter="query"]').value,
           status: this.querySelector('[data-filter="status"]').value,
           source: this.querySelector('[data-filter="source"]').value,
-          type: this.querySelector('[data-filter="type"]').value
+          type: this.querySelector('[data-filter="type"]').value,
+          sort: this.querySelector('[data-filter="sort"]').value
         };
         this.render();
       });
@@ -231,6 +232,23 @@ function renderFilters(filters, sources, types, statuses) {
         <span>Type</span>
         <select data-filter="type">
           ${["all", ...types].map((type) => renderOption(type, filters.type, type === "all" ? "All" : labelize(type))).join("")}
+        </select>
+      </label>
+      <label>
+        <span>Sort</span>
+        <select data-filter="sort">
+          ${[
+            ["started-desc", "Newest"],
+            ["cpu-desc", "CPU"],
+            ["memory-desc", "Memory"],
+            ["spend-desc", "Spend"],
+            ["tokens-desc", "Tokens"],
+            ["runtime-desc", "Runtime"],
+            ["priority-desc", "Priority"],
+            ["status-asc", "Status"]
+          ]
+            .map(([value, label]) => renderOption(value, filters.sort, label))
+            .join("")}
         </select>
       </label>
     </form>
@@ -794,7 +812,23 @@ function filterAgents(agents, filters) {
     const matchesSource = filters.source === "all" || agent.source === filters.source;
     const matchesType = filters.type === "all" || (agent.type || agent.providerId || agent.source) === filters.type;
     return matchesQuery && matchesStatus && matchesSource && matchesType;
-  });
+  }).sort((a, b) => compareAgents(a, b, filters.sort || "started-desc"));
+}
+
+function compareAgents(a, b, sort) {
+  const runtime = (agent) => Number((agent.endedAt || Date.now()) - agent.startedAt || 0);
+  const priority = (agent) => ({ urgent: 4, high: 3, medium: 2, normal: 1, low: 0 })[String(agent.priority || "").toLowerCase()] ?? -1;
+  const comparisons = {
+    "started-desc": () => Number(b.startedAt || 0) - Number(a.startedAt || 0),
+    "cpu-desc": () => Number(b.cpu || 0) - Number(a.cpu || 0),
+    "memory-desc": () => Number(b.memoryMb || 0) - Number(a.memoryMb || 0),
+    "spend-desc": () => Number(b.costUsd || 0) - Number(a.costUsd || 0),
+    "tokens-desc": () => Number(b.tokens || 0) - Number(a.tokens || 0),
+    "runtime-desc": () => runtime(b) - runtime(a),
+    "priority-desc": () => priority(b) - priority(a),
+    "status-asc": () => String(a.status || "").localeCompare(String(b.status || ""))
+  };
+  return (comparisons[sort]?.() || 0) || String(a.name || "").localeCompare(String(b.name || ""));
 }
 
 function renderOption(value, selected, label = labelize(value)) {

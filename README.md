@@ -310,6 +310,7 @@ Anthropic Message Batch setup can be edited from the app Settings panel. Saved A
 - Track agents from multiple provider namespaces.
 - Classify every agent with a stable `type` such as `local`, `openai`, `anthropic`, or a third-party provider slug.
 - Show status, provider, parent/child relationships, process lineage, resource usage, spend, runtime, recent logs, and recent transcript turns.
+- Sort visible tasks by newest, CPU, memory, spend, tokens, runtime, priority, and status.
 - Show task progress percentage and current step when providers report them.
 - Show task and progress details in the selected-agent inspector.
 - Show owner/workspace/repository/branch/queue/priority context for remote agents when providers report it.
