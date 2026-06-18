@@ -148,6 +148,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Live browser and widget surfaces auto-refresh by default on a 3s cadence, with refresh intervals clamped to 1s-300s; Sources no longer renders provider test checkmark buttons.
 - Sources rail consolidates source/provider counts into a compact summary and preserves scroll during live refresh; local process Go To recognizes Ghostty, and local interrupt sends SIGINT.
 - Office view now uses a vendored Three.js/WebGL renderer with a low-poly 3D office floor, one cubicle per visible agent, raycast cubicle selection, close-up focused cubicles, context boards, signal placeholders, and the same lifecycle inspector/actions as the table view.
+- Local process agents now carry best-effort short descriptions, terminal-tab-friendly titles, context-window fields, and thinking snippets/status when configured or inferable from visible CLI args. The detail panel and Office focused cubicle board render this metadata, with explicit unknown/unavailable states when local CLI internals are not observable.
 
 ## Blockers
 

@@ -279,11 +279,31 @@ function addContextBoard(scene, agent, x, z) {
   accent.rotation.y = board.rotation.y;
   scene.add(accent);
 
-  for (let index = 0; index < 4; index += 1) {
-    const line = mesh(new THREE.BoxGeometry(1.7 - index * 0.18, 0.035, 0.025), 0x667085);
+  const lineCount = agent.thinkingSnippet || agent.shortDescription || agent.terminalTitle ? 5 : 3;
+  for (let index = 0; index < lineCount; index += 1) {
+    const lineColor = index === 0 && agent.shortDescription ? 0x2b5f94 : index === 1 && agent.thinkingSnippet ? statusAccent(agent) : 0x667085;
+    const line = mesh(new THREE.BoxGeometry(1.7 - index * 0.16, 0.035, 0.025), lineColor);
     line.position.set(x - 0.1, 1.28 - index * 0.18, z - 0.08);
     line.rotation.y = board.rotation.y;
     scene.add(line);
+  }
+
+  const usage = contextUsageRatio(agent);
+  if (usage !== null) {
+    const rail = mesh(new THREE.BoxGeometry(1.74, 0.05, 0.025), 0xd0d5dd);
+    rail.position.set(x - 0.1, 0.56, z - 0.08);
+    rail.rotation.y = board.rotation.y;
+    scene.add(rail);
+
+    const bar = mesh(new THREE.BoxGeometry(Math.max(0.08, 1.74 * usage), 0.08, 0.03), usage > 0.85 ? 0xd94841 : usage > 0.6 ? 0xc47a13 : statusAccent(agent));
+    bar.position.set(x - 0.97 + (1.74 * usage) / 2, 0.56, z - 0.105);
+    bar.rotation.y = board.rotation.y;
+    scene.add(bar);
+  }
+
+  if (agent.thinkingSnippet || agent.shortDescription || agent.terminalTitle) {
+    addPinnedNote(scene, x - 0.72, 0.86, z - 0.13, board.rotation.y, agent.thinkingSnippet ? 0xfff1c7 : 0xe5efff);
+    addPinnedNote(scene, x + 0.66, 0.86, z - 0.13, board.rotation.y, agent.terminalTitle ? 0xdff8ea : 0xf5f0df);
   }
 }
 
@@ -378,4 +398,28 @@ function statusTone(agent) {
   if (["waiting", "queued", "paused", "pending"].includes(status)) return "warn";
   if (["ended", "complete", "completed", "cancelled", "failed"].includes(status)) return "done";
   return "idle";
+}
+
+function contextUsageRatio(agent) {
+  const used = finiteMetric(agent.contextWindowUsed);
+  const total = finiteMetric(agent.contextWindowTotal);
+  if (used === null || total === null || total <= 0) return null;
+  return Math.min(Math.max(used / total, 0), 1);
+}
+
+function finiteMetric(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function addPinnedNote(scene, x, y, z, rotationY, color) {
+  const note = mesh(new THREE.BoxGeometry(0.42, 0.28, 0.025), color);
+  note.position.set(x, y, z);
+  note.rotation.y = rotationY;
+  scene.add(note);
+  const pin = mesh(new THREE.IcosahedronGeometry(0.035, 1), 0x475467);
+  pin.position.set(x, y + 0.1, z - 0.02);
+  pin.rotation.y = rotationY;
+  scene.add(pin);
 }

@@ -5,7 +5,7 @@ import { spawn } from "node:child_process";
 import { createOpenAIResponsesProvider } from "../server/openAIResponsesProvider.js";
 import { createAnthropicMessageBatchesProvider } from "../server/anthropicMessageBatchesProvider.js";
 import { createRemoteHttpProvider } from "../server/remoteHttpProvider.js";
-import { inferLocalSurface, signalForAction, signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
+import { inferLocalAgentMetadata, inferLocalSurface, signalForAction, signalPidsForProcessTree, summarizeProcessResources } from "../server/localProcessProvider.js";
 import { applySampledTokenRates, buildProviderErrorSnapshot, normalizeProviderAgent } from "../server/providerRegistry.js";
 import { agentActions } from "../src/core.js";
 
@@ -121,6 +121,11 @@ try {
   assert(appSource.includes("did not advertise"), "browser app should explain unadvertised provider capabilities");
   assert(appSource.includes("No progress reported"), "browser app detail panel should render task progress state");
   assert(appSource.includes("agentContextLine"), "browser app detail panel should render agent context");
+  assert(appSource.includes("displayAgentTitle"), "browser app should use terminal/local short titles as primary agent titles");
+  assert(appSource.includes("contextWindowTitle"), "browser app detail panel should render context-window usage");
+  assert(appSource.includes("thinkingSnippetLine"), "browser app detail panel should render local thinking snippets");
+  assert(appSource.includes('data-local-agent-field="description"'), "app settings should expose local agent short descriptions");
+  assert(appSource.includes('data-local-agent-field="contextWindowTotal"'), "app settings should expose local context-window total");
   assert(appSource.includes("childrenLabel"), "browser app detail panel should preserve unresolved child lineage IDs");
   assert(appSource.includes("parentLabel"), "browser app detail panel should preserve unresolved parent lineage IDs");
   assert(appSource.includes("Provider Health"), "browser app detail panel should render provider health");
@@ -220,9 +225,12 @@ try {
   assert(officeSceneSource.includes("renderer.dispose()"), "Office view should dispose WebGL resources on refresh");
   assert(officeSceneSource.includes("addContextBoard"), "Office focused view should include a context board");
   assert(officeSceneSource.includes("addSignalBoard"), "Office focused view should include signal/communication placeholders");
+  assert(officeSceneSource.includes("contextUsageRatio"), "Office focused view should graphically represent context-window usage");
+  assert(officeSceneSource.includes("addPinnedNote"), "Office focused view should graphically represent local title/thinking notes");
   const configSource = await readFile(new URL("../server/config.js", import.meta.url), "utf8");
   assert(configSource.includes("?? 3000"), "snapshot refresh should default to a realtime 3s cadence");
   assert(configSource.includes("Math.max(Math.round(intervalMs), 1000)"), "snapshot refresh should allow 1s minimum intervals");
+  assert(configSource.includes("contextWindowTotal"), "config should preserve configured local context-window totals");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("agents: []"), "state store should default to no hardcoded agents");
   assert(stateStoreSource.includes("deprecatedSeedAgentIds"), "state store should migrate old seeded agent rows out of persisted state");
@@ -1099,6 +1107,24 @@ function assertLocalSurfaceInference() {
   );
   assert(ghosttySurface.goToKind === "terminal", "Ghostty-hosted agents should expose terminal go-to");
   assert(ghosttySurface.windowTitle === "Ghostty", "Ghostty-hosted agents should identify Ghostty");
+
+  const localMetadata = inferLocalAgentMetadata(
+    {
+      command: "opencode",
+      description: "Custom Weather Node.js app with NWS data",
+      contextWindowTotal: 128000
+    },
+    { pid: 24, ppid: 23, command: "opencode --prompt 'Custom Weather Node.js app with NWS data'" },
+    [
+      { pid: 23, ppid: 1, command: "/Applications/Ghostty.app/Contents/MacOS/ghostty" },
+      { pid: 24, ppid: 23, command: "opencode --prompt 'Custom Weather Node.js app with NWS data'" }
+    ],
+    ghosttySurface
+  );
+  assert(localMetadata.shortDescription === "Custom Weather Node.js app with NWS data", "local metadata should preserve short descriptions");
+  assert(localMetadata.terminalTitle === "OC | Custom Weather Node.js app with NWS data", "local metadata should build terminal-tab-friendly titles");
+  assert(localMetadata.contextWindowTotal === 128000, "local metadata should preserve context window totals");
+  assert(localMetadata.contextWindowConfidence === "reported", "local metadata should mark reported context windows");
 
   const editorSurface = inferLocalSurface(
     { command: "aider" },

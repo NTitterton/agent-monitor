@@ -323,6 +323,21 @@ Agents should expose recent conversation turns separately from operational logs.
 
 Status: implemented for state-backed agents, remote HTTP provider payloads, and best-effort OpenAI Responses output text. The selected-agent detail panel shows recent transcript turns, and smoke tests verify transcript persistence.
 
+### Local Agent Context Metadata
+
+Local process agents should expose short task descriptions and available context/thinking metadata when Agent Monitor can observe or configure it.
+
+Requirements:
+
+- Configured local agents can store a short description that is suitable for terminal/tab-style titles, for example `OC | Custom Weather Node.js app with NWS data`.
+- Local process discovery should infer a short description from common CLI flags such as `--description`, `--title`, `--task`, or `--prompt` when those flags are visible in process arguments.
+- Snapshots may include `shortDescription`, `terminalTitle`, `contextWindowUsed`, `contextWindowTotal`, `contextWindowConfidence`, and `thinkingSnippet`.
+- If live local CLI thinking/context-window usage cannot be observed from process metadata, the UI should say that explicitly rather than inventing values.
+- The selected-agent detail panel should show local title, context-window usage, and thinking snippet/status.
+- The Office focused cubicle view should represent local title/thinking notes and context-window usage on the cubicle board/whiteboard.
+
+Status: implemented as best-effort local-process metadata. Configured local agents preserve optional `description` and `contextWindowTotal`; discovered agents infer visible prompt/title flags from command lines when available. The browser app renders these fields in the table title, selected-agent inspector, and Office inspector. The Three.js focused cubicle renders context usage as a board meter and title/thinking as pinned notes.
+
 ## Data Model Draft
 
 ```json
@@ -334,7 +349,13 @@ Status: implemented for state-backed agents, remote HTTP provider payloads, and 
   "provider": "Local Process",
   "providerId": "local-process",
   "status": "running",
+  "shortDescription": "Custom Weather Node.js app with NWS data",
+  "terminalTitle": "OC | Custom Weather Node.js app with NWS data",
   "currentStep": "Running tests",
+  "thinkingSnippet": "Checking NWS forecast response handling",
+  "contextWindowUsed": 64000,
+  "contextWindowTotal": 128000,
+  "contextWindowConfidence": "reported",
   "progressPercent": 42,
   "tokens": 18420,
   "tokensPerSecond": 12.4,

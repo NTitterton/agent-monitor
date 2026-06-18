@@ -320,6 +320,12 @@ function cloneAgent(agent) {
     endedAt: agent.endedAt ? normalizeTimestamp(agent.endedAt, null) : undefined,
     currentStep: agent.currentStep || "",
     progressPercent: normalizeProgress(agent.progressPercent),
+    shortDescription: normalizeOptionalString(agent.shortDescription || agent.description),
+    terminalTitle: normalizeOptionalString(agent.terminalTitle),
+    contextWindowUsed: normalizeOptionalNumber(agent.contextWindowUsed),
+    contextWindowTotal: normalizeOptionalNumber(agent.contextWindowTotal),
+    contextWindowConfidence: normalizeContextWindowConfidence(agent.contextWindowConfidence),
+    thinkingSnippet: normalizeOptionalString(agent.thinkingSnippet),
     remoteId: normalizeOptionalString(agent.remoteId ?? agent.remote_id ?? agent.providerObjectId),
     model: String(agent.model || "").trim(),
     requestCounts: normalizeRequestCounts(agent.requestCounts ?? agent.request_counts),
@@ -348,6 +354,16 @@ function normalizeStringList(value) {
 function normalizeOptionalString(value) {
   const text = String(value ?? "").trim();
   return text || null;
+}
+
+function normalizeOptionalNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function normalizeContextWindowConfidence(value) {
+  return ["observed", "estimated", "reported", "unknown"].includes(value) ? value : "unknown";
 }
 
 function normalizeTokenConfidence(value, fallback = "unknown") {

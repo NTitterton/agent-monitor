@@ -148,6 +148,7 @@ function toProcessAgent(agent, processes) {
   const childPids = childProcesses.map((item) => item.pid);
   const resources = summarizeProcessResources(processInfo, childProcesses);
   const surface = inferLocalSurface(agent, processInfo, processes);
+  const localMetadata = inferLocalAgentMetadata(agent, processInfo, processes, surface);
 
   return {
     id: agent.id,
@@ -158,7 +159,14 @@ function toProcessAgent(agent, processes) {
     source: "local",
     status: isRunning ? "running" : "ended",
     parentId: agent.parentId || null,
-    task: agent.command,
+    task: localMetadata.shortDescription || agent.command,
+    shortDescription: localMetadata.shortDescription,
+    terminalTitle: localMetadata.terminalTitle,
+    currentStep: localMetadata.currentStep,
+    contextWindowUsed: localMetadata.contextWindowUsed,
+    contextWindowTotal: localMetadata.contextWindowTotal,
+    contextWindowConfidence: localMetadata.contextWindowConfidence,
+    thinkingSnippet: localMetadata.thinkingSnippet,
     cpu: resources.cpu,
     memoryMb: resources.memoryMb,
     processCpu: resources.processCpu,
@@ -178,7 +186,7 @@ function toProcessAgent(agent, processes) {
     childPids,
     goToTarget: surface.goToTarget,
     goToKind: surface.goToKind,
-    windowTitle: surface.windowTitle,
+    windowTitle: localMetadata.terminalTitle || surface.windowTitle,
     logs: buildProcessLogs(agent, processInfo, childPids, isRunning),
     command: agent.command,
     match: agent.match,
@@ -207,6 +215,42 @@ export function summarizeProcessResources(processInfo, childProcesses = []) {
     processMemoryMb,
     childCpu,
     childMemoryMb
+  };
+}
+
+export function inferLocalAgentMetadata(agent = {}, processInfo = null, processes = [], surface = null) {
+  const commandChain = [
+    processInfo,
+    ...ancestorProcesses(processes, processInfo?.ppid)
+  ]
+    .map((item) => item?.command || "")
+    .filter(Boolean);
+  const commandText = [agent.command, ...(agent.args || []), agent.match, ...commandChain].filter(Boolean).join("\n");
+  const shortDescription = normalizeDescription(
+    agent.shortDescription ||
+      agent.description ||
+      extractFlagValue(commandText, ["description", "desc", "title", "task", "prompt", "initial-prompt"]) ||
+      extractCodexExecDescription(commandText) ||
+      friendlyCommandDescription(agent, processInfo)
+  );
+  const providerPrefix = agent.command && /opencode/i.test(agent.command) ? "OC" : agent.command && /codex/i.test(agent.command) ? "Codex" : "";
+  const terminalTitle = [providerPrefix, shortDescription].filter(Boolean).join(" | ");
+  const thinkingSnippet = normalizeDescription(
+    agent.thinkingSnippet ||
+      agent.currentStep ||
+      extractFlagValue(commandText, ["thinking", "thought", "status", "current-step"])
+  );
+  const contextWindowUsed = finiteOptionalNumber(agent.contextWindowUsed);
+  const contextWindowTotal = finiteOptionalNumber(agent.contextWindowTotal);
+
+  return {
+    shortDescription,
+    terminalTitle: terminalTitle || surface?.windowTitle || "",
+    currentStep: thinkingSnippet || (processInfo ? "Running locally" : "No matching local process"),
+    contextWindowUsed,
+    contextWindowTotal,
+    contextWindowConfidence: contextWindowUsed !== null || contextWindowTotal !== null ? "reported" : "unknown",
+    thinkingSnippet
   };
 }
 
@@ -344,6 +388,45 @@ function extractCommandUrl(command) {
   } catch {
     return "";
   }
+}
+
+function extractFlagValue(command, names) {
+  const text = String(command || "");
+  for (const name of names) {
+    const pattern = new RegExp(`(?:^|\\s)--${name}(?:=|\\s+)(?:"([^"]+)"|'([^']+)'|([^\\n]+?))(?=\\s--|\\s-[a-zA-Z]|$)`, "i");
+    const match = text.match(pattern);
+    if (match) return match[1] || match[2] || match[3] || "";
+  }
+  return "";
+}
+
+function extractCodexExecDescription(command) {
+  const text = String(command || "");
+  const match = text.match(/(?:^|\s)(?:codex|opencode|claude)\s+(?:exec\s+)?(?:"([^"]+)"|'([^']+)'|([^-\n][^\n]{12,160}))$/i);
+  return match ? match[1] || match[2] || match[3] || "" : "";
+}
+
+function friendlyCommandDescription(agent, processInfo) {
+  if (agent.description || agent.shortDescription) return agent.description || agent.shortDescription;
+  if (agent.name && agent.discovered) return agent.name.replace(/\s*\(\d+\)\s*$/, "");
+  if (agent.name && agent.command && agent.name !== agent.command) return agent.name;
+  const command = String(processInfo?.command || agent.command || "").trim();
+  if (!command) return "";
+  const executable = command.split(/\s+/)[0].split("/").pop();
+  return executable || command;
+}
+
+function normalizeDescription(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .replace(/^exec\s+/i, "")
+    .trim()
+    .slice(0, 140);
+}
+
+function finiteOptionalNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
 function buildProcessLogs(agent, processInfo, childPids, isRunning) {

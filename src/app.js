@@ -599,8 +599,10 @@ function renderLocalAgentRow(agent, index, mode) {
       <input data-local-agent-field="args" value="${escapeAttribute((agent.args || []).join(" "))}" ${disabled} aria-label="Local agent args ${index + 1}" />
       <input data-local-agent-field="match" value="${escapeAttribute(agent.match || agent.command || "")}" ${disabled} aria-label="Local agent match ${index + 1}" />
       <input data-local-agent-field="cwd" value="${escapeAttribute(agent.cwd || ".")}" ${disabled} aria-label="Local agent working directory ${index + 1}" />
+      <input data-local-agent-field="description" value="${escapeAttribute(agent.description || agent.shortDescription || "")}" ${disabled} aria-label="Local agent short description ${index + 1}" />
+      <input data-local-agent-field="contextWindowTotal" type="number" min="0" step="1" value="${escapeAttribute(agent.contextWindowTotal ?? "")}" ${disabled} aria-label="Local agent context window total ${index + 1}" />
       <input data-local-agent-field="env" type="password" value="" ${disabled} aria-label="Local agent env ${index + 1}" />
-      <span>${agent.hasEnv ? "Env saved" : "No env"} · id | name | command | args | match | cwd</span>
+      <span>${agent.hasEnv ? "Env saved" : "No env"} · id | name | command | args | match | cwd | description | context total</span>
     </fieldset>
   `;
 }
@@ -715,7 +717,7 @@ function renderOfficeInspector(agent, agents, providers, focused = false) {
   return `
     <div class="office-inspector-heading">
       <p class="eyebrow">${focused ? "Cubicle Focus" : "Selected Cubicle"}</p>
-      <h3>${escapeText(agent.name)}</h3>
+      <h3>${escapeText(displayAgentTitle(agent))}</h3>
       <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
     </div>
     <p class="office-inspector-subtitle">${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))}</p>
@@ -732,6 +734,21 @@ function renderOfficeInspector(agent, agents, providers, focused = false) {
         <span>Context</span>
         <strong>${escapeText(agentContextTitle(agent))}</strong>
         <p>${escapeText(agentContextLine(agent) || "No context reported")}</p>
+      </article>
+      <article>
+        <span>Local Title</span>
+        <strong>${escapeText(agent.terminalTitle || agent.shortDescription || "No local title")}</strong>
+        <p>${escapeText(localTitleLine(agent))}</p>
+      </article>
+      <article>
+        <span>Context Window</span>
+        <strong>${escapeText(contextWindowTitle(agent))}</strong>
+        <p>${escapeText(contextWindowLine(agent))}</p>
+      </article>
+      <article>
+        <span>Thinking</span>
+        <strong>${escapeText(agent.thinkingSnippet || agent.currentStep || "No thinking snippet")}</strong>
+        <p>${escapeText(thinkingSnippetLine(agent))}</p>
       </article>
       <article>
         <span>Resources</span>
@@ -802,7 +819,7 @@ function renderAgentRow(agent, agents, providers, selectedAgentId) {
   return `
     <article class="table-row ${agent.id === selectedAgentId ? "selected" : ""}" role="row">
       <div class="agent-name">
-        <button class="agent-link" type="button" data-select-agent="${escapeAttribute(agent.id)}">${escapeText(agent.name)}</button>
+        <button class="agent-link" type="button" data-select-agent="${escapeAttribute(agent.id)}">${escapeText(displayAgentTitle(agent))}</button>
         <p>${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))} · ${escapeText(agent.task)}</p>
         ${renderAgentHealthLine(agent, provider)}
         ${renderTaskProgress(agent)}
@@ -836,7 +853,7 @@ function renderDetailPanel(detail, providers = []) {
       <summary class="detail-heading">
         <div class="detail-title">
           <p class="eyebrow">Selected Agent</p>
-          <h2>${escapeText(agent.name)}</h2>
+          <h2>${escapeText(displayAgentTitle(agent))}</h2>
           <p>${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))}</p>
         </div>
         <div class="detail-controls">
@@ -856,6 +873,21 @@ function renderDetailPanel(detail, providers = []) {
           <span>Context</span>
           <strong>${escapeText(agentContextTitle(agent))}</strong>
           <p>${escapeText(agentContextLine(agent) || "No context reported")}</p>
+        </article>
+        <article>
+          <span>Local Title</span>
+          <strong>${escapeText(agent.terminalTitle || agent.shortDescription || "No local title")}</strong>
+          <p>${escapeText(localTitleLine(agent))}</p>
+        </article>
+        <article>
+          <span>Context Window</span>
+          <strong>${escapeText(contextWindowTitle(agent))}</strong>
+          <p>${escapeText(contextWindowLine(agent))}</p>
+        </article>
+        <article>
+          <span>Thinking</span>
+          <strong>${escapeText(agent.thinkingSnippet || agent.currentStep || "No thinking snippet")}</strong>
+          <p>${escapeText(thinkingSnippetLine(agent))}</p>
         </article>
         <article>
           <span>Provider</span>
@@ -1066,6 +1098,10 @@ function renderResourceLine(agent) {
   return parts.join(" · ");
 }
 
+function displayAgentTitle(agent) {
+  return agent.terminalTitle || agent.shortDescription || agent.name;
+}
+
 function renderTaskProgress(agent) {
   if (!agent.currentStep && !Number.isFinite(Number(agent.progressPercent))) return "";
   return `<p class="muted">${escapeText(taskProgressLine(agent))}</p>`;
@@ -1079,7 +1115,7 @@ function taskProgressLine(agent) {
 }
 
 function agentContextTitle(agent) {
-  return agent.workspace || agent.repository || agent.windowTitle || agent.queue || "Agent context";
+  return agent.workspace || agent.repository || agent.windowTitle || agent.terminalTitle || agent.queue || "Agent context";
 }
 
 function agentContextLine(agent) {
@@ -1090,6 +1126,43 @@ function agentContextLine(agent) {
     agent.priority ? `priority ${agent.priority}` : "",
     agent.remoteUrl || agent.goToTarget || ""
   ].filter(Boolean).join(" · ");
+}
+
+function localTitleLine(agent) {
+  if (agent.terminalTitle) return "Terminal/tab title friendly";
+  if (agent.shortDescription) return "Short description";
+  return agent.type === "local" ? "No local short description reported" : "Not a local process title";
+}
+
+function contextWindowTitle(agent) {
+  const used = finiteMetric(agent.contextWindowUsed);
+  const total = finiteMetric(agent.contextWindowTotal);
+  if (used !== null && total !== null && total > 0) return `${Math.round((used / total) * 100)}% used`;
+  if (total !== null && total > 0) return `${total.toLocaleString()} token window`;
+  if (used !== null && used > 0) return `${used.toLocaleString()} tokens used`;
+  return "Unknown";
+}
+
+function contextWindowLine(agent) {
+  const parts = [];
+  const used = finiteMetric(agent.contextWindowUsed);
+  const total = finiteMetric(agent.contextWindowTotal);
+  if (used !== null) parts.push(`${used.toLocaleString()} used`);
+  if (total !== null) parts.push(`${total.toLocaleString()} total`);
+  parts.push(`${labelize(agent.contextWindowConfidence || "unknown")} confidence`);
+  return parts.join(" · ");
+}
+
+function finiteMetric(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function thinkingSnippetLine(agent) {
+  if (agent.thinkingSnippet) return "Reported or inferred local status";
+  if (agent.currentStep) return "Using current step";
+  return agent.type === "local" ? "Local CLI thinking is not observable from process metadata yet" : "No thinking snippet reported";
 }
 
 function renderTokenUsageLine(agent) {
@@ -1149,6 +1222,11 @@ function searchableAgentFields(agent) {
     agent.provider,
     agent.task,
     agent.currentStep,
+    agent.shortDescription,
+    agent.terminalTitle,
+    agent.thinkingSnippet,
+    agent.contextWindowUsed,
+    agent.contextWindowTotal,
     agent.owner,
     agent.workspace,
     agent.repository,
@@ -1271,6 +1349,8 @@ function parseLocalAgents(form) {
         args: splitShellWords(fields.args),
         match: fields.match || fields.command,
         cwd: fields.cwd || ".",
+        ...(fields.description ? { description: fields.description } : {}),
+        ...(fields.contextWindowTotal ? { contextWindowTotal: Number(fields.contextWindowTotal) } : {}),
         ...(fields.env ? { env: fields.env.split("\n") } : {})
       };
     })

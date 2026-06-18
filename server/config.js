@@ -360,6 +360,9 @@ function publicLocalAgents(agents) {
       args: normalizeStringList(agent.args),
       match: agent.match || agent.command,
       cwd: agent.cwd || ".",
+      description: agent.description || agent.shortDescription || "",
+      shortDescription: agent.shortDescription || agent.description || "",
+      contextWindowTotal: finiteOptionalNumber(agent.contextWindowTotal),
       hasEnv: Boolean(agent.env && Object.keys(agent.env).length)
     }));
 }
@@ -381,6 +384,12 @@ function normalizeLocalAgents(value, fallback = []) {
         args: normalizeStringList(agent.args),
         match: String(agent.match || existing.match || agent.command).trim(),
         cwd: String(agent.cwd || existing.cwd || ".").trim(),
+        ...(agent.description || agent.shortDescription || existing.description || existing.shortDescription
+          ? { description: String(agent.description || agent.shortDescription || existing.description || existing.shortDescription).trim() }
+          : {}),
+        ...(finiteOptionalNumber(agent.contextWindowTotal ?? existing.contextWindowTotal) !== null
+          ? { contextWindowTotal: finiteOptionalNumber(agent.contextWindowTotal ?? existing.contextWindowTotal) }
+          : {}),
         ...(env ? { env } : {})
       };
     });
@@ -603,6 +612,11 @@ function normalizeEnvLines(value, fallback = null) {
     })
     .filter(Boolean);
   return entries.length ? Object.fromEntries(entries) : null;
+}
+
+function finiteOptionalNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
 }
 
 function normalizeStringList(value) {
