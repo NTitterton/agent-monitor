@@ -146,7 +146,7 @@ The browser app has two peer views over the same filtered snapshot data:
 flowchart LR
     Snapshot["Unified Snapshot<br/>agents + providers + history"] --> Filters["Filters + Sort"]
     Filters --> Table["Table View<br/>scrollable task list"]
-    Filters --> Office["Office View<br/>canvas cubicles"]
+    Filters --> Office["Office View<br/>Three.js office floor"]
     Table --> Selection["Selected Agent"]
     Office --> Focus["Focused Cubicle<br/>desk, context board, signals"]
     Focus --> Selection
@@ -155,7 +155,7 @@ flowchart LR
     Actions --> API["POST /api/agents/:id/actions"]
 ```
 
-The current Office implementation uses Canvas 2D for a dependency-free renderer. Its layout and hit-testing are deterministic functions over the visible agent list, which keeps selection predictable and makes the renderer replaceable by Three.js/OpenGL later. Focused cubicles draw a larger desk scene with context and signal boards so future provider data for working memory, current thinking/state, and agent-to-agent communication has a visual home without changing the action contract.
+The current Office implementation uses a vendored Three.js module for local-first WebGL rendering in both browser and desktop surfaces. The app owns filters, selection, detail fetching, and lifecycle actions; `src/officeScene.js` owns 3D scene construction, cubicle layout, lighting, camera framing, and raycast picking. Focused cubicles draw a larger desk scene with context and signal boards so future provider data for working memory, current thinking/state, and agent-to-agent communication has a visual home without changing the action contract.
 
 ## 5. Provider Adapter Contract
 

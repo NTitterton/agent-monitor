@@ -7,6 +7,7 @@ import {
   statusTone
 } from "./core.js";
 import { createAgentClient } from "./client.js";
+import { renderThreeOfficeView } from "./officeScene.js";
 
 const client = createAgentClient();
 
@@ -33,6 +34,7 @@ class AgentMonitorApp extends HTMLElement {
   disconnectedCallback() {
     this.unsubscribe?.();
     this.clearPolling();
+    this.officeSceneCleanup?.();
   }
 
   configurePolling(config, mode) {
@@ -58,6 +60,8 @@ class AgentMonitorApp extends HTMLElement {
   }
 
   render() {
+    this.officeSceneCleanup?.();
+    this.officeSceneCleanup = null;
     const agents = this.agents || [];
     const filters = { query: "", status: "all", source: "all", type: "all", provider: "all", sort: "started-desc", ...(this.filters || {}) };
     const filteredAgents = filterAgents(agents, filters);
@@ -163,12 +167,13 @@ class AgentMonitorApp extends HTMLElement {
     restoreFocusedFilter(this, focusedFilter);
     const officeCanvas = this.querySelector("[data-office-canvas]");
     if (officeCanvas) {
-      const hitBoxes = drawOfficeView(officeCanvas, filteredAgents, this.selectedAgentId, this.officeFocusAgentId);
+      const officeScene = renderThreeOfficeView(officeCanvas, filteredAgents, this.selectedAgentId, this.officeFocusAgentId);
+      this.officeSceneCleanup = officeScene.destroy;
       officeCanvas.addEventListener("click", async (event) => {
-        const hit = officeHitTest(officeCanvas, hitBoxes, event);
-        if (!hit) return;
-        this.officeFocusAgentId = hit.agent.id;
-        this.selectedAgentId = hit.agent.id;
+        const agent = officeScene.pick(event);
+        if (!agent) return;
+        this.officeFocusAgentId = agent.id;
+        this.selectedAgentId = agent.id;
         this.detail = buildDetail(this.selectedAgentId, this.agents || [], this.history || []);
         this.render();
         this.detail = await client.detail(this.selectedAgentId);
@@ -1010,409 +1015,6 @@ function buildDetail(agentId, agents, history) {
     },
     history: history.filter((record) => record.agentId === agentId)
   };
-}
-
-function drawOfficeView(canvas, agents, selectedAgentId, focusAgentId = null) {
-  const context = canvas.getContext("2d");
-  if (!context) return [];
-
-  const width = canvas.width;
-  const height = canvas.height;
-  context.clearRect(0, 0, width, height);
-  drawOfficeFloor(context, width, height);
-
-  if (!agents.length) {
-    context.fillStyle = "#667085";
-    context.font = "700 30px Inter, sans-serif";
-    context.textAlign = "center";
-    context.fillText("No agents match the current filters", width / 2, height / 2);
-    return [];
-  }
-
-  const focusedAgent = focusAgentId ? agents.find((agent) => agent.id === focusAgentId) : null;
-  if (focusedAgent) {
-    drawFocusedCubicle(context, focusedAgent, width, height);
-    return [];
-  }
-
-  const hitBoxes = officeCubicleLayout(agents, width, height);
-  drawOfficeAisles(context, hitBoxes, width, height);
-  hitBoxes.forEach((box) => drawCubicle(context, box, box.agent.id === selectedAgentId));
-  return hitBoxes;
-}
-
-function drawOfficeFloor(context, width, height) {
-  const tile = 38;
-  context.fillStyle = "#ece7dc";
-  context.fillRect(0, 0, width, height);
-  context.strokeStyle = "rgba(99, 83, 58, 0.12)";
-  context.lineWidth = 1;
-  for (let x = 0; x <= width; x += tile) {
-    context.beginPath();
-    context.moveTo(x, 0);
-    context.lineTo(x, height);
-    context.stroke();
-  }
-  for (let y = 0; y <= height; y += tile) {
-    context.beginPath();
-    context.moveTo(0, y);
-    context.lineTo(width, y);
-    context.stroke();
-  }
-
-  context.fillStyle = "rgba(255, 255, 255, 0.34)";
-  context.beginPath();
-  context.moveTo(48, 44);
-  context.lineTo(width - 80, 24);
-  context.lineTo(width - 34, 84);
-  context.lineTo(70, 118);
-  context.closePath();
-  context.fill();
-}
-
-function drawOfficeAisles(context, hitBoxes, width, height) {
-  if (!hitBoxes.length) return;
-  context.fillStyle = "rgba(255, 255, 255, 0.45)";
-  const rows = [...new Set(hitBoxes.map((box) => box.row))];
-  rows.forEach((row) => {
-    const rowBoxes = hitBoxes.filter((box) => box.row === row);
-    const y = Math.min(...rowBoxes.map((box) => box.y)) - 16;
-    context.fillRect(0, y, width, 16);
-  });
-  context.fillRect(width - 92, 0, 40, height);
-}
-
-function drawCubicle(context, box, selected) {
-  const { agent, x, y, width, height } = box;
-  const tone = officeTone(agent);
-  const wall = selected ? "#23395d" : "#7d8796";
-  const accent = tone.accent;
-  const deskY = y + height * 0.52;
-
-  context.save();
-  context.shadowColor = selected ? "rgba(35, 57, 93, 0.28)" : "rgba(33, 41, 54, 0.14)";
-  context.shadowBlur = selected ? 18 : 8;
-  context.shadowOffsetY = 4;
-  context.fillStyle = tone.floor;
-  roundedRect(context, x, y, width, height, 8);
-  context.fill();
-  context.restore();
-
-  context.strokeStyle = wall;
-  context.lineWidth = selected ? 5 : 3;
-  context.beginPath();
-  context.moveTo(x, y + height);
-  context.lineTo(x, y);
-  context.lineTo(x + width, y);
-  context.lineTo(x + width, y + height * 0.58);
-  context.stroke();
-
-  context.fillStyle = "#b98958";
-  roundedRect(context, x + 18, deskY, width - 36, 20, 4);
-  context.fill();
-  context.fillStyle = "#8d5f38";
-  context.fillRect(x + 18, deskY + 16, width - 36, 8);
-
-  context.fillStyle = "#46556a";
-  roundedRect(context, x + width * 0.56, deskY - 34, 34, 22, 3);
-  context.fill();
-  context.fillStyle = accent;
-  context.fillRect(x + width * 0.56 + 5, deskY - 29, 24, 12);
-
-  context.fillStyle = "#3f4652";
-  roundedRect(context, x + width * 0.28, deskY - 24, 28, 28, 7);
-  context.fill();
-  context.fillStyle = accent;
-  context.beginPath();
-  context.arc(x + width * 0.28 + 14, deskY - 34, 14, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "rgba(255, 255, 255, 0.42)";
-  context.beginPath();
-  context.moveTo(x + width * 0.28 + 10, deskY - 46);
-  context.lineTo(x + width * 0.28 + 22, deskY - 38);
-  context.lineTo(x + width * 0.28 + 12, deskY - 31);
-  context.closePath();
-  context.fill();
-
-  context.fillStyle = selected ? "#172033" : "#344054";
-  context.font = "800 19px Inter, sans-serif";
-  context.textAlign = "left";
-  context.textBaseline = "top";
-  clippedText(context, agent.name, x + 14, y + 13, width - 28);
-
-  context.fillStyle = "#667085";
-  context.font = "700 14px Inter, sans-serif";
-  clippedText(context, `${labelize(agent.status)} · ${formatMemory(agent.memoryMb)}`, x + 14, y + 39, width - 28);
-
-  context.fillStyle = accent;
-  roundedRect(context, x + width - 34, y + height - 32, 18, 18, 9);
-  context.fill();
-}
-
-function drawFocusedCubicle(context, agent, width, height) {
-  const tone = officeTone(agent);
-  const room = {
-    x: 92,
-    y: 70,
-    width: width - 184,
-    height: height - 128
-  };
-  const desk = {
-    x: room.x + room.width * 0.16,
-    y: room.y + room.height * 0.57,
-    width: room.width * 0.68,
-    height: 70
-  };
-
-  context.save();
-  context.fillStyle = tone.floor;
-  roundedRect(context, room.x, room.y, room.width, room.height, 18);
-  context.fill();
-  context.restore();
-
-  context.strokeStyle = "#596273";
-  context.lineWidth = 9;
-  context.beginPath();
-  context.moveTo(room.x, room.y + room.height);
-  context.lineTo(room.x, room.y);
-  context.lineTo(room.x + room.width, room.y);
-  context.lineTo(room.x + room.width, room.y + room.height * 0.64);
-  context.stroke();
-
-  drawWallPanels(context, room, tone);
-  drawFocusedDesk(context, desk, tone);
-  drawFocusedAgent(context, room, desk, tone);
-  drawFocusedContextBoard(context, agent, room, tone);
-  drawFocusedComms(context, agent, room, tone);
-
-  context.fillStyle = "#172033";
-  context.font = "900 38px Inter, sans-serif";
-  context.textAlign = "left";
-  context.textBaseline = "top";
-  clippedText(context, agent.name, room.x + 34, room.y + 28, room.width * 0.56);
-
-  context.fillStyle = "#475467";
-  context.font = "700 20px Inter, sans-serif";
-  clippedText(context, `${agent.provider} · ${labelize(agent.type || agent.providerId || agent.source)} · ${labelize(agent.status)}`, room.x + 36, room.y + 78, room.width * 0.58);
-}
-
-function drawWallPanels(context, room, tone) {
-  const panelY = room.y + 130;
-  context.fillStyle = "rgba(255, 255, 255, 0.38)";
-  roundedRect(context, room.x + 34, panelY, room.width * 0.28, 132, 8);
-  context.fill();
-  context.fillStyle = "rgba(255, 255, 255, 0.32)";
-  roundedRect(context, room.x + room.width * 0.39, panelY + 12, room.width * 0.2, 74, 7);
-  context.fill();
-  context.fillStyle = tone.accent;
-  roundedRect(context, room.x + room.width * 0.62, panelY + 2, 22, 22, 11);
-  context.fill();
-  context.fillStyle = "rgba(23, 32, 51, 0.12)";
-  for (let index = 0; index < 4; index += 1) {
-    context.fillRect(room.x + 56, panelY + 28 + index * 24, room.width * 0.22, 5);
-  }
-}
-
-function drawFocusedDesk(context, desk, tone) {
-  context.fillStyle = "#b98958";
-  roundedRect(context, desk.x, desk.y, desk.width, desk.height, 8);
-  context.fill();
-  context.fillStyle = "#8d5f38";
-  context.fillRect(desk.x, desk.y + desk.height - 18, desk.width, 18);
-
-  const screenX = desk.x + desk.width * 0.58;
-  context.fillStyle = "#263143";
-  roundedRect(context, screenX, desk.y - 96, 150, 92, 8);
-  context.fill();
-  context.fillStyle = "#d9f7e6";
-  roundedRect(context, screenX + 12, desk.y - 84, 126, 64, 5);
-  context.fill();
-  context.fillStyle = tone.accent;
-  context.fillRect(screenX + 24, desk.y - 70, 78, 7);
-  context.fillStyle = "#7d8796";
-  context.fillRect(screenX + 38, desk.y - 53, 58, 6);
-  context.fillRect(screenX + 38, desk.y - 38, 82, 6);
-  context.fillStyle = "#263143";
-  context.fillRect(screenX + 70, desk.y - 4, 20, 28);
-  context.fillRect(screenX + 48, desk.y + 20, 64, 8);
-
-  context.fillStyle = "#f4d7aa";
-  roundedRect(context, desk.x + 72, desk.y - 34, 64, 42, 6);
-  context.fill();
-  context.fillStyle = "#475467";
-  context.fillRect(desk.x + 84, desk.y - 20, 38, 5);
-  context.fillRect(desk.x + 84, desk.y - 7, 28, 5);
-}
-
-function drawFocusedAgent(context, room, desk, tone) {
-  const centerX = desk.x + desk.width * 0.36;
-  const centerY = desk.y - 42;
-
-  context.fillStyle = "#3f4652";
-  roundedRect(context, centerX - 35, centerY + 32, 70, 82, 12);
-  context.fill();
-  context.fillStyle = tone.accent;
-  context.beginPath();
-  context.arc(centerX, centerY, 42, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = "rgba(255, 255, 255, 0.45)";
-  context.beginPath();
-  context.moveTo(centerX - 14, centerY - 30);
-  context.lineTo(centerX + 28, centerY - 8);
-  context.lineTo(centerX - 8, centerY + 18);
-  context.closePath();
-  context.fill();
-  context.fillStyle = "#263143";
-  roundedRect(context, centerX - 50, centerY + 116, 100, 26, 13);
-  context.fill();
-
-  context.fillStyle = "rgba(23, 32, 51, 0.1)";
-  context.beginPath();
-  context.ellipse(room.x + room.width * 0.5, room.y + room.height - 44, room.width * 0.28, 22, 0, 0, Math.PI * 2);
-  context.fill();
-}
-
-function drawFocusedContextBoard(context, agent, room, tone) {
-  const x = room.x + room.width - 360;
-  const y = room.y + 42;
-  context.fillStyle = "#ffffff";
-  roundedRect(context, x, y, 300, 210, 10);
-  context.fill();
-  context.strokeStyle = "rgba(89, 98, 115, 0.28)";
-  context.lineWidth = 2;
-  roundedRect(context, x, y, 300, 210, 10);
-  context.stroke();
-
-  context.fillStyle = "#172033";
-  context.font = "900 20px Inter, sans-serif";
-  context.fillText("Context", x + 20, y + 20);
-  context.fillStyle = tone.accent;
-  context.fillRect(x + 20, y + 52, 84, 7);
-
-  const lines = [
-    agentContextTitle(agent),
-    agentContextLine(agent) || "No context reported",
-    taskProgressLine(agent) || agent.task || "No progress reported",
-    renderTokenUsageLine(agent)
-  ].filter(Boolean);
-  context.fillStyle = "#475467";
-  context.font = "700 15px Inter, sans-serif";
-  lines.slice(0, 5).forEach((line, index) => {
-    clippedText(context, line, x + 20, y + 76 + index * 28, 260);
-  });
-}
-
-function drawFocusedComms(context, agent, room, tone) {
-  const x = room.x + room.width - 360;
-  const y = room.y + 284;
-  context.fillStyle = "#ffffff";
-  roundedRect(context, x, y, 300, 142, 10);
-  context.fill();
-  context.strokeStyle = "rgba(89, 98, 115, 0.28)";
-  context.lineWidth = 2;
-  roundedRect(context, x, y, 300, 142, 10);
-  context.stroke();
-
-  context.fillStyle = "#172033";
-  context.font = "900 20px Inter, sans-serif";
-  context.fillText("Signals", x + 20, y + 18);
-  const childCount = Array.isArray(agent.children) ? agent.children.length : 0;
-  const nodes = [
-    { label: agent.parentId ? "parent" : "root", active: Boolean(agent.parentId) },
-    { label: `${childCount} child${childCount === 1 ? "" : "ren"}`, active: childCount > 0 },
-    { label: agent.goToKind || "surface", active: Boolean(agent.goToTarget) }
-  ];
-  nodes.forEach((node, index) => {
-    const cx = x + 58 + index * 88;
-    const cy = y + 82;
-    context.strokeStyle = index ? "rgba(89, 98, 115, 0.32)" : "transparent";
-    context.lineWidth = 3;
-    if (index) {
-      context.beginPath();
-      context.moveTo(cx - 66, cy);
-      context.lineTo(cx - 20, cy);
-      context.stroke();
-    }
-    context.fillStyle = node.active ? tone.accent : "#cbd2dd";
-    roundedRect(context, cx - 18, cy - 18, 36, 36, 18);
-    context.fill();
-    context.fillStyle = "#475467";
-    context.font = "700 12px Inter, sans-serif";
-    context.textAlign = "left";
-    clippedText(context, node.label, cx - 36, cy + 28, 72);
-  });
-}
-
-function officeCubicleLayout(agents, width, height) {
-  const count = Math.max(1, agents.length);
-  const columns = Math.max(1, Math.ceil(Math.sqrt(count * (width / Math.max(height, 1)))));
-  const rows = Math.max(1, Math.ceil(count / columns));
-  const padding = 44;
-  const gap = Math.max(14, Math.min(30, 32 - Math.max(0, count - 8)));
-  const cellWidth = (width - padding * 2 - gap * (columns - 1)) / columns;
-  const cellHeight = (height - padding * 2 - gap * (rows - 1)) / rows;
-  const cubicleWidth = Math.max(116, Math.min(250, cellWidth));
-  const cubicleHeight = Math.max(96, Math.min(165, cellHeight));
-
-  return agents.map((agent, index) => {
-    const column = index % columns;
-    const row = Math.floor(index / columns);
-    const cellX = padding + column * (cellWidth + gap);
-    const cellY = padding + row * (cellHeight + gap);
-    return {
-      agent,
-      row,
-      column,
-      x: cellX + Math.max(0, (cellWidth - cubicleWidth) / 2),
-      y: cellY + Math.max(0, (cellHeight - cubicleHeight) / 2),
-      width: cubicleWidth,
-      height: cubicleHeight
-    };
-  });
-}
-
-function officeHitTest(canvas, hitBoxes, event) {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / Math.max(rect.width, 1);
-  const scaleY = canvas.height / Math.max(rect.height, 1);
-  const x = (event.clientX - rect.left) * scaleX;
-  const y = (event.clientY - rect.top) * scaleY;
-  return hitBoxes.find((box) => x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height) || null;
-}
-
-function officeTone(agent) {
-  const tone = statusTone(agent.status);
-  const tones = {
-    good: { floor: "#e3f5e9", accent: "#2f8f51" },
-    warn: { floor: "#fff0ca", accent: "#c47a13" },
-    done: { floor: "#e7edf5", accent: "#4f6f9d" },
-    idle: { floor: "#edf1f5", accent: "#667085" }
-  };
-  return tones[tone] || tones.idle;
-}
-
-function roundedRect(context, x, y, width, height, radius) {
-  const r = Math.min(radius, width / 2, height / 2);
-  context.beginPath();
-  context.moveTo(x + r, y);
-  context.arcTo(x + width, y, x + width, y + height, r);
-  context.arcTo(x + width, y + height, x, y + height, r);
-  context.arcTo(x, y + height, x, y, r);
-  context.arcTo(x, y, x + width, y, r);
-  context.closePath();
-}
-
-function clippedText(context, text, x, y, maxWidth) {
-  const value = String(text || "");
-  if (context.measureText(value).width <= maxWidth) {
-    context.fillText(value, x, y);
-    return;
-  }
-  let clipped = value;
-  while (clipped.length > 1 && context.measureText(`${clipped}...`).width > maxWidth) {
-    clipped = clipped.slice(0, -1);
-  }
-  context.fillText(`${clipped}...`, x, y);
 }
 
 function renderLineageTree(agents) {

@@ -67,7 +67,7 @@ Requirements:
 - The focused cubicle view should visually reserve space for richer context and communication/status signals even when the provider has not reported full contents yet.
 - Future office cubicles should be able to show richer agent context, current thinking/state, and agent-to-agent communication paths.
 
-Status: initial implementation uses a dependency-free Canvas 2D renderer with deterministic cubicle layout, click hit-testing, a close-up cubicle focus mode, an inspector action panel, and visual boards for current context plus agent signal placeholders. The renderer is structured as a replaceable visual layer so a future Three.js/OpenGL renderer can take over without changing provider/action semantics.
+Status: implemented with a vendored Three.js/WebGL renderer so the browser and desktop app render a real low-poly 3D office locally without a runtime CDN. The scene includes a 3D office floor, one cubicle per visible agent, raycast cubicle selection, a close-up cubicle focus mode, an inspector action panel, and visual boards for current context plus agent signal placeholders. The renderer remains isolated from provider/action semantics so future art upgrades can improve the scene without changing lifecycle controls.
 
 ### Agent Type
 

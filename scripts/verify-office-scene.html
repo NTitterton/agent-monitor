@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Office Scene Verification</title>
+    <style>
+      body {
+        margin: 0;
+        background: #111827;
+        color: #f8fafc;
+        font-family: system-ui, sans-serif;
+      }
+
+      main {
+        display: grid;
+        gap: 16px;
+        padding: 16px;
+      }
+
+      canvas {
+        display: block;
+        border: 1px solid #475467;
+        background: #8a7966;
+      }
+
+      .desktop {
+        width: 960px;
+        height: 520px;
+      }
+
+      .mobile {
+        width: 390px;
+        height: 520px;
+      }
+
+      .focus,
+      .pick {
+        width: 620px;
+        height: 420px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <pre id="result">running</pre>
+      <canvas id="scene"></canvas>
+    </main>
+    <script type="module">
+      import { renderThreeOfficeView } from "../src/officeScene.js";
+
+      const mode = new URLSearchParams(location.search).get("mode") || "desktop";
+      const canvas = document.querySelector("#scene");
+      const result = document.querySelector("#result");
+      const sizes = {
+        desktop: [960, 520],
+        mobile: [390, 520],
+        focus: [620, 420],
+        pick: [620, 420]
+      };
+      const [width, height] = sizes[mode] || sizes.desktop;
+      canvas.className = mode;
+      canvas.width = width;
+      canvas.height = height;
+
+      window.addEventListener("error", (event) => setResult(`ERROR ${event.message}`, "error"));
+      window.addEventListener("unhandledrejection", (event) => setResult(`ERROR ${event.reason?.message || event.reason}`, "error"));
+
+      const agents = Array.from({ length: mode === "pick" ? 1 : 7 }, (_, index) => ({
+        id: `agent-${index}`,
+        name: `Agent ${index + 1}`,
+        provider: index % 2 ? "Local Codex" : "Cloud Runner",
+        providerId: index % 2 ? "local" : "remote",
+        source: index % 2 ? "local" : "cloud",
+        type: index % 2 ? "local" : "openai",
+        status: index % 3 === 0 ? "running" : index % 3 === 1 ? "waiting" : "ended",
+        task: "Verify 3D office scene",
+        memoryMb: 128 + index * 24,
+        tokens: index * 1000,
+        children: index === 0 ? ["agent-1"] : [],
+        goToTarget: index === 0 ? "http://127.0.0.1:5173/" : ""
+      }));
+
+      const scene = renderThreeOfficeView(canvas, mode === "mobile" ? agents.slice(0, 4) : agents, "agent-0", mode === "focus" ? "agent-0" : null);
+      const checks = [["nonblank", canvasHasVariedPixels(canvas)]];
+      if (mode === "pick") {
+        const rect = canvas.getBoundingClientRect();
+        const picked = scene.pick({
+          clientX: rect.left + rect.width * 0.38,
+          clientY: rect.top + rect.height * 0.43
+        });
+        checks.push(["pick-agent", picked?.id === "agent-0"]);
+      }
+
+      const failed = checks.filter(([, ok]) => !ok);
+      setResult(
+        failed.length ? `FAIL ${mode} ${failed.map(([name]) => name).join(", ")}` : `PASS ${mode} ${checks.map(([name]) => name).join(", ")}`,
+        failed.length ? "fail" : "pass"
+      );
+
+      function canvasHasVariedPixels(target) {
+        const context = target.getContext("webgl2") || target.getContext("webgl");
+        if (!context) return false;
+        const points = [
+          [Math.round(target.width * 0.2), Math.round(target.height * 0.2)],
+          [Math.round(target.width * 0.5), Math.round(target.height * 0.5)],
+          [Math.round(target.width * 0.8), Math.round(target.height * 0.75)]
+        ];
+        const colors = points.map(([x, y]) => {
+          const pixel = new Uint8Array(4);
+          context.readPixels(x, target.height - y, 1, 1, context.RGBA, context.UNSIGNED_BYTE, pixel);
+          return Array.from(pixel).join(",");
+        });
+        return new Set(colors).size > 1 && colors.some((color) => !color.startsWith("0,0,0,0"));
+      }
+
+      function setResult(text, status) {
+        result.textContent = text;
+        document.body.dataset.officeScene = status;
+      }
+    </script>
+  </body>
+</html>
