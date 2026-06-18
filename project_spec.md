@@ -53,6 +53,21 @@ The browser app should behave like a one-screen operations console.
 
 Status: implemented as a compact viewport-height app shell with a denser one-row desktop summary, collapsible Settings disclosure in the Sources rail, scrollable Sources rail, compact desktop filters, scrollable dominant agent table with a hard desktop minimum of 60% of the main panel, sticky task-table header, denser table rows/actions, and a collapsed-by-default selected-agent inspector that expands into a bounded detail area. Further visual refinement can continue, but the default desktop layout no longer requires the long settings form, full detail inspector, or agent list to push the entire page vertically.
 
+### Office View
+
+Agent Monitor should include a second agent-list view called Office. It should visualize the currently visible agents as a top-down office floor where each agent gets a cubicle. The aesthetic should be low-poly and indie-game-like rather than a plain administrative chart. More visible agents should create more cubicles, using the active table filters and sort order.
+
+Requirements:
+
+- The table view remains the default operational view.
+- Operators can switch between Table and Office without changing filters, selected agent, polling, or lifecycle semantics.
+- Each visible agent maps to one cubicle.
+- Clicking a cubicle selects that agent and surfaces the same lifecycle controls as the table/detail surfaces, including stop, interrupt, end with prompt, force end, and go to when available.
+- The office inspector should show task, context, resources, provider health, lineage, and usage at a glance.
+- Future office cubicles should be able to show richer agent context, current thinking/state, and agent-to-agent communication paths.
+
+Status: initial implementation uses a dependency-free Canvas 2D renderer with deterministic cubicle layout and click hit-testing. The renderer is structured as a replaceable visual layer so a future Three.js/OpenGL renderer can take over without changing provider/action semantics.
+
 ### Agent Type
 
 Add an explicit `type` field to normalized agents.

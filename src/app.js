@@ -61,6 +61,7 @@ class AgentMonitorApp extends HTMLElement {
     const agents = this.agents || [];
     const filters = { query: "", status: "all", source: "all", type: "all", provider: "all", sort: "started-desc", ...(this.filters || {}) };
     const filteredAgents = filterAgents(agents, filters);
+    const viewMode = this.viewMode || "table";
     const active = activeAgentCount(agents);
     const cpu = agents.reduce((total, agent) => total + Number(agent.cpu || 0), 0);
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
@@ -133,13 +134,20 @@ class AgentMonitorApp extends HTMLElement {
           <section class="panel agent-panel">
             <div class="panel-heading">
               <h2>Agent Tasks</h2>
-              <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
+              <div class="panel-tools">
+                ${renderViewToggle(viewMode)}
+                <button class="icon-button" type="button" title="Refresh snapshots" data-refresh>↻</button>
+              </div>
             </div>
             ${renderFilters(filters, sources, types, providers, statuses)}
             ${renderActionMessage(this.actionMessage)}
-            <div class="agent-table" role="table" aria-label="Agent task table">
-              ${renderAgentTable(filteredAgents, agents, this.providers || [], this.selectedAgentId)}
-            </div>
+            ${
+              viewMode === "office"
+                ? renderOfficeView(filteredAgents, agents, this.providers || [], this.selectedAgentId)
+                : `<div class="agent-table" role="table" aria-label="Agent task table">
+                    ${renderAgentTable(filteredAgents, agents, this.providers || [], this.selectedAgentId)}
+                  </div>`
+            }
             ${renderDetailPanel(selectedDetail, this.providers || [])}
           </section>
         </section>
@@ -150,8 +158,27 @@ class AgentMonitorApp extends HTMLElement {
     if (sourcesPanel) sourcesPanel.scrollTop = previousSourcesScrollTop;
     restoreOpenPanels(this, openPanels);
     restoreFocusedFilter(this, focusedFilter);
+    const officeCanvas = this.querySelector("[data-office-canvas]");
+    if (officeCanvas) {
+      const hitBoxes = drawOfficeView(officeCanvas, filteredAgents, this.selectedAgentId);
+      officeCanvas.addEventListener("click", async (event) => {
+        const hit = officeHitTest(officeCanvas, hitBoxes, event);
+        if (!hit) return;
+        this.selectedAgentId = hit.agent.id;
+        this.detail = buildDetail(this.selectedAgentId, this.agents || [], this.history || []);
+        this.render();
+        this.detail = await client.detail(this.selectedAgentId);
+        this.render();
+      });
+    }
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
+    this.querySelectorAll("[data-view-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        this.viewMode = button.getAttribute("data-view-mode") || "table";
+        this.render();
+      });
+    });
     this.querySelector(".settings-form")?.addEventListener("submit", async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -227,6 +254,27 @@ class AgentMonitorApp extends HTMLElement {
 function renderActionMessage(message) {
   if (!message) return "";
   return `<p class="action-message ${message.tone || "ok"}">${escapeText(message.text || "")}</p>`;
+}
+
+function renderViewToggle(viewMode) {
+  return `
+    <div class="view-toggle" role="group" aria-label="Agent view">
+      ${["table", "office"]
+        .map(
+          (mode) => `
+            <button
+              class="view-button ${viewMode === mode ? "active" : ""}"
+              type="button"
+              data-view-mode="${mode}"
+              aria-pressed="${viewMode === mode ? "true" : "false"}"
+            >
+              ${mode === "table" ? "Table" : "Office"}
+            </button>
+          `
+        )
+        .join("")}
+    </div>
+  `;
 }
 
 function captureFocusedFilter(root) {
@@ -624,6 +672,82 @@ function renderAnthropicProviderRow(provider, index, mode) {
   `;
 }
 
+function renderOfficeView(agents, allAgents, providers, selectedAgentId) {
+  const selected = agents.find((agent) => agent.id === selectedAgentId) || allAgents.find((agent) => agent.id === selectedAgentId) || agents[0] || null;
+  return `
+    <section class="office-view" aria-label="Office view of agents">
+      <div class="office-stage">
+        <canvas class="office-canvas" width="1400" height="760" data-office-canvas aria-label="Agent office floor"></canvas>
+        <div class="office-legend" aria-label="Office status legend">
+          <span><i class="legend-dot good"></i>Running</span>
+          <span><i class="legend-dot warn"></i>Waiting</span>
+          <span><i class="legend-dot idle"></i>Idle</span>
+        </div>
+      </div>
+      <aside class="office-inspector">
+        ${selected ? renderOfficeInspector(selected, allAgents, providers) : renderOfficeEmptyState()}
+      </aside>
+    </section>
+  `;
+}
+
+function renderOfficeInspector(agent, agents, providers) {
+  const provider = providerForAgent(agent, providers);
+  const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId)?.name || agent.parentId : "Root";
+  return `
+    <div class="office-inspector-heading">
+      <p class="eyebrow">Selected Cubicle</p>
+      <h3>${escapeText(agent.name)}</h3>
+      <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
+    </div>
+    <p class="office-inspector-subtitle">${escapeText(agent.provider)} · ${escapeText(labelize(agent.type || agent.providerId || agent.source))}</p>
+    <div class="office-inspector-actions action-row">
+      ${agentActions.map((action) => renderAction(agent, action)).join("")}
+    </div>
+    <div class="office-card-grid">
+      <article>
+        <span>Task</span>
+        <strong>${escapeText(agent.task || "Untitled task")}</strong>
+        <p>${escapeText(taskProgressLine(agent) || "No progress reported")}</p>
+      </article>
+      <article>
+        <span>Context</span>
+        <strong>${escapeText(agentContextTitle(agent))}</strong>
+        <p>${escapeText(agentContextLine(agent) || "No context reported")}</p>
+      </article>
+      <article>
+        <span>Resources</span>
+        <strong>${formatMemory(agent.memoryMb)}</strong>
+        <p>${escapeText(renderResourceLine(agent))}</p>
+      </article>
+      <article class="${provider?.status === "error" ? "detail-warning" : ""}">
+        <span>Provider</span>
+        <strong>${escapeText(provider ? labelize(provider.status) : "Unknown")}</strong>
+        <p>${escapeText(providerHealthLine(agent, provider))}</p>
+      </article>
+      <article>
+        <span>Lineage</span>
+        <strong>${escapeText(parent)}</strong>
+        <p>${escapeText(agent.children?.length ? `${agent.children.length} children` : "No children")}</p>
+      </article>
+      <article>
+        <span>Usage</span>
+        <strong>${formatTokenTotal(agent.tokens)} tokens</strong>
+        <p>${escapeText(renderTokenUsageLine(agent))} · $${Number(agent.costUsd || 0).toFixed(2)}</p>
+      </article>
+    </div>
+  `;
+}
+
+function renderOfficeEmptyState() {
+  return `
+    <div class="office-empty">
+      <p class="eyebrow">Selected Cubicle</p>
+      <h3>No agent selected</h3>
+    </div>
+  `;
+}
+
 function renderAgentTable(agents, allAgents, providers, selectedAgentId) {
   if (!agents.length) {
     return `
@@ -873,6 +997,209 @@ function buildDetail(agentId, agents, history) {
     },
     history: history.filter((record) => record.agentId === agentId)
   };
+}
+
+function drawOfficeView(canvas, agents, selectedAgentId) {
+  const context = canvas.getContext("2d");
+  if (!context) return [];
+
+  const width = canvas.width;
+  const height = canvas.height;
+  context.clearRect(0, 0, width, height);
+  drawOfficeFloor(context, width, height);
+
+  if (!agents.length) {
+    context.fillStyle = "#667085";
+    context.font = "700 30px Inter, sans-serif";
+    context.textAlign = "center";
+    context.fillText("No agents match the current filters", width / 2, height / 2);
+    return [];
+  }
+
+  const hitBoxes = officeCubicleLayout(agents, width, height);
+  drawOfficeAisles(context, hitBoxes, width, height);
+  hitBoxes.forEach((box) => drawCubicle(context, box, box.agent.id === selectedAgentId));
+  return hitBoxes;
+}
+
+function drawOfficeFloor(context, width, height) {
+  const tile = 38;
+  context.fillStyle = "#ece7dc";
+  context.fillRect(0, 0, width, height);
+  context.strokeStyle = "rgba(99, 83, 58, 0.12)";
+  context.lineWidth = 1;
+  for (let x = 0; x <= width; x += tile) {
+    context.beginPath();
+    context.moveTo(x, 0);
+    context.lineTo(x, height);
+    context.stroke();
+  }
+  for (let y = 0; y <= height; y += tile) {
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(width, y);
+    context.stroke();
+  }
+
+  context.fillStyle = "rgba(255, 255, 255, 0.34)";
+  context.beginPath();
+  context.moveTo(48, 44);
+  context.lineTo(width - 80, 24);
+  context.lineTo(width - 34, 84);
+  context.lineTo(70, 118);
+  context.closePath();
+  context.fill();
+}
+
+function drawOfficeAisles(context, hitBoxes, width, height) {
+  if (!hitBoxes.length) return;
+  context.fillStyle = "rgba(255, 255, 255, 0.45)";
+  const rows = [...new Set(hitBoxes.map((box) => box.row))];
+  rows.forEach((row) => {
+    const rowBoxes = hitBoxes.filter((box) => box.row === row);
+    const y = Math.min(...rowBoxes.map((box) => box.y)) - 16;
+    context.fillRect(0, y, width, 16);
+  });
+  context.fillRect(width - 92, 0, 40, height);
+}
+
+function drawCubicle(context, box, selected) {
+  const { agent, x, y, width, height } = box;
+  const tone = officeTone(agent);
+  const wall = selected ? "#23395d" : "#7d8796";
+  const accent = tone.accent;
+  const deskY = y + height * 0.52;
+
+  context.save();
+  context.shadowColor = selected ? "rgba(35, 57, 93, 0.28)" : "rgba(33, 41, 54, 0.14)";
+  context.shadowBlur = selected ? 18 : 8;
+  context.shadowOffsetY = 4;
+  context.fillStyle = tone.floor;
+  roundedRect(context, x, y, width, height, 8);
+  context.fill();
+  context.restore();
+
+  context.strokeStyle = wall;
+  context.lineWidth = selected ? 5 : 3;
+  context.beginPath();
+  context.moveTo(x, y + height);
+  context.lineTo(x, y);
+  context.lineTo(x + width, y);
+  context.lineTo(x + width, y + height * 0.58);
+  context.stroke();
+
+  context.fillStyle = "#b98958";
+  roundedRect(context, x + 18, deskY, width - 36, 20, 4);
+  context.fill();
+  context.fillStyle = "#8d5f38";
+  context.fillRect(x + 18, deskY + 16, width - 36, 8);
+
+  context.fillStyle = "#46556a";
+  roundedRect(context, x + width * 0.56, deskY - 34, 34, 22, 3);
+  context.fill();
+  context.fillStyle = accent;
+  context.fillRect(x + width * 0.56 + 5, deskY - 29, 24, 12);
+
+  context.fillStyle = "#3f4652";
+  roundedRect(context, x + width * 0.28, deskY - 24, 28, 28, 7);
+  context.fill();
+  context.fillStyle = accent;
+  context.beginPath();
+  context.arc(x + width * 0.28 + 14, deskY - 34, 14, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "rgba(255, 255, 255, 0.42)";
+  context.beginPath();
+  context.moveTo(x + width * 0.28 + 10, deskY - 46);
+  context.lineTo(x + width * 0.28 + 22, deskY - 38);
+  context.lineTo(x + width * 0.28 + 12, deskY - 31);
+  context.closePath();
+  context.fill();
+
+  context.fillStyle = selected ? "#172033" : "#344054";
+  context.font = "800 19px Inter, sans-serif";
+  context.textAlign = "left";
+  context.textBaseline = "top";
+  clippedText(context, agent.name, x + 14, y + 13, width - 28);
+
+  context.fillStyle = "#667085";
+  context.font = "700 14px Inter, sans-serif";
+  clippedText(context, `${labelize(agent.status)} · ${formatMemory(agent.memoryMb)}`, x + 14, y + 39, width - 28);
+
+  context.fillStyle = accent;
+  roundedRect(context, x + width - 34, y + height - 32, 18, 18, 9);
+  context.fill();
+}
+
+function officeCubicleLayout(agents, width, height) {
+  const count = Math.max(1, agents.length);
+  const columns = Math.max(1, Math.ceil(Math.sqrt(count * (width / Math.max(height, 1)))));
+  const rows = Math.max(1, Math.ceil(count / columns));
+  const padding = 44;
+  const gap = Math.max(14, Math.min(30, 32 - Math.max(0, count - 8)));
+  const cellWidth = (width - padding * 2 - gap * (columns - 1)) / columns;
+  const cellHeight = (height - padding * 2 - gap * (rows - 1)) / rows;
+  const cubicleWidth = Math.max(116, Math.min(250, cellWidth));
+  const cubicleHeight = Math.max(96, Math.min(165, cellHeight));
+
+  return agents.map((agent, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const cellX = padding + column * (cellWidth + gap);
+    const cellY = padding + row * (cellHeight + gap);
+    return {
+      agent,
+      row,
+      column,
+      x: cellX + Math.max(0, (cellWidth - cubicleWidth) / 2),
+      y: cellY + Math.max(0, (cellHeight - cubicleHeight) / 2),
+      width: cubicleWidth,
+      height: cubicleHeight
+    };
+  });
+}
+
+function officeHitTest(canvas, hitBoxes, event) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / Math.max(rect.width, 1);
+  const scaleY = canvas.height / Math.max(rect.height, 1);
+  const x = (event.clientX - rect.left) * scaleX;
+  const y = (event.clientY - rect.top) * scaleY;
+  return hitBoxes.find((box) => x >= box.x && x <= box.x + box.width && y >= box.y && y <= box.y + box.height) || null;
+}
+
+function officeTone(agent) {
+  const tone = statusTone(agent.status);
+  const tones = {
+    good: { floor: "#e3f5e9", accent: "#2f8f51" },
+    warn: { floor: "#fff0ca", accent: "#c47a13" },
+    done: { floor: "#e7edf5", accent: "#4f6f9d" },
+    idle: { floor: "#edf1f5", accent: "#667085" }
+  };
+  return tones[tone] || tones.idle;
+}
+
+function roundedRect(context, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  context.beginPath();
+  context.moveTo(x + r, y);
+  context.arcTo(x + width, y, x + width, y + height, r);
+  context.arcTo(x + width, y + height, x, y + height, r);
+  context.arcTo(x, y + height, x, y, r);
+  context.arcTo(x, y, x + width, y, r);
+  context.closePath();
+}
+
+function clippedText(context, text, x, y, maxWidth) {
+  const value = String(text || "");
+  if (context.measureText(value).width <= maxWidth) {
+    context.fillText(value, x, y);
+    return;
+  }
+  let clipped = value;
+  while (clipped.length > 1 && context.measureText(`${clipped}...`).width > maxWidth) {
+    clipped = clipped.slice(0, -1);
+  }
+  context.fillText(`${clipped}...`, x, y);
 }
 
 function renderLineageTree(agents) {

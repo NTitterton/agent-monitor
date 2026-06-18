@@ -158,6 +158,13 @@ try {
   assert(appSource.includes("this.detail = buildDetail(this.selectedAgentId, snapshot.agents, snapshot.history)"), "browser app selected detail should refresh from snapshots");
   assert(appSource.includes('data-setting="apiToken"'), "app settings should include write-only API token control");
   assert(appSource.includes("...(apiToken ? { apiToken } : {})"), "app settings should only send nonblank API token updates");
+  assert(appSource.includes("renderViewToggle"), "browser app should expose table and office view controls");
+  assert(appSource.includes('"office"') && appSource.includes('data-view-mode="${mode}"'), "browser app should expose Office view mode");
+  assert(appSource.includes("renderOfficeView"), "browser app should render the agent office view");
+  assert(appSource.includes("data-office-canvas"), "browser app should render an Office view canvas");
+  assert(appSource.includes("drawOfficeView"), "browser app should draw agents as office cubicles");
+  assert(appSource.includes("officeCubicleLayout"), "browser app should lay out one cubicle per visible agent");
+  assert(appSource.includes("officeHitTest"), "browser app should select agents from office cubicle clicks");
   const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
   assert(clientSource.includes("validationWarnings: [...payload.config.validationWarnings]"), "client should preserve config validation warnings after save refresh");
   assert(clientSource.includes("errorPayload?.agents"), "client detail errors should apply returned snapshot context");
@@ -195,6 +202,10 @@ try {
   assert(stylesSource.includes(".detail-panel[open]"), "selected-agent detail should expand only when opened");
   assert(stylesSource.includes("max-height: 32%"), "selected-agent detail should stay bounded below the task list");
   assert(stylesSource.includes("min-height: 30px"), "task table header should stay compact");
+  assert(stylesSource.includes(".view-toggle"), "browser app should style the table/office view toggle");
+  assert(stylesSource.includes(".office-view"), "browser app should style the office view layout");
+  assert(stylesSource.includes(".office-canvas"), "browser app should style the office floor canvas");
+  assert(stylesSource.includes(".office-inspector"), "browser app should style the office selected-agent inspector");
   const configSource = await readFile(new URL("../server/config.js", import.meta.url), "utf8");
   assert(configSource.includes("?? 3000"), "snapshot refresh should default to a realtime 3s cadence");
   assert(configSource.includes("Math.max(Math.round(intervalMs), 1000)"), "snapshot refresh should allow 1s minimum intervals");

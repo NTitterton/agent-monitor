@@ -135,6 +135,27 @@ sequenceDiagram
     end
 ```
 
+## 4.1 Agent Views
+
+The browser app has two peer views over the same filtered snapshot data:
+
+- **Table view:** dense task-manager list for scanning resources, status, lineage, and actions.
+- **Office view:** low-poly top-down office floor where each visible agent is rendered as a cubicle. Clicking a cubicle selects that agent and opens a compact inspector with the same lifecycle controls as the table.
+
+```mermaid
+flowchart LR
+    Snapshot["Unified Snapshot<br/>agents + providers + history"] --> Filters["Filters + Sort"]
+    Filters --> Table["Table View<br/>scrollable task list"]
+    Filters --> Office["Office View<br/>canvas cubicles"]
+    Table --> Selection["Selected Agent"]
+    Office --> Selection
+    Selection --> Inspector["Inspector<br/>task, context, resources, lineage"]
+    Selection --> Actions["Lifecycle Actions<br/>start, stop, interrupt, end, force end, go to"]
+    Actions --> API["POST /api/agents/:id/actions"]
+```
+
+The current Office implementation uses Canvas 2D for a dependency-free renderer. Its layout and hit-testing are deterministic functions over the visible agent list, which keeps selection predictable and makes the renderer replaceable by Three.js/OpenGL later. Future visual layers should preserve the same data/action contract while adding richer representations of context, current agent state, and agent-to-agent communication.
+
 ## 5. Provider Adapter Contract
 
 Provider adapters are objects with this shape:

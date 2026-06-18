@@ -183,6 +183,39 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-tools {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.view-toggle {
+  display: inline-flex;
+  overflow: hidden;
+  border: 1px solid #cbd2dd;
+  border-radius: 6px;
+  background: #f8fafc;
+}
+
+.view-button {
+  min-height: 30px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #536071;
+  font-weight: 700;
+}
+
+.view-button + .view-button {
+  border-left: 1px solid #d7dce5;
+}
+
+.view-button.active {
+  background: #172033;
+  color: #ffffff;
 }
 
 .filter-bar {
@@ -520,6 +553,161 @@ h2 {
   border-top: 1px solid #e6e9ef;
 }
 
+.office-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: 10px;
+  overflow: hidden;
+  min-height: 0;
+  flex: 1 1 auto;
+  min-height: 60%;
+  border-top: 1px solid #e6e9ef;
+  padding: 10px 14px;
+}
+
+.office-stage {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #d7dce5;
+  border-radius: 8px;
+  background: #ece7dc;
+}
+
+.office-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  cursor: pointer;
+}
+
+.office-legend {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  max-width: calc(100% - 20px);
+  border: 1px solid rgba(215, 220, 229, 0.9);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #344054;
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 6px 8px;
+}
+
+.office-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.legend-dot.good {
+  background: #2f8f51;
+}
+
+.legend-dot.warn {
+  background: #c47a13;
+}
+
+.legend-dot.idle {
+  background: #667085;
+}
+
+.office-inspector {
+  min-height: 0;
+  overflow-y: auto;
+  border: 1px solid #d7dce5;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.office-inspector-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: start;
+}
+
+.office-inspector-heading .eyebrow {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+
+.office-inspector-heading h3 {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 1rem;
+}
+
+.office-inspector-subtitle {
+  margin: 4px 0 0;
+  color: #667085;
+  font-size: 0.82rem;
+}
+
+.office-inspector-actions {
+  margin-top: 10px;
+}
+
+.office-card-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.office-card-grid article {
+  border: 1px solid #e6e9ef;
+  border-radius: 6px;
+  background: #fbfcfe;
+  padding: 8px;
+}
+
+.office-card-grid span {
+  display: block;
+  color: #667085;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.office-card-grid strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.86rem;
+}
+
+.office-card-grid p {
+  margin: 5px 0 0;
+  color: #667085;
+  font-size: 0.8rem;
+}
+
+.office-empty {
+  display: grid;
+  place-content: center;
+  min-height: 100%;
+  color: #667085;
+  text-align: center;
+}
+
+.office-empty h3 {
+  margin: 0;
+  color: #172033;
+}
+
 .table-row {
   display: grid;
   grid-template-columns: minmax(250px, 1.65fr) 96px minmax(210px, 1fr) 118px minmax(286px, 1fr);
@@ -778,6 +966,15 @@ h2 {
 
   .filter-bar {
     grid-template-columns: 1fr;
+  }
+
+  .office-view {
+    grid-template-columns: 1fr;
+    overflow: visible;
+  }
+
+  .office-canvas {
+    min-height: 360px;
   }
 
   .detail-heading {
