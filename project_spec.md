@@ -331,12 +331,13 @@ Requirements:
 
 - Configured local agents can store a short description that is suitable for terminal/tab-style titles, for example `OC | Custom Weather Node.js app with NWS data`.
 - Local process discovery should infer a short description from common CLI flags such as `--description`, `--title`, `--task`, or `--prompt` when those flags are visible in process arguments.
+- Discovered OpenCode sessions should read the local OpenCode SQLite session store when available and use the latest session title for the primary title, the latest step token total for context-window usage, and the latest reasoning/todo/tool description for thinking/status.
 - Snapshots may include `shortDescription`, `terminalTitle`, `contextWindowUsed`, `contextWindowTotal`, `contextWindowConfidence`, and `thinkingSnippet`.
 - If live local CLI thinking/context-window usage cannot be observed from process metadata, the UI should say that explicitly rather than inventing values.
-- The selected-agent detail panel should show local title, context-window usage, and thinking snippet/status.
+- The selected-agent detail panel should use the local/session title as the primary agent title and should show context-window usage and thinking snippet/status without a separate redundant Local Title card.
 - The Office focused cubicle view should represent local title/thinking notes and context-window usage on the cubicle board/whiteboard.
 
-Status: implemented as best-effort local-process metadata. Configured local agents preserve optional `description` and `contextWindowTotal`; discovered agents infer visible prompt/title flags from command lines when available. The browser app renders these fields in the table title, selected-agent inspector, and Office inspector. The Three.js focused cubicle renders context usage as a board meter and title/thinking as pinned notes.
+Status: implemented as best-effort local-process metadata with first-class OpenCode enrichment. Configured local agents preserve optional `description` and `contextWindowTotal`; discovered agents infer visible prompt/title flags from command lines when available; discovered OpenCode agents read `~/.local/share/opencode/opencode.db` for the latest session title, step token total, cumulative tokens, and reasoning/todo/tool status. The browser app renders the local/session title as the agent title and renders context-window and thinking cards in the selected-agent inspector and Office inspector. The Three.js focused cubicle renders context usage as a board meter and title/thinking as pinned notes.
 
 ## Data Model Draft
 

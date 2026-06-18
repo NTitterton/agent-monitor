@@ -736,11 +736,6 @@ function renderOfficeInspector(agent, agents, providers, focused = false) {
         <p>${escapeText(agentContextLine(agent) || "No context reported")}</p>
       </article>
       <article>
-        <span>Local Title</span>
-        <strong>${escapeText(agent.terminalTitle || agent.shortDescription || "No local title")}</strong>
-        <p>${escapeText(localTitleLine(agent))}</p>
-      </article>
-      <article>
         <span>Context Window</span>
         <strong>${escapeText(contextWindowTitle(agent))}</strong>
         <p>${escapeText(contextWindowLine(agent))}</p>
@@ -873,11 +868,6 @@ function renderDetailPanel(detail, providers = []) {
           <span>Context</span>
           <strong>${escapeText(agentContextTitle(agent))}</strong>
           <p>${escapeText(agentContextLine(agent) || "No context reported")}</p>
-        </article>
-        <article>
-          <span>Local Title</span>
-          <strong>${escapeText(agent.terminalTitle || agent.shortDescription || "No local title")}</strong>
-          <p>${escapeText(localTitleLine(agent))}</p>
         </article>
         <article>
           <span>Context Window</span>
@@ -1128,19 +1118,13 @@ function agentContextLine(agent) {
   ].filter(Boolean).join(" · ");
 }
 
-function localTitleLine(agent) {
-  if (agent.terminalTitle) return "Terminal/tab title friendly";
-  if (agent.shortDescription) return "Short description";
-  return agent.type === "local" ? "No local short description reported" : "Not a local process title";
-}
-
 function contextWindowTitle(agent) {
   const used = finiteMetric(agent.contextWindowUsed);
   const total = finiteMetric(agent.contextWindowTotal);
   if (used !== null && total !== null && total > 0) return `${Math.round((used / total) * 100)}% used`;
   if (total !== null && total > 0) return `${total.toLocaleString()} token window`;
-  if (used !== null && used > 0) return `${used.toLocaleString()} tokens used`;
-  return "Unknown";
+  if (used !== null) return `${used.toLocaleString()} tokens used`;
+  return "No context tokens reported";
 }
 
 function contextWindowLine(agent) {
@@ -1149,7 +1133,8 @@ function contextWindowLine(agent) {
   const total = finiteMetric(agent.contextWindowTotal);
   if (used !== null) parts.push(`${used.toLocaleString()} used`);
   if (total !== null) parts.push(`${total.toLocaleString()} total`);
-  parts.push(`${labelize(agent.contextWindowConfidence || "unknown")} confidence`);
+  if (parts.length) parts.push(`${labelize(agent.contextWindowConfidence || "unknown")} confidence`);
+  if (!parts.length) parts.push("Provider did not report context tokens");
   return parts.join(" · ");
 }
 
@@ -1160,9 +1145,9 @@ function finiteMetric(value) {
 }
 
 function thinkingSnippetLine(agent) {
-  if (agent.thinkingSnippet) return "Reported or inferred local status";
+  if (agent.thinkingSnippet) return "Latest local reasoning/status";
   if (agent.currentStep) return "Using current step";
-  return agent.type === "local" ? "Local CLI thinking is not observable from process metadata yet" : "No thinking snippet reported";
+  return agent.type === "local" ? "Provider did not report a reasoning/status snippet" : "No thinking snippet reported";
 }
 
 function renderTokenUsageLine(agent) {

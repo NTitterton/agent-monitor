@@ -1,9 +1,12 @@
-import { spawn } from "node:child_process";
-import { resolve } from "node:path";
+import { execFileSync, spawn } from "node:child_process";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
 import { agentActions } from "../src/core.js";
 import { readConfig } from "./config.js";
 
 const runningChildren = new Map();
+const openCodeDbPath = join(homedir(), ".local/share/opencode/opencode.db");
 const discoveryMatchers = [
   { id: "codex", name: "Codex CLI", pattern: /(^|\s|\/)codex(\s|$)/i },
   { id: "claude", name: "Claude CLI", pattern: /(^|\s|\/)claude(\s|$)/i },
@@ -173,11 +176,11 @@ function toProcessAgent(agent, processes) {
     processMemoryMb: resources.processMemoryMb,
     childCpu: resources.childCpu,
     childMemoryMb: resources.childMemoryMb,
-    tokens: 0,
+    tokens: localMetadata.tokens || 0,
     tokensPerSecond: 0,
     tokenRateWindowMs: 0,
-    tokenCountConfidence: "unknown",
-    costUsd: 0,
+    tokenCountConfidence: localMetadata.tokenCountConfidence || "unknown",
+    costUsd: localMetadata.costUsd || 0,
     startedAt: processInfo?.startedAt || Date.now(),
     endedAt: isRunning ? undefined : Date.now(),
     children: [],
@@ -226,31 +229,37 @@ export function inferLocalAgentMetadata(agent = {}, processInfo = null, processe
     .map((item) => item?.command || "")
     .filter(Boolean);
   const commandText = [agent.command, ...(agent.args || []), agent.match, ...commandChain].filter(Boolean).join("\n");
+  const openCodeMetadata = /(^|\s|\/)opencode(\s|$)/i.test(commandText) ? readOpenCodeSessionMetadata() : null;
   const shortDescription = normalizeDescription(
     agent.shortDescription ||
       agent.description ||
+      openCodeMetadata?.title ||
       extractFlagValue(commandText, ["description", "desc", "title", "task", "prompt", "initial-prompt"]) ||
       extractCodexExecDescription(commandText) ||
       friendlyCommandDescription(agent, processInfo)
   );
-  const providerPrefix = agent.command && /opencode/i.test(agent.command) ? "OC" : agent.command && /codex/i.test(agent.command) ? "Codex" : "";
+  const providerPrefix = /(^|\s|\/)opencode(\s|$)/i.test(commandText) ? "OC" : /(^|\s|\/)codex(\s|$)/i.test(commandText) ? "Codex" : "";
   const terminalTitle = [providerPrefix, shortDescription].filter(Boolean).join(" | ");
   const thinkingSnippet = normalizeDescription(
     agent.thinkingSnippet ||
       agent.currentStep ||
+      openCodeMetadata?.thinkingSnippet ||
       extractFlagValue(commandText, ["thinking", "thought", "status", "current-step"])
   );
-  const contextWindowUsed = finiteOptionalNumber(agent.contextWindowUsed);
-  const contextWindowTotal = finiteOptionalNumber(agent.contextWindowTotal);
+  const contextWindowUsed = finiteOptionalNumber(agent.contextWindowUsed) ?? openCodeMetadata?.contextWindowUsed ?? null;
+  const contextWindowTotal = finiteOptionalNumber(agent.contextWindowTotal) ?? openCodeMetadata?.contextWindowTotal ?? null;
 
   return {
     shortDescription,
     terminalTitle: terminalTitle || surface?.windowTitle || "",
-    currentStep: thinkingSnippet || (processInfo ? "Running locally" : "No matching local process"),
+    currentStep: thinkingSnippet || openCodeMetadata?.currentStep || (processInfo ? "Running locally" : "No matching local process"),
     contextWindowUsed,
     contextWindowTotal,
     contextWindowConfidence: contextWindowUsed !== null || contextWindowTotal !== null ? "reported" : "unknown",
-    thinkingSnippet
+    thinkingSnippet,
+    tokens: openCodeMetadata?.tokens || 0,
+    tokenCountConfidence: openCodeMetadata?.tokens ? "reported" : "unknown",
+    costUsd: openCodeMetadata?.costUsd || 0
   };
 }
 
@@ -427,6 +436,74 @@ function normalizeDescription(value) {
 function finiteOptionalNumber(value) {
   const number = Number(value);
   return Number.isFinite(number) && number >= 0 ? number : null;
+}
+
+function readOpenCodeSessionMetadata() {
+  if (!existsSync(openCodeDbPath)) return null;
+
+  const sessions = readOpenCodeRows(
+    `select id,title,directory,agent,model,tokens_input,tokens_output,tokens_reasoning,tokens_cache_read,tokens_cache_write,cost,time_created,time_updated from session order by time_updated desc limit 1`
+  );
+  const session = sessions[0];
+  if (!session?.id) return null;
+
+  const parts = readOpenCodeRows(
+    `select data,time_updated from part where session_id=${sqliteString(session.id)} order by time_updated desc limit 80`
+  )
+    .map((row) => ({ ...row, parsed: parseJson(row.data) }))
+    .filter((row) => row.parsed);
+  const todos = readOpenCodeRows(
+    `select content,status,priority,time_updated from todo where session_id=${sqliteString(session.id)} order by position asc`
+  );
+
+  const latestTokenPart = parts.find((row) => row.parsed?.tokens?.total);
+  const latestReasoning = parts.find((row) => row.parsed?.type === "reasoning" && row.parsed.text);
+  const latestTool = parts.find((row) => row.parsed?.type === "tool" && (row.parsed.state?.input?.description || row.parsed.state?.title));
+  const activeTodo = todos.find((todo) => !["completed", "cancelled", "failed"].includes(String(todo.status || "").toLowerCase()));
+  const currentStep = normalizeDescription(activeTodo?.content || latestTool?.parsed?.state?.input?.description || latestTool?.parsed?.state?.title || "");
+  const thinkingSnippet = normalizeDescription(latestReasoning?.parsed?.text || currentStep);
+  const tokens = [
+    session.tokens_input,
+    session.tokens_output,
+    session.tokens_reasoning,
+    session.tokens_cache_read,
+    session.tokens_cache_write
+  ].reduce((total, value) => total + Number(value || 0), 0);
+
+  return {
+    title: normalizeDescription(session.title),
+    currentStep,
+    thinkingSnippet,
+    contextWindowUsed: finiteOptionalNumber(latestTokenPart?.parsed?.tokens?.total),
+    contextWindowTotal: null,
+    tokens,
+    costUsd: Number(session.cost || 0)
+  };
+}
+
+function readOpenCodeRows(sql) {
+  try {
+    const output = execFileSync("sqlite3", ["-json", openCodeDbPath, sql], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+      timeout: 1000
+    });
+    return JSON.parse(output || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function sqliteString(value) {
+  return `'${String(value || "").replace(/'/g, "''")}'`;
+}
+
+function parseJson(value) {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
 }
 
 function buildProcessLogs(agent, processInfo, childPids, isRunning) {

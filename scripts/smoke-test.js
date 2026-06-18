@@ -124,6 +124,7 @@ try {
   assert(appSource.includes("displayAgentTitle"), "browser app should use terminal/local short titles as primary agent titles");
   assert(appSource.includes("contextWindowTitle"), "browser app detail panel should render context-window usage");
   assert(appSource.includes("thinkingSnippetLine"), "browser app detail panel should render local thinking snippets");
+  assert(!appSource.includes("<span>Local Title</span>"), "browser app should not render a redundant Local Title card");
   assert(appSource.includes('data-local-agent-field="description"'), "app settings should expose local agent short descriptions");
   assert(appSource.includes('data-local-agent-field="contextWindowTotal"'), "app settings should expose local context-window total");
   assert(appSource.includes("childrenLabel"), "browser app detail panel should preserve unresolved child lineage IDs");
@@ -231,6 +232,10 @@ try {
   assert(configSource.includes("?? 3000"), "snapshot refresh should default to a realtime 3s cadence");
   assert(configSource.includes("Math.max(Math.round(intervalMs), 1000)"), "snapshot refresh should allow 1s minimum intervals");
   assert(configSource.includes("contextWindowTotal"), "config should preserve configured local context-window totals");
+  const localProcessProviderSource = await readFile(new URL("../server/localProcessProvider.js", import.meta.url), "utf8");
+  assert(localProcessProviderSource.includes("readOpenCodeSessionMetadata"), "local provider should enrich OpenCode agents from the local session database");
+  assert(localProcessProviderSource.includes(".local/share/opencode/opencode.db"), "local provider should know the OpenCode session database path");
+  assert(localProcessProviderSource.includes("tokens?.total"), "local provider should use OpenCode step token totals for context-window usage");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("agents: []"), "state store should default to no hardcoded agents");
   assert(stateStoreSource.includes("deprecatedSeedAgentIds"), "state store should migrate old seeded agent rows out of persisted state");
