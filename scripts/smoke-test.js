@@ -88,6 +88,7 @@ try {
   assert(appSource.includes("renderActionMessage"), "browser app should render action feedback");
   assert(!appSource.includes("data-test-provider"), "Sources panel should not render provider test checkmark buttons");
   assert(appSource.includes("previousSourcesScrollTop"), "browser app should preserve Sources scroll across live refreshes");
+  assert(appSource.includes("previousOfficeInspectorScrollTop"), "browser app should preserve Office inspector scroll across live refreshes");
   assert(appSource.includes("compact-source-row"), "Sources panel should consolidate provider/source rows");
   assert(appSource.includes("captureFocusedFilter") && appSource.includes("restoreFocusedFilter"), "browser app should preserve filter focus across render");
   assert(appSource.includes("captureOpenPanels") && appSource.includes("restoreOpenPanels"), "browser app should preserve open panels across live refreshes");

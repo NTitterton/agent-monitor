@@ -83,6 +83,7 @@ class AgentMonitorApp extends HTMLElement {
     const types = [...new Set(agents.map((agent) => agent.type || agent.providerId || agent.source))].sort();
     const providers = agentProviderOptions(agents);
     const previousSourcesScrollTop = this.querySelector(".sources-panel")?.scrollTop || 0;
+    const previousOfficeInspectorScrollTop = this.querySelector(".office-inspector")?.scrollTop || 0;
     const focusedFilter = captureFocusedFilter(this);
     const openPanels = captureOpenPanels(this);
 
@@ -163,6 +164,8 @@ class AgentMonitorApp extends HTMLElement {
 
     const sourcesPanel = this.querySelector(".sources-panel");
     if (sourcesPanel) sourcesPanel.scrollTop = previousSourcesScrollTop;
+    const officeInspector = this.querySelector(".office-inspector");
+    if (officeInspector) officeInspector.scrollTop = previousOfficeInspectorScrollTop;
     restoreOpenPanels(this, openPanels);
     restoreFocusedFilter(this, focusedFilter);
     const officeCanvas = this.querySelector("[data-office-canvas]");

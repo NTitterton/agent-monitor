@@ -149,6 +149,7 @@ Build Agent Monitor: a local-first task manager for AI agents that can run as a 
 - Sources rail consolidates source/provider counts into a compact summary and preserves scroll during live refresh; local process Go To recognizes Ghostty, and local interrupt sends SIGINT.
 - Office view now uses a vendored Three.js/WebGL renderer with a low-poly 3D office floor, one cubicle per visible agent, raycast cubicle selection, close-up focused cubicles, context boards, signal placeholders, and the same lifecycle inspector/actions as the table view.
 - Local process agents now carry short descriptions, terminal-tab-friendly titles, context-window fields, and thinking snippets/status when configured or inferable. OpenCode discovery reads the local OpenCode SQLite session store for real session titles, step token totals, cumulative tokens, and reasoning/todo/tool status; the detail panel avoids the redundant Local Title card and the Office focused cubicle board renders this metadata graphically.
+- Office cubicle focus preserves the inspector scroll position across live snapshot refreshes.
 
 ## Blockers
 
