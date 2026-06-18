@@ -76,6 +76,7 @@ class AgentMonitorApp extends HTMLElement {
     const providers = agentProviderOptions(agents);
     const previousSourcesScrollTop = this.querySelector(".sources-panel")?.scrollTop || 0;
     const focusedFilter = captureFocusedFilter(this);
+    const openPanels = captureOpenPanels(this);
 
     this.innerHTML = `
       <main class="app-shell">
@@ -147,6 +148,7 @@ class AgentMonitorApp extends HTMLElement {
 
     const sourcesPanel = this.querySelector(".sources-panel");
     if (sourcesPanel) sourcesPanel.scrollTop = previousSourcesScrollTop;
+    restoreOpenPanels(this, openPanels);
     restoreFocusedFilter(this, focusedFilter);
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
@@ -235,6 +237,21 @@ function captureFocusedFilter(root) {
     selectionStart: active.selectionStart,
     selectionEnd: active.selectionEnd
   };
+}
+
+function captureOpenPanels(root) {
+  return {
+    settings: Boolean(root.querySelector(".settings-block")?.open),
+    detail: Boolean(root.querySelector(".detail-panel")?.open)
+  };
+}
+
+function restoreOpenPanels(root, openPanels) {
+  if (!openPanels) return;
+  const settings = root.querySelector(".settings-block");
+  if (settings && openPanels.settings) settings.open = true;
+  const detail = root.querySelector(".detail-panel");
+  if (detail && openPanels.detail) detail.open = true;
 }
 
 function restoreFocusedFilter(root, focusedFilter) {
