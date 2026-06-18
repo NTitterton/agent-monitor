@@ -62,6 +62,9 @@ class AgentMonitorApp extends HTMLElement {
     const filters = { query: "", status: "all", source: "all", type: "all", provider: "all", sort: "started-desc", ...(this.filters || {}) };
     const filteredAgents = filterAgents(agents, filters);
     const viewMode = this.viewMode || "table";
+    if (this.officeFocusAgentId && !filteredAgents.some((agent) => agent.id === this.officeFocusAgentId)) {
+      this.officeFocusAgentId = null;
+    }
     const active = activeAgentCount(agents);
     const cpu = agents.reduce((total, agent) => total + Number(agent.cpu || 0), 0);
     const memory = agents.reduce((total, agent) => total + agent.memoryMb, 0);
@@ -143,7 +146,7 @@ class AgentMonitorApp extends HTMLElement {
             ${renderActionMessage(this.actionMessage)}
             ${
               viewMode === "office"
-                ? renderOfficeView(filteredAgents, agents, this.providers || [], this.selectedAgentId)
+                ? renderOfficeView(filteredAgents, agents, this.providers || [], this.selectedAgentId, this.officeFocusAgentId)
                 : `<div class="agent-table" role="table" aria-label="Agent task table">
                     ${renderAgentTable(filteredAgents, agents, this.providers || [], this.selectedAgentId)}
                   </div>`
@@ -160,10 +163,11 @@ class AgentMonitorApp extends HTMLElement {
     restoreFocusedFilter(this, focusedFilter);
     const officeCanvas = this.querySelector("[data-office-canvas]");
     if (officeCanvas) {
-      const hitBoxes = drawOfficeView(officeCanvas, filteredAgents, this.selectedAgentId);
+      const hitBoxes = drawOfficeView(officeCanvas, filteredAgents, this.selectedAgentId, this.officeFocusAgentId);
       officeCanvas.addEventListener("click", async (event) => {
         const hit = officeHitTest(officeCanvas, hitBoxes, event);
         if (!hit) return;
+        this.officeFocusAgentId = hit.agent.id;
         this.selectedAgentId = hit.agent.id;
         this.detail = buildDetail(this.selectedAgentId, this.agents || [], this.history || []);
         this.render();
@@ -171,6 +175,10 @@ class AgentMonitorApp extends HTMLElement {
         this.render();
       });
     }
+    this.querySelector("[data-office-floor]")?.addEventListener("click", () => {
+      this.officeFocusAgentId = null;
+      this.render();
+    });
 
     this.querySelector("[data-refresh]")?.addEventListener("click", () => client.refresh());
     this.querySelectorAll("[data-view-mode]").forEach((button) => {
@@ -672,12 +680,17 @@ function renderAnthropicProviderRow(provider, index, mode) {
   `;
 }
 
-function renderOfficeView(agents, allAgents, providers, selectedAgentId) {
+function renderOfficeView(agents, allAgents, providers, selectedAgentId, focusAgentId = null) {
   const selected = agents.find((agent) => agent.id === selectedAgentId) || allAgents.find((agent) => agent.id === selectedAgentId) || agents[0] || null;
+  const focused = focusAgentId ? agents.find((agent) => agent.id === focusAgentId) || null : null;
   return `
     <section class="office-view" aria-label="Office view of agents">
-      <div class="office-stage">
-        <canvas class="office-canvas" width="1400" height="760" data-office-canvas aria-label="Agent office floor"></canvas>
+      <div class="office-stage ${focused ? "focused" : ""}">
+        <canvas class="office-canvas" width="1400" height="760" data-office-canvas aria-label="${focused ? "Focused agent cubicle" : "Agent office floor"}"></canvas>
+        <div class="office-hud" aria-label="Office view status">
+          <span>${focused ? "Cubicle Focus" : `${agents.length} cubicle${agents.length === 1 ? "" : "s"}`}</span>
+          ${focused ? `<button type="button" data-office-floor>Floor</button>` : ""}
+        </div>
         <div class="office-legend" aria-label="Office status legend">
           <span><i class="legend-dot good"></i>Running</span>
           <span><i class="legend-dot warn"></i>Waiting</span>
@@ -685,18 +698,18 @@ function renderOfficeView(agents, allAgents, providers, selectedAgentId) {
         </div>
       </div>
       <aside class="office-inspector">
-        ${selected ? renderOfficeInspector(selected, allAgents, providers) : renderOfficeEmptyState()}
+        ${selected ? renderOfficeInspector(selected, allAgents, providers, Boolean(focused)) : renderOfficeEmptyState()}
       </aside>
     </section>
   `;
 }
 
-function renderOfficeInspector(agent, agents, providers) {
+function renderOfficeInspector(agent, agents, providers, focused = false) {
   const provider = providerForAgent(agent, providers);
   const parent = agent.parentId ? agents.find((item) => item.id === agent.parentId)?.name || agent.parentId : "Root";
   return `
     <div class="office-inspector-heading">
-      <p class="eyebrow">Selected Cubicle</p>
+      <p class="eyebrow">${focused ? "Cubicle Focus" : "Selected Cubicle"}</p>
       <h3>${escapeText(agent.name)}</h3>
       <span class="status-pill ${escapeAttribute(statusTone(agent.status))}">${escapeText(agent.status)}</span>
     </div>
@@ -999,7 +1012,7 @@ function buildDetail(agentId, agents, history) {
   };
 }
 
-function drawOfficeView(canvas, agents, selectedAgentId) {
+function drawOfficeView(canvas, agents, selectedAgentId, focusAgentId = null) {
   const context = canvas.getContext("2d");
   if (!context) return [];
 
@@ -1013,6 +1026,12 @@ function drawOfficeView(canvas, agents, selectedAgentId) {
     context.font = "700 30px Inter, sans-serif";
     context.textAlign = "center";
     context.fillText("No agents match the current filters", width / 2, height / 2);
+    return [];
+  }
+
+  const focusedAgent = focusAgentId ? agents.find((agent) => agent.id === focusAgentId) : null;
+  if (focusedAgent) {
+    drawFocusedCubicle(context, focusedAgent, width, height);
     return [];
   }
 
@@ -1128,6 +1147,200 @@ function drawCubicle(context, box, selected) {
   context.fillStyle = accent;
   roundedRect(context, x + width - 34, y + height - 32, 18, 18, 9);
   context.fill();
+}
+
+function drawFocusedCubicle(context, agent, width, height) {
+  const tone = officeTone(agent);
+  const room = {
+    x: 92,
+    y: 70,
+    width: width - 184,
+    height: height - 128
+  };
+  const desk = {
+    x: room.x + room.width * 0.16,
+    y: room.y + room.height * 0.57,
+    width: room.width * 0.68,
+    height: 70
+  };
+
+  context.save();
+  context.fillStyle = tone.floor;
+  roundedRect(context, room.x, room.y, room.width, room.height, 18);
+  context.fill();
+  context.restore();
+
+  context.strokeStyle = "#596273";
+  context.lineWidth = 9;
+  context.beginPath();
+  context.moveTo(room.x, room.y + room.height);
+  context.lineTo(room.x, room.y);
+  context.lineTo(room.x + room.width, room.y);
+  context.lineTo(room.x + room.width, room.y + room.height * 0.64);
+  context.stroke();
+
+  drawWallPanels(context, room, tone);
+  drawFocusedDesk(context, desk, tone);
+  drawFocusedAgent(context, room, desk, tone);
+  drawFocusedContextBoard(context, agent, room, tone);
+  drawFocusedComms(context, agent, room, tone);
+
+  context.fillStyle = "#172033";
+  context.font = "900 38px Inter, sans-serif";
+  context.textAlign = "left";
+  context.textBaseline = "top";
+  clippedText(context, agent.name, room.x + 34, room.y + 28, room.width * 0.56);
+
+  context.fillStyle = "#475467";
+  context.font = "700 20px Inter, sans-serif";
+  clippedText(context, `${agent.provider} · ${labelize(agent.type || agent.providerId || agent.source)} · ${labelize(agent.status)}`, room.x + 36, room.y + 78, room.width * 0.58);
+}
+
+function drawWallPanels(context, room, tone) {
+  const panelY = room.y + 130;
+  context.fillStyle = "rgba(255, 255, 255, 0.38)";
+  roundedRect(context, room.x + 34, panelY, room.width * 0.28, 132, 8);
+  context.fill();
+  context.fillStyle = "rgba(255, 255, 255, 0.32)";
+  roundedRect(context, room.x + room.width * 0.39, panelY + 12, room.width * 0.2, 74, 7);
+  context.fill();
+  context.fillStyle = tone.accent;
+  roundedRect(context, room.x + room.width * 0.62, panelY + 2, 22, 22, 11);
+  context.fill();
+  context.fillStyle = "rgba(23, 32, 51, 0.12)";
+  for (let index = 0; index < 4; index += 1) {
+    context.fillRect(room.x + 56, panelY + 28 + index * 24, room.width * 0.22, 5);
+  }
+}
+
+function drawFocusedDesk(context, desk, tone) {
+  context.fillStyle = "#b98958";
+  roundedRect(context, desk.x, desk.y, desk.width, desk.height, 8);
+  context.fill();
+  context.fillStyle = "#8d5f38";
+  context.fillRect(desk.x, desk.y + desk.height - 18, desk.width, 18);
+
+  const screenX = desk.x + desk.width * 0.58;
+  context.fillStyle = "#263143";
+  roundedRect(context, screenX, desk.y - 96, 150, 92, 8);
+  context.fill();
+  context.fillStyle = "#d9f7e6";
+  roundedRect(context, screenX + 12, desk.y - 84, 126, 64, 5);
+  context.fill();
+  context.fillStyle = tone.accent;
+  context.fillRect(screenX + 24, desk.y - 70, 78, 7);
+  context.fillStyle = "#7d8796";
+  context.fillRect(screenX + 38, desk.y - 53, 58, 6);
+  context.fillRect(screenX + 38, desk.y - 38, 82, 6);
+  context.fillStyle = "#263143";
+  context.fillRect(screenX + 70, desk.y - 4, 20, 28);
+  context.fillRect(screenX + 48, desk.y + 20, 64, 8);
+
+  context.fillStyle = "#f4d7aa";
+  roundedRect(context, desk.x + 72, desk.y - 34, 64, 42, 6);
+  context.fill();
+  context.fillStyle = "#475467";
+  context.fillRect(desk.x + 84, desk.y - 20, 38, 5);
+  context.fillRect(desk.x + 84, desk.y - 7, 28, 5);
+}
+
+function drawFocusedAgent(context, room, desk, tone) {
+  const centerX = desk.x + desk.width * 0.36;
+  const centerY = desk.y - 42;
+
+  context.fillStyle = "#3f4652";
+  roundedRect(context, centerX - 35, centerY + 32, 70, 82, 12);
+  context.fill();
+  context.fillStyle = tone.accent;
+  context.beginPath();
+  context.arc(centerX, centerY, 42, 0, Math.PI * 2);
+  context.fill();
+  context.fillStyle = "rgba(255, 255, 255, 0.45)";
+  context.beginPath();
+  context.moveTo(centerX - 14, centerY - 30);
+  context.lineTo(centerX + 28, centerY - 8);
+  context.lineTo(centerX - 8, centerY + 18);
+  context.closePath();
+  context.fill();
+  context.fillStyle = "#263143";
+  roundedRect(context, centerX - 50, centerY + 116, 100, 26, 13);
+  context.fill();
+
+  context.fillStyle = "rgba(23, 32, 51, 0.1)";
+  context.beginPath();
+  context.ellipse(room.x + room.width * 0.5, room.y + room.height - 44, room.width * 0.28, 22, 0, 0, Math.PI * 2);
+  context.fill();
+}
+
+function drawFocusedContextBoard(context, agent, room, tone) {
+  const x = room.x + room.width - 360;
+  const y = room.y + 42;
+  context.fillStyle = "#ffffff";
+  roundedRect(context, x, y, 300, 210, 10);
+  context.fill();
+  context.strokeStyle = "rgba(89, 98, 115, 0.28)";
+  context.lineWidth = 2;
+  roundedRect(context, x, y, 300, 210, 10);
+  context.stroke();
+
+  context.fillStyle = "#172033";
+  context.font = "900 20px Inter, sans-serif";
+  context.fillText("Context", x + 20, y + 20);
+  context.fillStyle = tone.accent;
+  context.fillRect(x + 20, y + 52, 84, 7);
+
+  const lines = [
+    agentContextTitle(agent),
+    agentContextLine(agent) || "No context reported",
+    taskProgressLine(agent) || agent.task || "No progress reported",
+    renderTokenUsageLine(agent)
+  ].filter(Boolean);
+  context.fillStyle = "#475467";
+  context.font = "700 15px Inter, sans-serif";
+  lines.slice(0, 5).forEach((line, index) => {
+    clippedText(context, line, x + 20, y + 76 + index * 28, 260);
+  });
+}
+
+function drawFocusedComms(context, agent, room, tone) {
+  const x = room.x + room.width - 360;
+  const y = room.y + 284;
+  context.fillStyle = "#ffffff";
+  roundedRect(context, x, y, 300, 142, 10);
+  context.fill();
+  context.strokeStyle = "rgba(89, 98, 115, 0.28)";
+  context.lineWidth = 2;
+  roundedRect(context, x, y, 300, 142, 10);
+  context.stroke();
+
+  context.fillStyle = "#172033";
+  context.font = "900 20px Inter, sans-serif";
+  context.fillText("Signals", x + 20, y + 18);
+  const childCount = Array.isArray(agent.children) ? agent.children.length : 0;
+  const nodes = [
+    { label: agent.parentId ? "parent" : "root", active: Boolean(agent.parentId) },
+    { label: `${childCount} child${childCount === 1 ? "" : "ren"}`, active: childCount > 0 },
+    { label: agent.goToKind || "surface", active: Boolean(agent.goToTarget) }
+  ];
+  nodes.forEach((node, index) => {
+    const cx = x + 58 + index * 88;
+    const cy = y + 82;
+    context.strokeStyle = index ? "rgba(89, 98, 115, 0.32)" : "transparent";
+    context.lineWidth = 3;
+    if (index) {
+      context.beginPath();
+      context.moveTo(cx - 66, cy);
+      context.lineTo(cx - 20, cy);
+      context.stroke();
+    }
+    context.fillStyle = node.active ? tone.accent : "#cbd2dd";
+    roundedRect(context, cx - 18, cy - 18, 36, 36, 18);
+    context.fill();
+    context.fillStyle = "#475467";
+    context.font = "700 12px Inter, sans-serif";
+    context.textAlign = "left";
+    clippedText(context, node.label, cx - 36, cy + 28, 72);
+  });
 }
 
 function officeCubicleLayout(agents, width, height) {

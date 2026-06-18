@@ -62,11 +62,12 @@ Requirements:
 - The table view remains the default operational view.
 - Operators can switch between Table and Office without changing filters, selected agent, polling, or lifecycle semantics.
 - Each visible agent maps to one cubicle.
-- Clicking a cubicle selects that agent and surfaces the same lifecycle controls as the table/detail surfaces, including stop, interrupt, end with prompt, force end, and go to when available.
+- Clicking a cubicle selects that agent, switches the office floor into a close-up cubicle focus view, and surfaces the same lifecycle controls as the table/detail surfaces, including stop, interrupt, end with prompt, force end, and go to when available.
 - The office inspector should show task, context, resources, provider health, lineage, and usage at a glance.
+- The focused cubicle view should visually reserve space for richer context and communication/status signals even when the provider has not reported full contents yet.
 - Future office cubicles should be able to show richer agent context, current thinking/state, and agent-to-agent communication paths.
 
-Status: initial implementation uses a dependency-free Canvas 2D renderer with deterministic cubicle layout and click hit-testing. The renderer is structured as a replaceable visual layer so a future Three.js/OpenGL renderer can take over without changing provider/action semantics.
+Status: initial implementation uses a dependency-free Canvas 2D renderer with deterministic cubicle layout, click hit-testing, a close-up cubicle focus mode, an inspector action panel, and visual boards for current context plus agent signal placeholders. The renderer is structured as a replaceable visual layer so a future Three.js/OpenGL renderer can take over without changing provider/action semantics.
 
 ### Agent Type
 

@@ -162,7 +162,12 @@ try {
   assert(appSource.includes('"office"') && appSource.includes('data-view-mode="${mode}"'), "browser app should expose Office view mode");
   assert(appSource.includes("renderOfficeView"), "browser app should render the agent office view");
   assert(appSource.includes("data-office-canvas"), "browser app should render an Office view canvas");
+  assert(appSource.includes("officeFocusAgentId"), "browser app should support focused cubicle inspection");
+  assert(appSource.includes("data-office-floor"), "browser app should expose a return-to-floor control");
   assert(appSource.includes("drawOfficeView"), "browser app should draw agents as office cubicles");
+  assert(appSource.includes("drawFocusedCubicle"), "browser app should draw a close-up cubicle view");
+  assert(appSource.includes("drawFocusedContextBoard"), "browser app should render future context surface placeholders in focused cubicles");
+  assert(appSource.includes("drawFocusedComms"), "browser app should render agent communication placeholders in focused cubicles");
   assert(appSource.includes("officeCubicleLayout"), "browser app should lay out one cubicle per visible agent");
   assert(appSource.includes("officeHitTest"), "browser app should select agents from office cubicle clicks");
   const clientSource = await readFile(new URL("../src/client.js", import.meta.url), "utf8");
@@ -205,6 +210,8 @@ try {
   assert(stylesSource.includes(".view-toggle"), "browser app should style the table/office view toggle");
   assert(stylesSource.includes(".office-view"), "browser app should style the office view layout");
   assert(stylesSource.includes(".office-canvas"), "browser app should style the office floor canvas");
+  assert(stylesSource.includes(".office-stage.focused"), "browser app should style focused cubicle inspection");
+  assert(stylesSource.includes(".office-hud"), "browser app should style Office view controls");
   assert(stylesSource.includes(".office-inspector"), "browser app should style the office selected-agent inspector");
   const configSource = await readFile(new URL("../server/config.js", import.meta.url), "utf8");
   assert(configSource.includes("?? 3000"), "snapshot refresh should default to a realtime 3s cadence");
