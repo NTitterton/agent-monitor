@@ -89,6 +89,7 @@ try {
   assert(!appSource.includes("data-test-provider"), "Sources panel should not render provider test checkmark buttons");
   assert(appSource.includes("previousSourcesScrollTop"), "browser app should preserve Sources scroll across live refreshes");
   assert(appSource.includes("previousOfficeInspectorScrollTop"), "browser app should preserve Office inspector scroll across live refreshes");
+  assert(appSource.includes("previousAgentTableScrollTop"), "browser app should preserve agent table scroll across live refreshes");
   assert(appSource.includes("compact-source-row"), "Sources panel should consolidate provider/source rows");
   assert(appSource.includes("captureFocusedFilter") && appSource.includes("restoreFocusedFilter"), "browser app should preserve filter focus across render");
   assert(appSource.includes("captureOpenPanels") && appSource.includes("restoreOpenPanels"), "browser app should preserve open panels across live refreshes");
@@ -237,6 +238,8 @@ try {
   assert(localProcessProviderSource.includes("readOpenCodeSessionMetadata"), "local provider should enrich OpenCode agents from the local session database");
   assert(localProcessProviderSource.includes(".local/share/opencode/opencode.db"), "local provider should know the OpenCode session database path");
   assert(localProcessProviderSource.includes("tokens?.total"), "local provider should use OpenCode step token totals for context-window usage");
+  assert(localProcessProviderSource.includes("hasMatchingAncestor"), "local discovery should avoid listing child processes as separate agents");
+  assert(localProcessProviderSource.includes("isKnownHelperProcess"), "local discovery should skip known desktop helper processes");
   const stateStoreSource = await readFile(new URL("../server/stateStore.js", import.meta.url), "utf8");
   assert(stateStoreSource.includes("agents: []"), "state store should default to no hardcoded agents");
   assert(stateStoreSource.includes("deprecatedSeedAgentIds"), "state store should migrate old seeded agent rows out of persisted state");

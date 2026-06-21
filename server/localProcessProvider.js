@@ -564,10 +564,12 @@ function discoverAgents(processes, configuredMatches, options) {
     .map((processInfo) => {
       const matcher = matchers.find((item) => item.pattern.test(processInfo.command));
       if (!matcher) return null;
+      if (hasMatchingAncestor(processInfo, processes, matcher.pattern)) return null;
+      if (isKnownHelperProcess(processInfo.command)) return null;
 
       return {
         id: `local-discovered-${matcher.id}-${processInfo.pid}`,
-        name: `${matcher.name} (${processInfo.pid})`,
+        name: `${discoveredAgentName(matcher, processInfo)} (${processInfo.pid})`,
         command: processInfo.command,
         match: processInfo.command,
         discovered: true,
@@ -575,6 +577,25 @@ function discoverAgents(processes, configuredMatches, options) {
       };
     })
     .filter(Boolean);
+}
+
+function hasMatchingAncestor(processInfo, processes, pattern) {
+  return ancestorProcesses(processes, processInfo.ppid).some((ancestor) => pattern.test(ancestor.command));
+}
+
+function isKnownHelperProcess(command) {
+  const text = String(command || "");
+  if (!/\/Applications\/Codex\.app\//i.test(text)) return false;
+  if (/\/Contents\/MacOS\/Codex$/i.test(text)) return false;
+  if (/\/Contents\/Resources\/codex\b/i.test(text)) return false;
+  return /browser_crashpad_handler|Codex \(Service\)|Codex \(Renderer\)|bare-modifier-monitor|SkyComputerUseService|--type=/i.test(text);
+}
+
+function discoveredAgentName(matcher, processInfo) {
+  if (matcher.id === "codex" && /\/Applications\/Codex\.app\/Contents\/MacOS\/Codex$/i.test(processInfo.command)) {
+    return "Codex Desktop";
+  }
+  return matcher.name;
 }
 
 function attachProcessLineage(agents) {
